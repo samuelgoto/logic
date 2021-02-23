@@ -33,7 +33,7 @@ describe("Parser", function() {
     assertThat(results).equalsTo([["foo"]]);
   });
 
-  it.only("propositional logic", function() {
+  it.only("logic", function() {
     const grammar = build(`
       @builtin "whitespace.ne"
 
@@ -43,10 +43,10 @@ describe("Parser", function() {
 
       main -> (_ sentence):* _ {% ([sentences]) => sentences.map(([ws, s]) => s ) %}
 
-      sentence -> proposition _ "." {% ([prop, ws, dot]) =>  [prop, dot]%}
-      sentence -> proposition _ "?" {% ([prop, ws, q]) => [prop, q] %}
+      sentence -> expression _ "." {% ([prop, ws, dot]) =>  [prop, dot]%}
+      sentence -> expression _ "?" {% ([prop, ws, q]) => [prop, q] %}
 
-      proposition -> implication {% id %}
+      expression -> implication {% id %}
 
       implication -> implication _ "=>" _ disjunction {% op %}
                    | disjunction {% id %}
@@ -57,10 +57,16 @@ describe("Parser", function() {
       conjunction -> conjunction _ "&&" _ cluster {% op %}
                    | cluster {% id %}
 
-      cluster -> "(" _ proposition _ ")" {% ([p1, ws1, prop]) => prop %}
-                   | constant {% id %}
+      cluster -> "(" _ expression _ ")" {% ([p1, ws1, prop]) => prop %}
+                   | terminal {% id %}
+
+      terminal -> constant {% id %}
+      terminal -> predicate _ "(" _ ")" {% ([pred]) => [pred] %}
 
       constant -> [A-Z] [a-z]:* {% ([head, body]) => head + body.join("")  %}
+
+      predicate -> [a-z]:+ {% ([body]) => body.join("")  %}
+
     `);
     const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
     const {results} = parser.feed(`
@@ -80,6 +86,8 @@ describe("Parser", function() {
       (A).
       A?
       (A => B) && (B => C)?
+      a().
+      a() && b() => c().
     `);
     assertThat(results).equalsTo([[
       ["Aa", "."],
@@ -98,6 +106,8 @@ describe("Parser", function() {
       ["A", "."],
       ["A", "?"],
       [[["A", "=>", "B"], "&&", ["B", "=>", "C"]], "?"],
+      [["a"], "."],
+      [[[["a"], "&&", ["b"]], "=>", ["c"]], "."],
     ]]);
   });
 
