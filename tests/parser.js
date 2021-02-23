@@ -36,11 +36,20 @@ describe("Parser", function() {
   it.only("propositional logic", function() {
     const grammar = build(`
       @builtin "whitespace.ne"
+
+      @{%
+        const op = ([a, ws1, op, ws2, b]) => [a, op, b];
+      %}
+
       main -> (_ proposition _ "."):* _ {% ([propositions]) => propositions.map(([ws, constant]) => constant ) %}
-      proposition -> disjunction {% id %}
-      disjunction -> disjunction _ "||" _ conjunction {% ([a, ws1, op, ws2, b]) => [a, op, b] %}
+      proposition -> implication {% id %}
+      implication -> implication _ "=>" _ disjunction {% op %}
+                   | disjunction {% id %}
+      disjunction -> disjunction _ "||" _ conjunction {% op %}
                    | conjunction {% id %}
-      conjunction -> conjunction _ "&&" _ constant {% ([a, ws1, op, ws2, b]) => [a, op, b] %}
+      conjunction -> conjunction _ "&&" _ cluster {% op %}
+                   | cluster {% id %}
+      cluster -> "(" _ proposition _ ")" {% ([p1, ws1, prop]) => prop %}
                    | constant {% id %}
       constant -> [A-Z] [a-z]:* {% ([head, body]) => head + body.join("")  %}
     `);
@@ -52,6 +61,14 @@ describe("Parser", function() {
       C && D.
       A || B && C.
       A && B || C.
+      A => B.
+      A && B => C.
+      A => B && C.
+      A || B => C.
+      A => B || C.
+      A && (B => C).
+      (A => B) && (B => C).
+      (A).
     `);
     assertThat(results).equalsTo([[
       "Aa",
@@ -60,6 +77,14 @@ describe("Parser", function() {
       ["C", "&&", "D"],
       ["A", "||", ["B", "&&", "C"]],
       [["A", "&&", "B"], "||", "C"],
+      ["A", "=>", "B"],
+      [["A", "&&", "B"], "=>", "C"],
+      ["A", "=>", ["B", "&&", "C"]],
+      [["A", "||", "B"], "=>", "C"],
+      ["A", "=>", ["B", "||", "C"]],
+      ["A", "&&", ["B", "=>", "C"]],
+      [["A", "=>", "B"], "&&", ["B", "=>", "C"]],
+      "A",
     ]]);
   });
 
