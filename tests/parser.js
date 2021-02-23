@@ -48,14 +48,18 @@ describe("Parser", function() {
     const {results} = parser.feed(`
       Aa. 
       Bb. 
-      A || B. 
+      A || B.
       C && D.
+      A || B && C.
+      A && B || C.
     `);
     assertThat(results).equalsTo([[
       "Aa",
       "Bb",
       ["A", "||", "B"],
       ["C", "&&", "D"],
+      ["A", "||", ["B", "&&", "C"]],
+      [["A", "&&", "B"], "||", "C"],
     ]]);
   });
 
