@@ -60,18 +60,28 @@ describe("Parser", function() {
       cluster -> "(" _ expression _ ")" {% ([p1, ws1, prop]) => prop %}
                    | terminal {% id %}
 
-      terminal -> constant {% id %}
-      terminal -> predicate _ "(" _ ")" {% ([pred]) => [pred] %}
+      terminal -> term {% id %}
+      terminal -> predicate _ "(" _ args _ ")" {% ([pred, ws1, p1, ws2, args]) => [pred, args] %}
 
-      constant -> [a-zA-Z]:* {% ([body]) => body.join("")  %}
+      term -> [a-zA-Z]:* {% ([body]) => body.join("")  %}
 
       predicate -> [a-zA-Z]:+ {% ([body]) => body.join("")  %}
+
+      args -> null
+      args -> arg (_ "," _ arg):* {% ([arg, list]) => [arg, ...list.map(([ws1, comma, ws2, tail]) => tail)] %}
+      arg -> variable {% id %} 
+           | constant {% id %}
+
+      variable -> [a-z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
+      constant -> [A-Z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
 
     `);
     const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
     const {results} = parser.feed(`
       a. 
       b. 
+      Aa. 
+      Bb. 
       a || b.
       c && d.
       a || b && c.
@@ -87,11 +97,16 @@ describe("Parser", function() {
       a?
       (a => b) && (b => c)?
       a().
-      a() && b() => C().
+      a() && b() => c().
+      a(b).
+      a(b, c).
+      a(B, C).
     `);
     assertThat(results).equalsTo([[
       ["a", "."],
       ["b", "."],
+      ["Aa", "."],
+      ["Bb", "."],
       [["a", "||", "b"], "."],
       [["c", "&&", "d"], "."],
       [["a", "||", ["b", "&&", "c"]], "."],
@@ -106,8 +121,11 @@ describe("Parser", function() {
       ["a", "."],
       ["a", "?"],
       [[["a", "=>", "b"], "&&", ["b", "=>", "c"]], "?"],
-      [["a"], "."],
-      [[[["a"], "&&", ["b"]], "=>", ["C"]], "."],
+      [["a", []], "."],
+      [[[["a", []], "&&", ["b", []]], "=>", ["c", []]], "."],
+      [["a", ["b"]], "."],
+      [["a", ["b", "c"]], "."],
+      [["a", ["B", "C"]], "."],
     ]]);
   });
 
