@@ -41,16 +41,25 @@ describe("Parser", function() {
         const op = ([a, ws1, op, ws2, b]) => [a, op, b];
       %}
 
-      main -> (_ proposition _ "."):* _ {% ([propositions]) => propositions.map(([ws, constant]) => constant ) %}
+      main -> (_ sentence):* _ {% ([sentences]) => sentences.map(([ws, s]) => s ) %}
+
+      sentence -> proposition _ "." {% ([prop, ws, dot]) =>  [prop, dot]%}
+      sentence -> proposition _ "?" {% ([prop, ws, q]) => [prop, q] %}
+
       proposition -> implication {% id %}
+
       implication -> implication _ "=>" _ disjunction {% op %}
                    | disjunction {% id %}
+
       disjunction -> disjunction _ "||" _ conjunction {% op %}
                    | conjunction {% id %}
+
       conjunction -> conjunction _ "&&" _ cluster {% op %}
                    | cluster {% id %}
+
       cluster -> "(" _ proposition _ ")" {% ([p1, ws1, prop]) => prop %}
                    | constant {% id %}
+
       constant -> [A-Z] [a-z]:* {% ([head, body]) => head + body.join("")  %}
     `);
     const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
@@ -69,22 +78,24 @@ describe("Parser", function() {
       A && (B => C).
       (A => B) && (B => C).
       (A).
+      A?
     `);
     assertThat(results).equalsTo([[
-      "Aa",
-      "Bb",
-      ["A", "||", "B"],
-      ["C", "&&", "D"],
-      ["A", "||", ["B", "&&", "C"]],
-      [["A", "&&", "B"], "||", "C"],
-      ["A", "=>", "B"],
-      [["A", "&&", "B"], "=>", "C"],
-      ["A", "=>", ["B", "&&", "C"]],
-      [["A", "||", "B"], "=>", "C"],
-      ["A", "=>", ["B", "||", "C"]],
-      ["A", "&&", ["B", "=>", "C"]],
-      [["A", "=>", "B"], "&&", ["B", "=>", "C"]],
-      "A",
+      ["Aa", "."],
+      ["Bb", "."],
+      [["A", "||", "B"], "."],
+      [["C", "&&", "D"], "."],
+      [["A", "||", ["B", "&&", "C"]], "."],
+      [[["A", "&&", "B"], "||", "C"], "."],
+      [["A", "=>", "B"], "."],
+      [[["A", "&&", "B"], "=>", "C"], "."],
+      [["A", "=>", ["B", "&&", "C"]], "."],
+      [[["A", "||", "B"], "=>", "C"], "."],
+      [["A", "=>", ["B", "||", "C"]], "."],
+      [["A", "&&", ["B", "=>", "C"]], "."],
+      [[["A", "=>", "B"], "&&", ["B", "=>", "C"]], "."],
+      ["A", "."],
+      ["A", "?"],
     ]]);
   });
 
