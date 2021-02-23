@@ -36,12 +36,27 @@ describe("Parser", function() {
   it.only("propositional logic", function() {
     const grammar = build(`
       @builtin "whitespace.ne"
-      main -> (_ constant _ "."):* {% ([propositions]) => propositions.map(([ws, constant]) => constant ) %}
+      main -> (_ proposition _ "."):* _ {% ([propositions]) => propositions.map(([ws, constant]) => constant ) %}
+      proposition -> disjunction {% id %}
+      disjunction -> disjunction _ "||" _ conjunction {% ([a, ws1, op, ws2, b]) => [a, op, b] %}
+                   | conjunction {% id %}
+      conjunction -> conjunction _ "&&" _ constant {% ([a, ws1, op, ws2, b]) => [a, op, b] %}
+                   | constant {% id %}
       constant -> [A-Z] [a-z]:* {% ([head, body]) => head + body.join("")  %}
     `);
     const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
-    const {results} = parser.feed("Aa. Bb.");
-    assertThat(results).equalsTo([["Aa", "Bb"]]);
+    const {results} = parser.feed(`
+      Aa. 
+      Bb. 
+      A || B. 
+      C && D.
+    `);
+    assertThat(results).equalsTo([[
+      "Aa",
+      "Bb",
+      ["A", "||", "B"],
+      ["C", "&&", "D"],
+    ]]);
   });
 
   function assertThat(x) {
