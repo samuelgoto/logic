@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha -w tests"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/samuelgoto/logic/issues"
   },
-  "homepage": "https://github.com/samuelgoto/logic#readme"
+  "homepage": "https://github.com/samuelgoto/logic#readme",
+  "dependencies": {
+    "mocha": "^8.3.0",
+    "nearley": "^2.20.1"
+  }
 }
