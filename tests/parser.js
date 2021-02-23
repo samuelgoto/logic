@@ -48,7 +48,7 @@ describe("Parser", function() {
 
       expression -> quantification {% id %}
 
-      quantification -> "forall" _ "(" _ args _ ")" _ implication {% 
+      quantification -> "forall" _ "(" _ variable _ ")" _ expression {% 
         ([forall, ws1, p1, ws2, args, ws3, p2, ws4, expr]) =>  ["forall", args, expr] 
       %}
                    | implication {% id %}
@@ -109,8 +109,7 @@ describe("Parser", function() {
       forall(x) a(x).
       forall(x) a(x) && b(x).
       forall(x) a(x) => b(x).
-      forall(x, y) a(x, y).
-      forall(x, y, Z) a(x, y, Z).
+      forall(x) forall(y) a(x, y).
     `);
     assertThat(results).equalsTo([[
       ["A", "."],
@@ -136,11 +135,10 @@ describe("Parser", function() {
       [["a", ["b"]], "."],
       [["a", ["b", "c"]], "."],
       [["a", ["B", "C"]], "."],
-      [["forall", ["x"], ["a", ["x"]]], "."],
-      [["forall", ["x"], [["a", ["x"]], "&&", ["b", ["x"]]]], "."],
-      [["forall", ["x"], [["a", ["x"]], "=>", ["b", ["x"]]]], "."],
-      [["forall", ["x", "y"], ["a", ["x", "y"]]], "."],
-      [["forall", ["x", "y", "Z"], ["a", ["x", "y", "Z"]]], "."],
+      [["forall", "x", ["a", ["x"]]], "."],
+      [["forall", "x", [["a", ["x"]], "&&", ["b", ["x"]]]], "."],
+      [["forall", "x", [["a", ["x"]], "=>", ["b", ["x"]]]], "."],
+      [["forall", "x", ["forall", "y", ["a", ["x", "y"]]]], "."],
     ]]);
   });
 
