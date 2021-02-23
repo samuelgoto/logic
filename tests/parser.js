@@ -2,16 +2,6 @@ const assert = require("assert");
 const {Parser} = require("../src/parser.js");
 
 describe("Parser", function() {
-  
-  it.skip("nearley", function() {
-    const grammar = build(`
-      main -> "foo" | bar
-    `);
-    const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
-    const {results} = parser.feed("foo");
-    assertThat(results).equalsTo([["foo"]]);
-  });
-
   it.only("logic", function() {
     const results = new Parser().parse(`
       A. 
