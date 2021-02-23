@@ -79,6 +79,7 @@ describe("Parser", function() {
       (A => B) && (B => C).
       (A).
       A?
+      (A => B) && (B => C)?
     `);
     assertThat(results).equalsTo([[
       ["Aa", "."],
@@ -96,6 +97,7 @@ describe("Parser", function() {
       [[["A", "=>", "B"], "&&", ["B", "=>", "C"]], "."],
       ["A", "."],
       ["A", "?"],
+      [[["A", "=>", "B"], "&&", ["B", "=>", "C"]], "?"],
     ]]);
   });
 
