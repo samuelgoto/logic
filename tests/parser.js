@@ -24,12 +24,31 @@ describe("Parser", function() {
     return module.exports;
   }
 
-  it("Basic", function() {
+  it("nearley", function() {
     const grammar = build(`
       main -> "foo" | bar
     `);
     const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
     const {results} = parser.feed("foo");
-    assert.deepEqual(results, [["foo"]]);
+    assertThat(results).equalsTo([["foo"]]);
   });
+
+  it.only("propositional logic", function() {
+    const grammar = build(`
+      @builtin "whitespace.ne"
+      main -> (_ constant _ "."):* {% ([propositions]) => propositions.map(([ws, constant]) => constant ) %}
+      constant -> [A-Z] [a-z]:* {% ([head, body]) => head + body.join("")  %}
+    `);
+    const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+    const {results} = parser.feed("Aa. Bb.");
+    assertThat(results).equalsTo([["Aa", "Bb"]]);
+  });
+
+  function assertThat(x) {
+    return {
+      equalsTo(y) {
+        assert.deepEqual(x, y);
+      }
+    }
+  }
 });
