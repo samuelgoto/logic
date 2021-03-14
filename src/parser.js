@@ -23,6 +23,7 @@ function build(sourceCode) {
 
 const grammar = build(`
       @builtin "whitespace.ne"
+      @builtin "string.ne"
 
       @{%
         const op = ([a, ws1, op, ws2, b]) => [a, op, b];

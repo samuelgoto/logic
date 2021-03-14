@@ -4,7 +4,7 @@ const {Parser} = require("../src/parser.js");
 describe("Parser", function() {
   it.only("logic", function() {
     const results = new Parser().parse(`
-      A. 
+      A.
       B. 
       Aa. 
       Bb. 
