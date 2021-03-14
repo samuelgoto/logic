@@ -46,6 +46,11 @@ describe("Parser", function() {
         B.
         C.
       }
+      if (A) {
+        B.
+      } else {
+        C.
+      }
     `);
     assertThat(results).equalsTo([[
       ["A", "."],
@@ -82,6 +87,7 @@ describe("Parser", function() {
       ["if", ["A", "&&", "B"], [["C", "&&", "D"], "."]],
       ["if", "A", [["B", "."]]],
       ["if", "A", [["B", "."], ["C", "."]]],
+      ["if", "A", [["B", "."]], [["C", "."]]],
     ]]);
   });
 

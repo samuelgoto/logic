@@ -36,6 +36,10 @@ const grammar = build(`
         ([iffy, ws1, p1, ws2, head, ws3, p2, ws4, body]) =>  ["if", head, body] 
       %}
 
+      statement -> "if" _ "(" _ expression _ ")" _ statement _ "else" _ statement {% 
+        ([iffy, ws1, p1, ws2, head, ws3, p2, ws4, body, ws5, elsy, ws6, tail]) =>  ["if", head, body, tail] 
+      %}
+
       statement -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
 
       statement -> expression _ "?" {% ([prop, ws, q]) => [prop, q] %}
