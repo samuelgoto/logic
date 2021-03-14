@@ -33,7 +33,12 @@ describe("Parser", function() {
       forall(x) forall(y) a(x, y, Z).
       (forall(x) a(x)) && (forall(y) b(y)).
       forall(x) a(x, C).
-      if (A) B 
+      if (A)
+        B. 
+      if (a(b, c))
+        d(e).
+      if (A && B)
+        C && D. 
     `);
     assertThat(results).equalsTo([[
       ["A", "."],
@@ -65,7 +70,9 @@ describe("Parser", function() {
       [["forall", "x", ["forall", "y", ["a", ["x", "y", "Z"]]]], "."],
       [[["forall", "x", ["a", ["x"]]], "&&", ["forall", "y", ["b", ["y"]]]], "."],
       [["forall", "x", ["a", ["x", "C"]]], "."],
-      ["if", "A", "B", "."],
+      ["if", "A", ["B", "."]],
+      ["if", ["a", ["b", "c"]], [["d", ["e"]], "."]],
+      ["if", ["A", "&&", "B"], [["C", "&&", "D"], "."]],
     ]]);
   });
 

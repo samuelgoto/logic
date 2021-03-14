@@ -28,16 +28,15 @@ const grammar = build(`
         const op = ([a, ws1, op, ws2, b]) => [a, op, b];
       %}
 
-      main -> (_ sentence):* _ {% ([sentences]) => sentences.map(([ws, s]) => s ) %}
-
-      sentence -> statement {% id %}
-      sentence -> expression _ "?" {% ([prop, ws, q]) => [prop, q] %}
+      main -> (_ statement):* _ {% ([sentences]) => sentences.map(([ws, s]) => s ) %}
 
       statement -> expression _ "." {% ([prop, ws, dot]) =>  [prop, dot]%}
 
-      statement -> "if" _ "(" _ expression _ ")" _ expression {% 
-        ([iffy, ws1, p1, ws2, head, ws3, p2, ws4, body]) =>  ["if", head, body, "."] 
+      statement -> "if" _ "(" _ expression _ ")" _ statement {% 
+        ([iffy, ws1, p1, ws2, head, ws3, p2, ws4, body]) =>  ["if", head, body] 
       %}
+
+      statement -> expression _ "?" {% ([prop, ws, q]) => [prop, q] %}
 
       expression -> quantification {% id %}
 
