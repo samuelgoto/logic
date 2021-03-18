@@ -45,9 +45,15 @@ const grammar = build(`
 
       statement -> expression _ "?" {% ([prop, ws, q]) => [prop, q] %}
 
-      statement -> "for" _ "(" _ "every" _ variable _ ")" _ statement {% 
-        ([forall, ws1, p1, ws2, all, ws3, args, ws4, p2, ws5, expr]) =>  ["every", args, expr] 
+      statement -> "for" _ "(" _ quantifier _ variable _ ")" _ statement {% 
+        ([forall, ws1, p1, ws2, quantifier, ws3, args, ws4, p2, ws5, expr]) =>  [quantifier, args, expr] 
       %}
+
+      quantifier -> "every" {% id %}
+                 | "most" {% id %}
+                 | "many" {% id %}
+                 | "few" {% id %}
+                 | "only" {% id %}
 
       expression -> implication {% id %}
 

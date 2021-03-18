@@ -76,6 +76,16 @@ describe("Parser", function() {
       for (every x) {
         a(x).
       }
+
+      for (most x) {
+        a(x).
+      }
+
+      for (few x)
+        a(x).
+
+      for (only x)
+        a(x).
     `);
     assertThat(results).equalsTo([[
       ["every", "x", [["a", ["x"]], "."]],
@@ -86,7 +96,10 @@ describe("Parser", function() {
       //[[["forall", "x", ["a", ["x"]]], "&&", ["forall", "y", ["b", ["y"]]]], "."],
       ["every", "x", [["a", ["x", "C"]], "."]],
       ["every", "x", [[["a", ["x"]], "."]]],
-    ]]);
+      ["most", "x", [[["a", ["x"]], "."]]],
+      ["few", "x", [["a", ["x"]], "."]], 
+      ["only", "x", [["a", ["x"]], "."]], 
+   ]]);
   });
   
   it("if", function() {
