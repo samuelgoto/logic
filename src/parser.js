@@ -45,12 +45,11 @@ const grammar = build(`
 
       statement -> expression _ "?" {% ([prop, ws, q]) => [prop, q] %}
 
-      expression -> quantification {% id %}
-
-      quantification -> "forall" _ "(" _ variable _ ")" _ expression {% 
+      statement -> "forall" _ "(" _ variable _ ")" _ statement {% 
         ([forall, ws1, p1, ws2, args, ws3, p2, ws4, expr]) =>  ["forall", args, expr] 
       %}
-                   | implication {% id %}
+
+      expression -> implication {% id %}
 
       implication -> implication _ "=>" _ disjunction {% op %}
                    | disjunction {% id %}

@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/samuelgoto/logic#readme",
   "dependencies": {
+    "logic-solver": "^2.0.1",
     "mocha": "^8.3.0",
     "nearley": "^2.20.1"
   }
