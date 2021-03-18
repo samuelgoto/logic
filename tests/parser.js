@@ -191,17 +191,32 @@ describe("Parser", function() {
     ]]);
   });
   
-  it("hello world", function() {
+  it("print('hello world')!", function() {
     const results = new Parser().parse(`
       // prints hello world
-      hello().
+      print("hello world")!
     `);
     assertThat(results).equalsTo([[
       "// prints hello world",
-      [["hello", []], "."],
+      [["print", ["hello world"]], "!"],
     ]]);
   });
-  
+
+  it("mortal(Socrates)?", function() {
+    const results = new Parser().parse(`
+      // most basic logical program
+      for (all x: man(x)) mortal(x).
+      man(Socrates).
+      mortal(Socrates)? 
+    `);
+    assertThat(results).equalsTo([[
+      "// most basic logical program",
+      ["all", "x", ["man", ["x"]], [["mortal", ["x"]], "."]],
+      [["man", ["Socrates"]], "."],
+      [["mortal", ["Socrates"]], "?"],
+    ]]);
+  });
+
   function assertThat(x) {
     return {
       equalsTo(y) {

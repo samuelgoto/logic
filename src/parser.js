@@ -55,6 +55,7 @@ const grammar = build(`
       %}
 
       quantifier -> "every" {% id %}
+                 | "all" {% id %}
                  | "most" {% id %}
                  | "many" {% id %}
                  | "few" {% id %}
@@ -88,6 +89,8 @@ const grammar = build(`
 
       variable -> [a-z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
       constant -> [A-Z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
+      constant -> dqstring {% id %}
+               |  sqstring {% id %}
 
     `);
 
