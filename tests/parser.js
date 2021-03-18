@@ -55,26 +55,37 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("forall", () => {
+  it("for", () => {
     const results = new Parser().parse(`
-      forall(x) a(x).
-      forall(x) a(x) && b(x).
-      forall(x) a(x) => b(x).
-      forall(x) forall(y) a(x, y, Z).
-      forall(x) a(x, C).
-      forall(x) {
+      for (every x) 
+        a(x).
+
+      for (every x) 
+        a(x) && b(x).
+
+      for (every x) 
+        a(x) => b(x).
+
+      for (every x) 
+        for (every y) 
+          a(x, y, Z).
+
+      for (every x) 
+        a(x, C).
+
+      for (every x) {
         a(x).
       }
     `);
     assertThat(results).equalsTo([[
-      ["forall", "x", [["a", ["x"]], "."]],
-      ["forall", "x", [[["a", ["x"]], "&&", ["b", ["x"]]], "."]],
-      ["forall", "x", [[["a", ["x"]], "=>", ["b", ["x"]]], "."]],
-      ["forall", "x", ["forall", "y", [["a", ["x", "y", "Z"]], "."]]],
+      ["every", "x", [["a", ["x"]], "."]],
+      ["every", "x", [[["a", ["x"]], "&&", ["b", ["x"]]], "."]],
+      ["every", "x", [[["a", ["x"]], "=>", ["b", ["x"]]], "."]],
+      ["every", "x", ["every", "y", [["a", ["x", "y", "Z"]], "."]]],
       // (forall(x) a(x)) && (forall(y) b(y)).
       //[[["forall", "x", ["a", ["x"]]], "&&", ["forall", "y", ["b", ["y"]]]], "."],
-      ["forall", "x", [["a", ["x", "C"]], "."]],
-      ["forall", "x", [[["a", ["x"]], "."]]],
+      ["every", "x", [["a", ["x", "C"]], "."]],
+      ["every", "x", [[["a", ["x"]], "."]]],
     ]]);
   });
   
