@@ -31,14 +31,17 @@ const grammar = build(`
 
       main -> (_ line):* _ {% ([lines]) => lines.map(([ws, s]) => s ) %}
 
-      line -> statement {% id %}
       line -> "//" [^\\n]:* [\\n] {% ([start, comment]) => "//" + comment.join("") %}
-
+      line -> statement {% id %}
+      line -> question {% id %}
+    
       statement -> expression _ dot {% ([prop, ws, dot]) =>  [prop, dot]%}
 
       dot -> "." {% id %}
-                  | "?" {% id %}
-                  | "!" {% id %}
+           | "!" {% id %}
+
+      question -> expression _ "?" {% ([expression]) => ["?", expression]  %}
+      question -> "question" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
 
       statement -> "if" _ "(" _ expression _ ")" _ statement {% 
         ([iffy, ws1, p1, ws2, head, ws3, p2, ws4, body]) =>  ["if", head, body] 

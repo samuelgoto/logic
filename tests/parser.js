@@ -12,25 +12,6 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("questions", function() {
-    const results = new Parser().parse(`
-      hello()?
-    `);
-    assertThat(results).equalsTo([[
-      [["hello", []], "?"],
-    ]]);
-  });
-
-  it("commands", function() {
-    const results = new Parser().parse(`
-      hello()!
-    `);
-    assertThat(results).equalsTo([[
-      [["hello", []], "!"],
-    ]]);
-  });
-  
-
   it("expressions", function() {
     const results = new Parser().parse(`
       A.
@@ -49,8 +30,6 @@ describe("Parser", function() {
       A && (B => C).
       (A => B) && (B => C).
       (A).
-      A?
-      (A => B) && (B => C)?
       a().
       a() && b() => c().
       a(b).
@@ -74,8 +53,6 @@ describe("Parser", function() {
       [["A", "&&", ["B", "=>", "C"]], "."],
       [[["A", "=>", "B"], "&&", ["B", "=>", "C"]], "."],
       ["A", "."],
-      ["A", "?"],
-      [[["A", "=>", "B"], "&&", ["B", "=>", "C"]], "?"],
       [["a", []], "."],
       [[[["a", []], "&&", ["b", []]], "=>", ["c", []]], "."],
       [["a", ["b"]], "."],
@@ -191,6 +168,28 @@ describe("Parser", function() {
     ]]);
   });
   
+  it("questions", function() {
+    const results = new Parser().parse(`
+      hello()?
+      question () {
+        hello().
+      } ?
+    `);
+    assertThat(results).equalsTo([[
+      ["?", ["hello", []]],
+      ["?", [[["hello", []], "."]]],
+    ]]);
+  });
+
+  it("commands", function() {
+    const results = new Parser().parse(`
+      hello()!
+    `);
+    assertThat(results).equalsTo([[
+      [["hello", []], "!"],
+    ]]);
+  });
+
   it("print('hello world')!", function() {
     const results = new Parser().parse(`
       // prints hello world
@@ -213,7 +212,7 @@ describe("Parser", function() {
       "// most basic logical program",
       ["all", "x", ["man", ["x"]], [["mortal", ["x"]], "."]],
       [["man", ["Socrates"]], "."],
-      [["mortal", ["Socrates"]], "?"],
+      ["?", ["mortal", ["Socrates"]]],
     ]]);
   });
 
