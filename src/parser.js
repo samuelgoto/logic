@@ -34,7 +34,11 @@ const grammar = build(`
       line -> statement {% id %}
       line -> "//" [^\\n]:* [\\n] {% ([start, comment]) => "//" + comment.join("") %}
 
-      statement -> expression _ "." {% ([prop, ws, dot]) =>  [prop, dot]%}
+      statement -> expression _ dot {% ([prop, ws, dot]) =>  [prop, dot]%}
+
+      dot -> "." {% id %}
+                  | "?" {% id %}
+                  | "!" {% id %}
 
       statement -> "if" _ "(" _ expression _ ")" _ statement {% 
         ([iffy, ws1, p1, ws2, head, ws3, p2, ws4, body]) =>  ["if", head, body] 
@@ -45,8 +49,6 @@ const grammar = build(`
       %}
 
       statement -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
-
-      statement -> expression _ "?" {% ([prop, ws, q]) => [prop, q] %}
 
       statement -> "for" _ "(" _ quantifier _ variable (_ ":" _ expression):? _ ")" _ statement {% 
         ([forall, ws1, p1, ws2, quantifier, ws3, arg, head, ws4, p2, ws5, tail]) =>  [quantifier, arg, head ? head[3] : [], tail] 

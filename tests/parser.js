@@ -2,6 +2,35 @@ const assert = require("assert");
 const {Parser} = require("../src/parser.js");
 
 describe("Parser", function() {
+
+  it("statements", function() {
+    const results = new Parser().parse(`
+      hello().
+    `);
+    assertThat(results).equalsTo([[
+      [["hello", []], "."],
+    ]]);
+  });
+
+  it("questions", function() {
+    const results = new Parser().parse(`
+      hello()?
+    `);
+    assertThat(results).equalsTo([[
+      [["hello", []], "?"],
+    ]]);
+  });
+
+  it("commands", function() {
+    const results = new Parser().parse(`
+      hello()!
+    `);
+    assertThat(results).equalsTo([[
+      [["hello", []], "!"],
+    ]]);
+  });
+  
+
   it("expressions", function() {
     const results = new Parser().parse(`
       A.
@@ -159,6 +188,17 @@ describe("Parser", function() {
       ["if", "A", ["B", "."]],
       "// another comment",
       "// this is another comment",
+    ]]);
+  });
+  
+  it("hello world", function() {
+    const results = new Parser().parse(`
+      // prints hello world
+      hello().
+    `);
+    assertThat(results).equalsTo([[
+      "// prints hello world",
+      [["hello", []], "."],
     ]]);
   });
   
