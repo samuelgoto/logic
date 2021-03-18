@@ -29,7 +29,10 @@ const grammar = build(`
         const op = ([a, ws1, op, ws2, b]) => [a, op, b];
       %}
 
-      main -> (_ statement):* _ {% ([statements]) => statements.map(([ws, s]) => s ) %}
+      main -> (_ line):* _ {% ([lines]) => lines.map(([ws, s]) => s ) %}
+
+      line -> statement {% id %}
+      line -> "//" [^\\n]:* [\\n] {% ([start, comment]) => "//" + comment.join("") %}
 
       statement -> expression _ "." {% ([prop, ws, dot]) =>  [prop, dot]%}
 

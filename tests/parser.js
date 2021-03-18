@@ -111,7 +111,7 @@ describe("Parser", function() {
       ["few", "x", [], [["a", ["x"]], "."]], 
       ["only", "x", [], [["a", ["x"]], "."]], 
       ["every", "x", ["b", ["x"]], [["a", ["x"]], "."]], 
-      ["every", "x", [["a", ["x"]], "&&", ["b", ["x"]]], [[["c", ["x"]], "&&", ["d", ["x"]]], "."]], 
+      ["every", "x", [["a", ["x"]], "&&", ["b", ["x"]]], [[["c", ["x"]], "&&", ["d", ["x"]]], "."]],
       ["every", "x", [["a", ["x"]], "&&", ["b", ["x"]]], [[["c", ["x"]], "."], [["d", ["x"]], "."]]], 
    ]]);
   });
@@ -147,6 +147,21 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("comments", function() {
+    const results = new Parser().parse(`
+      // this is a comment
+      if (A)
+        B. // another comment
+      // this is another comment
+    `);
+    assertThat(results).equalsTo([[
+      "// this is a comment",
+      ["if", "A", ["B", "."]],
+      "// another comment",
+      "// this is another comment",
+    ]]);
+  });
+  
   function assertThat(x) {
     return {
       equalsTo(y) {
