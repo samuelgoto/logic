@@ -54,6 +54,10 @@ const grammar = build(`
         ([either, ws1, head, ws4, or, ws5, body]) =>  ["either", head, body] 
       %}
 
+      statement -> "not" _ statement {% 
+        ([not, ws1, body]) =>  ["not", body] 
+      %}
+
       head -> expression {% id %}
             | block {% id %}
 

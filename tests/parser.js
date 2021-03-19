@@ -180,6 +180,20 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("not", function() {
+    const results = new Parser().parse(`
+      not A.
+      not {
+        A.
+        B.
+      }
+    `);
+    assertThat(results).equalsTo([[
+      ["not", ["A", "."]],
+      ["not", [["A", "."], ["B", "."]]],
+    ]]);
+  });
+
   it("comments", function() {
     const results = new Parser().parse(`
       // this is a comment
@@ -273,6 +287,23 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("Jones does not own a porsche.", function() {
+    const results = new Parser().parse(`
+      Jones(a).
+      not {
+        porsche(b).
+        own(s0, a, b).
+      }
+    `);
+    assertThat(results).equalsTo([[
+      [["Jones", ["a"]], "."],
+      ["not", [
+        [["porsche", ["b"]], "."],
+        [["own", ["s0", "a", "b"]], "."],
+      ]]
+    ]]);
+  });
+  
   it("Jones loves every man.", function() {
     const results = new Parser().parse(`
       Jones(a).
