@@ -327,6 +327,19 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("Jones is a happy man.", function() {
+    const results = new Parser().parse(`
+      Jones(a).
+      man(a).
+      happy-man(a).
+    `);
+    assertThat(results).equalsTo([[
+      [["Jones", ["a"]], "."],
+      [["man", ["a"]], "."],
+      [["happy-man", ["a"]], "."],
+    ]]);
+  });
+  
   it("Jones loves every man.", function() {
     const results = new Parser().parse(`
       Jones(a).

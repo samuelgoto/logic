@@ -95,7 +95,7 @@ const grammar = build(`
 
       term -> constant {% id %}
 
-      predicate -> [a-zA-Z]:+ {% ([body]) => body.join("")  %}
+      predicate -> [a-zA-Z\\-\\_]:+ {% ([body]) => body.join("")  %}
 
       args -> null
       args -> arg (_ "," _ arg):* {% ([arg, list]) => [arg, ...list.map(([ws1, comma, ws2, tail]) => tail)] %}
