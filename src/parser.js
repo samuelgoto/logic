@@ -50,7 +50,16 @@ const grammar = build(`
         ([iffy, ws1, p1, ws2, head, ws3, p2, ws4, body, ws5, elsy, ws6, tail]) =>  ["if", head, body, tail] 
       %}
 
-      statement -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
+      statement -> "either" _ head  _ "or" _ statement {% 
+        ([either, ws1, head, ws4, or, ws5, body]) =>  ["either", head, body] 
+      %}
+
+      head -> expression {% id %}
+            | block {% id %}
+
+      statement -> block {% id %}
+
+      block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
 
       statement -> "for" _ "(" _ quantifier _ variable (_ ":" _ expression):? _ ")" _ statement {% 
         ([forall, ws1, p1, ws2, quantifier, ws3, arg, head, ws4, p2, ws5, tail]) =>  [quantifier, arg, head ? head[3] : [], tail] 

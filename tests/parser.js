@@ -164,6 +164,22 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("either", function() {
+    const results = new Parser().parse(`
+      either A or B.
+
+      either {
+        A.
+      } or {
+        B.
+      }
+    `);
+    assertThat(results).equalsTo([[
+      ["either", "A", ["B", "."]],
+      ["either", [["A", "."]], [["B", "."]]],
+    ]]);
+  });
+
   it("comments", function() {
     const results = new Parser().parse(`
       // this is a comment
