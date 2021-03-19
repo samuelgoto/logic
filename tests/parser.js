@@ -303,7 +303,30 @@ describe("Parser", function() {
       ]]
     ]]);
   });
-  
+
+  it("Jones does not own a porsche which does not fascinate him.", function() {
+    const results = new Parser().parse(`
+      Jones(a).
+      not {
+        porsche(b).
+        own(s0, a, b).
+        not {
+          fascinate(s1, b, a).
+        }
+      }
+    `);
+    assertThat(results).equalsTo([[
+      [["Jones", ["a"]], "."],
+      ["not", [
+        [["porsche", ["b"]], "."],
+        [["own", ["s0", "a", "b"]], "."],
+        ["not", [
+          [["fascinate", ["s1", "b", "a"]], "."],
+        ]]
+      ]]
+    ]]);
+  });
+
   it("Jones loves every man.", function() {
     const results = new Parser().parse(`
       Jones(a).
