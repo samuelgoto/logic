@@ -27,7 +27,7 @@ describe("Solver", function() {
       });
 
       let result = [];
-      for await (let {links} of await await this.answer()) {
+      for await (let {links} of await this.answer()) {
         const keypairs = Object.entries(links).map(([key, value]) => [key, value.id]);
         result.push(Object.fromEntries(keypairs));
       }
@@ -47,17 +47,22 @@ describe("Solver", function() {
       });
 
       do {
-        const answer = await go();
-        if (!answer) {
-          return;
+        try {
+          const answer = await go();
+          if (!answer) {
+            return;
+          }
+          // console.log(answer);
+          yield answer;
+        } catch (e) {
+          // console.log(JSON.stringify(e));
+          return false;
         }
-        // console.log(answer);
-        yield answer;
       } while (true);
     }
   }
   
-  it("tau", async () => {
+  it("likes(sam, X)?", async () => {
     const prolog = new Interpreter();
     await prolog.consult(`
       likes(sam, salad).
@@ -72,6 +77,20 @@ describe("Solver", function() {
     assertThat(await prolog.query(`likes(sam, salad).`))
       .equalsTo([{}]);
     assertThat(await prolog.query(`likes(sam, whiskey).`))
+      .equalsTo([]);
+  });
+  
+  it("mortal(socrates)?", async () => {
+    const prolog = new Interpreter();
+    await prolog.consult(`
+      man(socrates).
+      mortal(X) :- man(X).
+    `);
+    assertThat(await prolog.query(`mortal(socrates).`))
+      .equalsTo([{}]);
+    assertThat(await prolog.query(`mortal(foobar).`))
+      .equalsTo([]);
+    assertThat(await prolog.query(`imortal(socrates).`))
       .equalsTo([]);
   });
   
