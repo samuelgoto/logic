@@ -67,7 +67,7 @@ describe("Parser", function() {
       [["a", ["b"]], "."],
       [["a", ["b", "c"]], "."],
       [["a", ["B", "C"]], "."],
-      [["a", ["b"]], "."],
+      [["a", ["'b'"]], "."],
       [["a", [1]], "."],
     ]]);
   });
@@ -208,7 +208,7 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       "// prints hello world",
-      ["!", ["print", ["hello world"]]],
+      ["!", ["print", ["'hello world'"]]],
     ]]);
   });
 
