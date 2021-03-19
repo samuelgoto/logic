@@ -50,7 +50,9 @@ const grammar = build(`
         ([iffy, ws1, p1, ws2, letty, head, ws3, p2, ws4, body, ws5, elsy, ws6, tail]) =>  ["if", letty ? letty[0] : [], head, body, tail] 
       %}
 
-      letty -> "let" _ variable (_ "," _ variable):* _ ":" {% ([letty, ws1, arg, args]) => [arg] %}
+      letty -> "let" _ variable (_ "," _ variable):* _ ":" {% 
+        ([letty, ws1, arg, args = []]) => [arg, ...args.map(([ws2, comma, ws3, b]) => b)] 
+      %}
 
       statement -> "either" _ head  _ "or" _ statement {% 
         ([either, ws1, head, ws4, or, ws5, body]) =>  ["either", head, body] 
