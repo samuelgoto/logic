@@ -19,6 +19,7 @@
   "dependencies": {
     "logic-solver": "^2.0.1",
     "mocha": "^8.3.0",
-    "nearley": "^2.20.1"
+    "nearley": "^2.20.1",
+    "tau-prolog": "^0.3.0"
   }
 }
