@@ -153,14 +153,18 @@ describe("Parser", function() {
       } else {
         C.
       }
+      if (let a: foo(a)) {
+        bar(a).
+      }
     `);
     assertThat(results).equalsTo([[
-      ["if", "A", ["B", "."]],
-      ["if", ["a", ["b", "c"]], [["d", ["e"]], "."]],
-      ["if", ["A", "&&", "B"], [["C", "&&", "D"], "."]],
-      ["if", "A", [["B", "."]]],
-      ["if", "A", [["B", "."], ["C", "."]]],
-      ["if", "A", [["B", "."]], [["C", "."]]],
+      ["if", [], "A", ["B", "."]],
+      ["if", [], ["a", ["b", "c"]], [["d", ["e"]], "."]],
+      ["if", [], ["A", "&&", "B"], [["C", "&&", "D"], "."]],
+      ["if", [], "A", [["B", "."]]],
+      ["if", [], "A", [["B", "."], ["C", "."]]],
+      ["if", [], "A", [["B", "."]], [["C", "."]]],
+      ["if", ["a"], ["foo", ["a"]], [[["bar", ["a"]], "."]]],
     ]]);
   });
 
@@ -203,7 +207,7 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       "// this is a comment",
-      ["if", "A", ["B", "."]],
+      ["if", [], "A", ["B", "."]],
       "// another comment",
       "// this is another comment",
     ]]);
@@ -352,7 +356,7 @@ describe("Parser", function() {
     assertThat(results).equalsTo([[
       [["Smith", ["a"]], "."],
       [["Mary", ["b"]], "."],
-      ["if", [["man", ["c"]], "&&", ["love", ["s0", "c", "b"]]], [
+      ["if", [], [["man", ["c"]], "&&", ["love", ["s0", "c", "b"]]], [
         [["woman", ["d"]], "."],
         [["like", ["s1", "a", "d"]], "."]
       ]],

@@ -42,13 +42,15 @@ const grammar = build(`
       question -> expression _ "?" {% ([expression]) => ["?", expression]  %}
       question -> "question" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
 
-      statement -> "if" _ "(" _ expression _ ")" _ statement {% 
-        ([iffy, ws1, p1, ws2, head, ws3, p2, ws4, body]) =>  ["if", head, body] 
+      statement -> "if" _ "(" _ (letty _):? expression _ ")" _ statement {% 
+        ([iffy, ws1, p1, ws2, letty, head, ws3, p2, ws4, body]) =>  ["if", letty ? letty[0] : [], head, body] 
       %}
 
-      statement -> "if" _ "(" _ expression _ ")" _ statement _ "else" _ statement {% 
-        ([iffy, ws1, p1, ws2, head, ws3, p2, ws4, body, ws5, elsy, ws6, tail]) =>  ["if", head, body, tail] 
+      statement -> "if" _ "(" _ (letty _):? expression _ ")" _ statement _ "else" _ statement {% 
+        ([iffy, ws1, p1, ws2, letty, head, ws3, p2, ws4, body, ws5, elsy, ws6, tail]) =>  ["if", letty ? letty[0] : [], head, body, tail] 
       %}
+
+      letty -> "let" _ variable (_ "," _ variable):* _ ":" {% ([letty, ws1, arg, args]) => [arg] %}
 
       statement -> "either" _ head  _ "or" _ statement {% 
         ([either, ws1, head, ws4, or, ws5, body]) =>  ["either", head, body] 
