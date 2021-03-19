@@ -17,7 +17,7 @@ describe("Solver", function() {
         });
       });
     }
-    async *query(code) {
+    async query(code) {
       const session = this.session;
       await new Promise((resolve, reject) => {
         session.query(code, {
@@ -26,9 +26,15 @@ describe("Solver", function() {
         });
       });
 
-      // console.log("hi");
-      yield * await this.answer();
+      let result = [];
+      for await (let {links} of await await this.answer()) {
+        const keypairs = Object.entries(links).map(([key, value]) => [key, value.id]);
+        result.push(Object.fromEntries(keypairs));
+      }
+
+      return result;
     }
+
     async *answer() {
       const session = this.session;
       const go = () => new Promise((resolve, reject) => {
@@ -59,13 +65,14 @@ describe("Solver", function() {
       likes(sam, apples).
       likes(dean, whiskey).
     `);
-    ;
-    let result = [];
-    for await (let {links} of await prolog.query(`likes(sam, X).`)) {
-      const keypairs = Object.entries(links).map(([key, value]) => [key, value.id]);
-      result.push(Object.fromEntries(keypairs));
-    }
-    assertThat(result).equalsTo([{X: "salad"}, {X: "apples"}]);
+    assertThat(await prolog.query(`likes(sam, X).`))
+      .equalsTo([{X: "salad"}, {X: "apples"}]);
+    assertThat(await prolog.query(`likes(X, whiskey).`))
+      .equalsTo([{X: "dean"}]);
+    assertThat(await prolog.query(`likes(sam, salad).`))
+      .equalsTo([{}]);
+    assertThat(await prolog.query(`likes(sam, whiskey).`))
+      .equalsTo([]);
   });
   
   it("basic", function() {
