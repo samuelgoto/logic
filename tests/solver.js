@@ -29,6 +29,7 @@ describe("Solver", function() {
       let result = [];
       for await (let {links} of await this.answer()) {
         const keypairs = Object.entries(links).map(([key, value]) => [key, value.id]);
+        // console.log(JSON.stringify(links, undefined, 2));
         result.push(Object.fromEntries(keypairs));
       }
 
@@ -93,7 +94,98 @@ describe("Solver", function() {
     assertThat(await prolog.query(`imortal(socrates).`))
       .equalsTo([]);
   });
-  
+
+  it("likes(sam, dani)?", async () => {
+    const prolog = new Interpreter();
+    await prolog.consult(`
+      loves(sam, dani).
+      likes(sam, dani) :- loves(sam, dani).
+    `);
+    assertThat(await prolog.query(`likes(sam, dani).`))
+      .equalsTo([{}]);
+    assertThat(await prolog.query(`likes(sam, X).`))
+      .equalsTo([{X: "dani"}]);
+    assertThat(await prolog.query(`likes(X, dani).`))
+      .equalsTo([{X: "sam"}]);
+  });
+
+  it("likes(sam, dani)?", async () => {
+    const prolog = new Interpreter();
+    await prolog.consult(`
+      loves(sam, dani).
+      likes(sam, dani) :- loves(sam, dani).
+    `);
+    assertThat(await prolog.query(`likes(sam, dani).`))
+      .equalsTo([{}]);
+    assertThat(await prolog.query(`likes(sam, X).`))
+      .equalsTo([{X: "dani"}]);
+    assertThat(await prolog.query(`likes(X, dani).`))
+      .equalsTo([{X: "sam"}]);
+  });
+
+  it("every brazilian politician is terribly corrupt", async () => {
+    const prolog = new Interpreter();
+    await prolog.consult(`
+      brazilian(foo).
+      politician(foo).
+      corrupt(X) :- brazilian(X), politician(X).
+      terribly-corrupt(X) :- brazilian(X), politician(X).
+    `);
+    assertThat(await prolog.query(`corrupt(foo).`))
+      .equalsTo([{}]);
+    assertThat(await prolog.query(`terribly-corrupt(foo).`))
+      .equalsTo([{}]);
+    assertThat(await prolog.query(`terribly-corrupt(X).`))
+      .equalsTo([{X: "foo"}]);
+  });
+
+  it("everything is awesome", async () => {
+    const prolog = new Interpreter();
+    await prolog.consult(`
+      awesome(X).
+    `);
+    assertThat(await prolog.query(`awesome(anything).`))
+      .equalsTo([{}]);
+  });
+
+  it("A farmer owns a donkey.", async () => {
+    const prolog = new Interpreter();
+    await prolog.consult(`
+      farmer([1]).
+      donkey([2]).
+      owns([1], [2]).
+    `);
+    // Does a man on a donkey?
+    assertThat(await prolog.query(`farmer(X1), donkey(X2), owns(X1, X2).`))
+      .equalsTo([{X1: ".", "X2": "."}]);
+  });
+
+  it("Pedro owns a donkey.", async () => {
+    const prolog = new Interpreter();
+    await prolog.consult(`
+        named([1], 'Pedro').
+        owns([1],[2]).
+        donkey([2]).
+    `);
+    // Who owns a donkey?
+    assertThat(await prolog.query(`named(X1, X), donkey(X2), owns(X1, X2).`))
+      .equalsTo([{X: "Pedro", X1: ".", "X2": "."}]);
+  });
+
+
+  it("Every old donkey is gray and furry.", async () => {
+    const prolog = new Interpreter();
+    await prolog.consult(`
+        donkey(foo).
+        old(foo).
+        consequent(X) :- donkey(X), old(X).
+        gray(X) :- consequent(X).
+        furry(X) :- consequent(X).
+    `);
+    assertThat(await prolog.query(`gray(foo).`))
+      .equalsTo([{}]);
+  });
+
   it("basic", function() {
     // console.log(Solver);
     const solver = new Solver();
