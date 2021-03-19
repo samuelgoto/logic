@@ -17,16 +17,19 @@ describe("Solver", function() {
         });
       });
     }
-    query(code) {
+    async *query(code) {
       const session = this.session;
-      return new Promise((resolve, reject) => {
+      await new Promise((resolve, reject) => {
         session.query(code, {
           success: resolve,
           error: reject
         });
       });
+
+      // console.log("hi");
+      yield * await this.answer();
     }
-    async *answer(code) {
+    async *answer() {
       const session = this.session;
       const go = () => new Promise((resolve, reject) => {
         session.answer({
@@ -42,6 +45,7 @@ describe("Solver", function() {
         if (!answer) {
           return;
         }
+        // console.log(answer);
         yield answer;
       } while (true);
     }
@@ -55,10 +59,9 @@ describe("Solver", function() {
       likes(sam, apples).
       likes(dean, whiskey).
     `);
-    await prolog.query(`likes(sam, X).`);
-    const answer = await prolog.answer();
+    ;
     let result = [];
-    for await (let {links} of prolog.answer()) {
+    for await (let {links} of await prolog.query(`likes(sam, X).`)) {
       const keypairs = Object.entries(links).map(([key, value]) => [key, value.id]);
       result.push(Object.fromEntries(keypairs));
     }
