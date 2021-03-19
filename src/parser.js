@@ -98,7 +98,7 @@ const grammar = build(`
       arg -> variable {% id %} 
            | constant {% id %}
 
-      variable -> [a-z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
+      variable -> [a-z] [a-zA-Z0-9]:* {% ([head, body]) => head + body.join("")  %}
       constant -> [A-Z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
       constant -> dqstring {% ([str]) => "'" + str + "'" %}
                 | sqstring {% ([str]) => "'" + str + "'" %}

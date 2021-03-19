@@ -242,6 +242,49 @@ describe("Parser", function() {
       ["?", ["mortal", ["Socrates"]]],
     ]]);
   });
+  
+  it("A man admires a woman.", function() {
+    const results = new Parser().parse(`
+      man(a).
+      woman(b).
+      admires(s0, a, b).
+    `);
+    assertThat(results).equalsTo([[
+      [["man", ["a"]], "."],
+      [["woman", ["b"]], "."],
+      [["admires", ["s0", "a", "b"]], "."],
+    ]]);
+  });
+
+  it("A man who loves Mary fascinates Smith.", function() {
+    const results = new Parser().parse(`
+      man(a).
+      Mary(b).
+      Smith(c).
+      love(s0, a, b).
+      fascinate(s1, a, c).
+    `);
+    assertThat(results).equalsTo([[
+      [["man", ["a"]], "."],
+      [["Mary", ["b"]], "."],
+      [["Smith", ["c"]], "."],
+      [["love", ["s0", "a", "b"]], "."],
+      [["fascinate", ["s1", "a", "c"]], "."],
+    ]]);
+  });
+
+  it("Jones loves every man.", function() {
+    const results = new Parser().parse(`
+      Jones(a).
+      for (every b: man(b)) {
+        love(s0, a, b).
+      }
+    `);
+    assertThat(results).equalsTo([[
+      [["Jones", ["a"]], "."],
+      ["every", "b", ["man", ["b"]], [[["love", ["s0", "a", "b"]], "."]]],
+    ]]);
+  });
 
   function assertThat(x) {
     return {
