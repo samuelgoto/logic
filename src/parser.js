@@ -24,6 +24,7 @@ function build(sourceCode) {
 const grammar = build(`
       @builtin "whitespace.ne"
       @builtin "string.ne"
+      @builtin "number.ne"
 
       @{%
         const op = ([a, ws1, op, ws2, b]) => [a, op, b];
@@ -34,12 +35,10 @@ const grammar = build(`
       line -> "//" [^\\n]:* [\\n] {% ([start, comment]) => "//" + comment.join("") %}
       line -> statement {% id %}
       line -> question {% id %}
+      line -> command {% id %}
     
-      statement -> expression _ dot {% ([prop, ws, dot]) =>  [prop, dot]%}
-
-      dot -> "." {% id %}
-           | "!" {% id %}
-
+      statement -> expression _ "." {% ([expression, ws, dot]) =>  [expression, dot]%}
+      command -> expression _ "!" {% ([expression]) => ["!", expression]  %}
       question -> expression _ "?" {% ([expression]) => ["?", expression]  %}
       question -> "question" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
 
@@ -94,6 +93,7 @@ const grammar = build(`
       constant -> [A-Z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
       constant -> dqstring {% id %}
                |  sqstring {% id %}
+               |  int {% id %}
 
     `);
 

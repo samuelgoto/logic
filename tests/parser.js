@@ -12,7 +12,7 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("expressions", function() {
+  it("propositions", function() {
     const results = new Parser().parse(`
       A.
       B. 
@@ -30,11 +30,6 @@ describe("Parser", function() {
       A && (B => C).
       (A => B) && (B => C).
       (A).
-      a().
-      a() && b() => c().
-      a(b).
-      a(b, c).
-      a(B, C).
     `);
     assertThat(results).equalsTo([[
       ["A", "."],
@@ -53,11 +48,27 @@ describe("Parser", function() {
       [["A", "&&", ["B", "=>", "C"]], "."],
       [[["A", "=>", "B"], "&&", ["B", "=>", "C"]], "."],
       ["A", "."],
+    ]]);
+  });
+
+  it("predicates", function() {
+    const results = new Parser().parse(`
+      a().
+      a() && b() => c().
+      a(b).
+      a(b, c).
+      a(B, C).
+      a("b").
+      a(1).
+    `);
+    assertThat(results).equalsTo([[
       [["a", []], "."],
       [[[["a", []], "&&", ["b", []]], "=>", ["c", []]], "."],
       [["a", ["b"]], "."],
       [["a", ["b", "c"]], "."],
       [["a", ["B", "C"]], "."],
+      [["a", ["b"]], "."],
+      [["a", [1]], "."],
     ]]);
   });
 
@@ -186,7 +197,7 @@ describe("Parser", function() {
       hello()!
     `);
     assertThat(results).equalsTo([[
-      [["hello", []], "!"],
+      ["!", ["hello", []]],
     ]]);
   });
 
@@ -197,7 +208,7 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       "// prints hello world",
-      [["print", ["hello world"]], "!"],
+      ["!", ["print", ["hello world"]]],
     ]]);
   });
 
