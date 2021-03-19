@@ -339,6 +339,25 @@ describe("Parser", function() {
       [["happy-man", ["a"]], "."],
     ]]);
   });
+
+  it("If a man loves Mary then Smith likes the woman.", function() {
+    const results = new Parser().parse(`
+      Smith(a).
+      Mary(b).
+      if (man(c) && love(s0, c, b)) {
+        woman(d).
+        like(s1, a, d).
+      }
+    `);
+    assertThat(results).equalsTo([[
+      [["Smith", ["a"]], "."],
+      [["Mary", ["b"]], "."],
+      ["if", [["man", ["c"]], "&&", ["love", ["s0", "c", "b"]]], [
+        [["woman", ["d"]], "."],
+        [["like", ["s1", "a", "d"]], "."]
+      ]],
+    ]]);
+  });
   
   it("Jones loves every man.", function() {
     const results = new Parser().parse(`
