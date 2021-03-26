@@ -94,7 +94,7 @@ const grammar = build(`
       cluster -> "(" _ expression _ ")" {% ([p1, ws1, prop]) => prop %}
                    | terminal {% id %}
 
-      terminal -> term {% id %}
+      # terminal -> term {% id %}
       terminal -> predicate _ "(" _ args _ ")" {% ([pred, ws1, p1, ws2, args]) => [pred, args] %}
 
       term -> constant {% id %}
@@ -107,7 +107,7 @@ const grammar = build(`
            | constant {% id %}
 
       variable -> [a-z] [a-zA-Z0-9]:* {% ([head, body]) => head + body.join("")  %}
-      constant -> [A-Z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
+      # constant -> [A-Z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
       constant -> dqstring {% ([str]) => "'" + str + "'" %}
                 | sqstring {% ([str]) => "'" + str + "'" %}
                 | int {% id %}

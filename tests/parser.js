@@ -14,40 +14,24 @@ describe("Parser", function() {
 
   it("propositions", function() {
     const results = new Parser().parse(`
-      A.
-      B. 
-      Aa. 
-      Bb. 
-      A || B.
-      C && D.
-      A || B && C.
-      A && B || C.
-      A => B.
-      A && B => C.
-      A => B && C.
-      A || B => C.
-      A => B || C.
-      A && (B => C).
-      (A => B) && (B => C).
-      (A).
+      a().
+      A().
+      b(). 
+      aB(). 
+      a-b(). 
+      c() && d().
+      a() && b() && c().
+      (a()).
     `);
     assertThat(results).equalsTo([[
-      ["A", "."],
-      ["B", "."],
-      ["Aa", "."],
-      ["Bb", "."],
-      [["A", "||", "B"], "."],
-      [["C", "&&", "D"], "."],
-      [["A", "||", ["B", "&&", "C"]], "."],
-      [[["A", "&&", "B"], "||", "C"], "."],
-      [["A", "=>", "B"], "."],
-      [[["A", "&&", "B"], "=>", "C"], "."],
-      [["A", "=>", ["B", "&&", "C"]], "."],
-      [[["A", "||", "B"], "=>", "C"], "."],
-      [["A", "=>", ["B", "||", "C"]], "."],
-      [["A", "&&", ["B", "=>", "C"]], "."],
-      [[["A", "=>", "B"], "&&", ["B", "=>", "C"]], "."],
-      ["A", "."],
+      [["a", []], "."],
+      [["A", []], "."],
+      [["b", []], "."],
+      [["aB", []], "."],
+      [["a-b", []], "."],
+      [[["c", []], "&&", ["d", []]], "."],
+      [[[["a", []], "&&", ["b", []]], "&&", ["c", []]], "."],
+      [["a", []], "."],
     ]]);
   });
 
@@ -57,7 +41,7 @@ describe("Parser", function() {
       a() && b() => c().
       a(b).
       a(b, c).
-      a(B, C).
+      a(b, c).
       a("b").
       a(1).
     `);
@@ -66,7 +50,7 @@ describe("Parser", function() {
       [[[["a", []], "&&", ["b", []]], "=>", ["c", []]], "."],
       [["a", ["b"]], "."],
       [["a", ["b", "c"]], "."],
-      [["a", ["B", "C"]], "."],
+      [["a", ["b", "c"]], "."],
       [["a", ["'b'"]], "."],
       [["a", [1]], "."],
     ]]);
@@ -85,10 +69,10 @@ describe("Parser", function() {
 
       for (every x) 
         for (every y) 
-          a(x, y, Z).
+          a(x, y).
 
       for (every x) 
-        a(x, C).
+        a(x, c).
 
       for (every x) {
         a(x).
@@ -119,10 +103,10 @@ describe("Parser", function() {
       ["every", "x", [], [["a", ["x"]], "."]],
       ["every", "x", [], [[["a", ["x"]], "&&", ["b", ["x"]]], "."]],
       ["every", "x", [], [[["a", ["x"]], "=>", ["b", ["x"]]], "."]],
-      ["every", "x", [], ["every", "y", [], [["a", ["x", "y", "Z"]], "."]]],
+      ["every", "x", [], ["every", "y", [], [["a", ["x", "y"]], "."]]],
       // (forall(x) a(x)) && (forall(y) b(y)).
       //[[["forall", "x", ["a", ["x"]]], "&&", ["forall", "y", ["b", ["y"]]]], "."],
-      ["every", "x", [], [["a", ["x", "C"]], "."]],
+      ["every", "x", [], [["a", ["x", "c"]], "."]],
       ["every", "x", [], [[["a", ["x"]], "."]]],
       ["most", "x", [], [[["a", ["x"]], "."]]],
       ["few", "x", [], [["a", ["x"]], "."]], 
@@ -135,38 +119,45 @@ describe("Parser", function() {
   
   it("if", function() {
     const results = new Parser().parse(`
-      if (A)
-        B. 
+      if (a())
+        b(). 
+
       if (a(b, c))
         d(e).
-      if (A && B)
-        C && D. 
-      if (A) {
-        B.
+
+      if (a() && b())
+        c() && d(). 
+
+      if (a()) {
+        b().
       }
-      if (A) {
-        B.
-        C.
+
+      if (a()) {
+        b().
+        c().
       }
-      if (A) {
-        B.
+
+      if (a()) {
+        b().
       } else {
-        C.
+        c().
       }
+
       if (let a: foo(a)) {
         bar(a).
       }
+
       if (let a, b: foo(a)) {
         bar(a, b).
       }
     `);
     assertThat(results).equalsTo([[
-      ["if", [], "A", ["B", "."]],
+      ["if", [], ["a", []], [["b", []], "."]],
       ["if", [], ["a", ["b", "c"]], [["d", ["e"]], "."]],
-      ["if", [], ["A", "&&", "B"], [["C", "&&", "D"], "."]],
-      ["if", [], "A", [["B", "."]]],
-      ["if", [], "A", [["B", "."], ["C", "."]]],
-      ["if", [], "A", [["B", "."]], [["C", "."]]],
+      ["if", [], [["a", []], "&&", ["b", []]], [[["c", []], "&&", ["d", []]], "."]],
+      ["if", [], ["a", []], [[["b", []], "."]]],
+      ["if", [], ["a", []], [[["b", []], "."], [["c", []], "."]]],
+      ["if", [], ["a", []], [[["b", []], "."]], [[["c", []], "."]]],
       ["if", ["a"], ["foo", ["a"]], [[["bar", ["a"]], "."]]],
       ["if", ["a", "b"], ["foo", ["a"]], [[["bar", ["a", "b"]], "."]]],
     ]]);
@@ -174,44 +165,44 @@ describe("Parser", function() {
 
   it("either", function() {
     const results = new Parser().parse(`
-      either A or B.
+      either a() or b().
 
       either {
-        A.
+        a().
       } or {
-        B.
+        b().
       }
     `);
     assertThat(results).equalsTo([[
-      ["either", "A", ["B", "."]],
-      ["either", [["A", "."]], [["B", "."]]],
+      ["either", ["a", []], [["b", []], "."]],
+      ["either", [[["a", []], "."]], [[["b", []], "."]]],
     ]]);
   });
 
   it("not", function() {
     const results = new Parser().parse(`
-      not A.
+      not a().
       not {
-        A.
-        B.
+        a().
+        b().
       }
     `);
     assertThat(results).equalsTo([[
-      ["not", ["A", "."]],
-      ["not", [["A", "."], ["B", "."]]],
+      ["not", [["a", []], "."]],
+      ["not", [[["a", []], "."], [["b", []], "."]]],
     ]]);
   });
 
   it("comments", function() {
     const results = new Parser().parse(`
       // this is a comment
-      if (A)
-        B. // another comment
+      if (a())
+        b(). // another comment
       // this is another comment
     `);
     assertThat(results).equalsTo([[
       "// this is a comment",
-      ["if", [], "A", ["B", "."]],
+      ["if", [], ["a", []], [["b", []], "."]],
       "// another comment",
       "// this is another comment",
     ]]);
@@ -250,18 +241,20 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("mortal(Socrates)?", function() {
+  it("Socrates(u). mortal(u)?", function() {
     const results = new Parser().parse(`
       // most basic logical program
       for (all x: man(x)) mortal(x).
-      man(Socrates).
-      mortal(Socrates)? 
+      Socrates(u).
+      man(u).
+      mortal(u)? 
     `);
     assertThat(results).equalsTo([[
       "// most basic logical program",
       ["all", "x", ["man", ["x"]], [["mortal", ["x"]], "."]],
-      [["man", ["Socrates"]], "."],
-      ["?", ["mortal", ["Socrates"]]],
+      [["Socrates", ["u"]], "."],
+      [["man", ["u"]], "."],
+      ["?", ["mortal", ["u"]]],
     ]]);
   });
   
