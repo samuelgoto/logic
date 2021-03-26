@@ -82,15 +82,17 @@ const grammar = build(`
                  | "few" {% id %}
                  | "only" {% id %}
 
-      expression -> implication {% id %}
+      #expression -> implication {% id %}
+      expression -> conjunction {% id %}
 
-      implication -> implication _ "=>" _ disjunction {% op %}
-                   | disjunction {% id %}
+      #implication -> implication _ "=>" _ disjunction {% op %}
+      #             | disjunction {% id %}
 
-      disjunction -> disjunction _ "||" _ conjunction {% op %}
-                   | conjunction {% id %}
+      #disjunction -> disjunction _ "||" _ conjunction {% op %}
+      #             | conjunction {% id %}
 
       conjunction -> conjunction _ "&&" _ cluster {% op %}
+                   | conjunction _ "and" _ cluster {% op %}
                    | cluster {% id %}
 
       cluster -> "(" _ expression _ ")" {% ([p1, ws1, prop]) => prop %}

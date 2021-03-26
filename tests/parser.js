@@ -22,6 +22,7 @@ describe("Parser", function() {
       c() && d().
       a() && b() && c().
       (a()).
+      c() and d().
     `);
     assertThat(results).equalsTo([[
       [["a", []], "."],
@@ -32,13 +33,13 @@ describe("Parser", function() {
       [[["c", []], "&&", ["d", []]], "."],
       [[[["a", []], "&&", ["b", []]], "&&", ["c", []]], "."],
       [["a", []], "."],
+      [[["c", []], "and", ["d", []]], "."],
     ]]);
   });
 
   it("predicates", function() {
     const results = new Parser().parse(`
       a().
-      a() && b() => c().
       a(b).
       a(b, c).
       a(b, c).
@@ -47,7 +48,6 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       [["a", []], "."],
-      [[[["a", []], "&&", ["b", []]], "=>", ["c", []]], "."],
       [["a", ["b"]], "."],
       [["a", ["b", "c"]], "."],
       [["a", ["b", "c"]], "."],
@@ -63,9 +63,6 @@ describe("Parser", function() {
 
       for (every x) 
         a(x) && b(x).
-
-      for (every x) 
-        a(x) => b(x).
 
       for (every x) 
         for (every y) 
@@ -102,7 +99,6 @@ describe("Parser", function() {
     assertThat(results).equalsTo([[
       ["every", "x", [], [["a", ["x"]], "."]],
       ["every", "x", [], [[["a", ["x"]], "&&", ["b", ["x"]]], "."]],
-      ["every", "x", [], [[["a", ["x"]], "=>", ["b", ["x"]]], "."]],
       ["every", "x", [], ["every", "y", [], [["a", ["x", "y"]], "."]]],
       // (forall(x) a(x)) && (forall(y) b(y)).
       //[[["forall", "x", ["a", ["x"]]], "&&", ["forall", "y", ["b", ["y"]]]], "."],
