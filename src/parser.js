@@ -105,7 +105,7 @@ const grammar = build(`
       constant -> dqstring {% ([str]) => "'" + str + "'" %}
                 | sqstring {% ([str]) => "'" + str + "'" %}
                 | int {% id %}
-
+                | [A-Z] [a-zA-Z0-9]:* {% ([head, body]) => head + body.join("")  %}
     `);
 
 class Parser {

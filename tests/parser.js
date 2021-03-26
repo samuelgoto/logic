@@ -55,6 +55,12 @@ describe("Parser", function() {
 
       // or numbers.
       a(1).
+
+      // or Symbols.
+      a(Foo).
+
+      // Or all of them.
+      a(b, "b", 1, B).
     `);
     assertThat(results).equalsTo([[
       ["a", []],
@@ -63,6 +69,8 @@ describe("Parser", function() {
       ["a", ["b", "c", "d"]],
       ["a", ["'b'"]],
       ["a", [1]],
+      ["a", ["Foo"]],
+      ["a", ["b", "'b'", 1, "B"]],
     ]]);
   });
 
