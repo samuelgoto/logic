@@ -29,19 +29,6 @@ describe("Parser", function() {
     ]]);
   });
 
-  it.skip("expressions", function() {
-    const results = new Parser().parse(`
-      a().
-      a() && b().
-      a() && b() && c().
-    `);
-    assertThat(results).equalsTo([[
-      [[["a", []]], "."],
-      [[["a", []], ["b", []]], "."],
-      [[["a", []], ["b", []], ["c", []]], "."],
-    ]]);
-  });
-
   it("predicates", function() {
     const results = new Parser().parse(`
       a().
@@ -238,7 +225,7 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("comments", function() {
+  it("// comments", function() {
     const results = new Parser().parse(`
       // this is a comment
       if (a())
@@ -246,10 +233,10 @@ describe("Parser", function() {
       // this is another comment
     `);
     assertThat(results).equalsTo([[
-      "// this is a comment",
+      // "// this is a comment",
       ["if", [], [["a", []]], [["b", []], "."]],
-      "// another comment",
-      "// this is another comment",
+      // "// another comment",
+      // "// this is another comment",
     ]]);
   });
   
@@ -285,7 +272,7 @@ describe("Parser", function() {
       print("hello world")!
     `);
     assertThat(results).equalsTo([[
-      "// prints hello world",
+      // "// prints hello world",
       ["!", ["print", ["'hello world'"]]],
     ]]);
   });
@@ -299,7 +286,7 @@ describe("Parser", function() {
       mortal(u)? 
     `);
     assertThat(results).equalsTo([[
-      "// most basic logical program",
+      // "// most basic logical program",
       ["all", "x", [["man", ["x"]]], [["mortal", ["x"]], "."]],
       [["Socrates", ["u"]], "."],
       [["man", ["u"]], "."],

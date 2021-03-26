@@ -30,7 +30,7 @@ const grammar = build(`
         const op = ([a, ws1, op, ws2, b]) => [a, op, b];
       %}
 
-      main -> (_ line):* _ {% ([lines]) => lines.map(([ws, s]) => s ) %}
+      main -> (_ line):* _ {% ([lines]) => lines.map(([ws, s]) => s ).filter((line) => typeof line != "string") %}
 
       line -> "//" [^\\n]:* [\\n] {% ([start, comment]) => "//" + comment.join("") %}
       line -> statement {% id %}
