@@ -37,11 +37,11 @@ const grammar = build(`
       line -> question {% id %}
       line -> command {% id %}
     
-      statement -> expression _ "." {% ([expression, ws, dot]) =>  [expression, dot]%}
-      command -> expression _ "!" {% ([expression]) => ["!", expression]  %}
+      statement ->  terminal _ "." {% ([expression, ws, dot]) =>  [expression, dot]%}
+      command -> terminal _ "!" {% ([expression]) => ["!", expression]  %}
       command -> "do" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
 
-      question -> expression _ "?" {% ([expression]) => ["?", expression]  %}
+      question -> terminal _ "?" {% ([expression]) => ["?", expression]  %}
       question -> "question" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
 
       statement -> "if" _ "(" _ (letty _):? expression _ ")" _ statement {% 
@@ -82,23 +82,15 @@ const grammar = build(`
                  | "few" {% id %}
                  | "only" {% id %}
 
-      #expression -> implication {% id %}
       expression -> conjunction {% id %}
 
-      #implication -> implication _ "=>" _ disjunction {% op %}
-      #             | disjunction {% id %}
+      conjunction -> terminal (_ "&&" _ terminal):* {% 
+        ([t1, conjunction = []]) => [t1, ...conjunction.map(([ws1, op, ws2, t]) => t)] 
+      %}
+      #conjunction -> conjunction _ "&&" _ terminal {% ([a, ws1, op, ws2, b]) => [a, b] %}
+      #             | conjunction _ "and" _ terminal {% ([a, ws1, op, ws2, b]) => [a, b] %}
+      #             | terminal {% id %}
 
-      #disjunction -> disjunction _ "||" _ conjunction {% op %}
-      #             | conjunction {% id %}
-
-      conjunction -> conjunction _ "&&" _ cluster {% op %}
-                   | conjunction _ "and" _ cluster {% op %}
-                   | cluster {% id %}
-
-      cluster -> "(" _ expression _ ")" {% ([p1, ws1, prop]) => prop %}
-                   | terminal {% id %}
-
-      # terminal -> term {% id %}
       terminal -> predicate _ "(" _ args _ ")" {% ([pred, ws1, p1, ws2, args]) => [pred, args] %}
 
       term -> constant {% id %}
@@ -111,7 +103,6 @@ const grammar = build(`
            | constant {% id %}
 
       variable -> [a-z] [a-zA-Z0-9]:* {% ([head, body]) => head + body.join("")  %}
-      # constant -> [A-Z] [a-zA-Z]:* {% ([head, body]) => head + body.join("")  %}
       constant -> dqstring {% ([str]) => "'" + str + "'" %}
                 | sqstring {% ([str]) => "'" + str + "'" %}
                 | int {% id %}
