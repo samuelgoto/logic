@@ -58,31 +58,31 @@ describe("Parser", function() {
 
   it("for", () => {
     const results = new Parser().parse(`
-      for (every x) 
+      for (every x: b(x)) 
         a(x).
 
-      for (every x) 
-        a(x) && b(x).
+      for (every x: b(x)) 
+        a(x) && c(x).
 
-      for (every x) 
-        for (every y) 
+      for (every x: b(x)) 
+        for (every y: b(y)) 
           a(x, y).
 
-      for (every x) 
+      for (every x: b(x)) 
         a(x, c).
 
-      for (every x) {
+      for (every x: b(x)) {
         a(x).
       }
 
-      for (most x) {
+      for (most x: b(x)) {
         a(x).
       }
 
-      for (few x)
+      for (few x: b(x))
         a(x).
 
-      for (only x)
+      for (only x: b(x))
         a(x).
 
       for (every x: b(x))
@@ -97,16 +97,16 @@ describe("Parser", function() {
       }
     `);
     assertThat(results).equalsTo([[
-      ["every", "x", [], [["a", ["x"]], "."]],
-      ["every", "x", [], [[["a", ["x"]], "&&", ["b", ["x"]]], "."]],
-      ["every", "x", [], ["every", "y", [], [["a", ["x", "y"]], "."]]],
+      ["every", "x", ["b", ["x"]], [["a", ["x"]], "."]],
+      ["every", "x", ["b", ["x"]], [[["a", ["x"]], "&&", ["c", ["x"]]], "."]],
+      ["every", "x", ["b", ["x"]], ["every", "y", ["b", ["y"]], [["a", ["x", "y"]], "."]]],
       // (forall(x) a(x)) && (forall(y) b(y)).
       //[[["forall", "x", ["a", ["x"]]], "&&", ["forall", "y", ["b", ["y"]]]], "."],
-      ["every", "x", [], [["a", ["x", "c"]], "."]],
-      ["every", "x", [], [[["a", ["x"]], "."]]],
-      ["most", "x", [], [[["a", ["x"]], "."]]],
-      ["few", "x", [], [["a", ["x"]], "."]], 
-      ["only", "x", [], [["a", ["x"]], "."]], 
+      ["every", "x", ["b", ["x"]], [["a", ["x", "c"]], "."]],
+      ["every", "x", ["b", ["x"]], [[["a", ["x"]], "."]]],
+      ["most", "x", ["b", ["x"]], [[["a", ["x"]], "."]]],
+      ["few", "x", ["b", ["x"]], [["a", ["x"]], "."]], 
+      ["only", "x", ["b", ["x"]], [["a", ["x"]], "."]], 
       ["every", "x", ["b", ["x"]], [["a", ["x"]], "."]], 
       ["every", "x", [["a", ["x"]], "&&", ["b", ["x"]]], [[["c", ["x"]], "&&", ["d", ["x"]]], "."]],
       ["every", "x", [["a", ["x"]], "&&", ["b", ["x"]]], [[["c", ["x"]], "."], [["d", ["x"]], "."]]], 
