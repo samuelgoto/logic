@@ -37,12 +37,13 @@ const grammar = build(`
       line -> question {% id %}
       line -> command {% id %}
     
-      statement ->  terminal _ "." {% ([expression, ws, dot]) =>  expression%}
       command -> terminal _ "!" {% ([expression]) => ["!", expression]  %}
       command -> "do" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
 
       question -> terminal _ "?" {% ([expression]) => ["?", expression]  %}
       question -> "question" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
+
+      statement ->  terminal _ "." {% ([expression, ws, dot]) =>  expression %}
 
       statement -> "if" _ "(" _ (letty _):? expression _ ")" _ statement {% 
         ([iffy, ws1, p1, ws2, letty, head, ws3, p2, ws4, body]) =>  ["if", letty ? letty[0] : [], head, body] 
@@ -57,18 +58,19 @@ const grammar = build(`
       %}
 
       statement -> "either" _ head  _ "or" _ statement {% 
-        ([either, ws1, head, ws4, or, ws5, body]) =>  ["either", head, body] 
+        ([either, ws1, head, ws2, or, ws3, body]) =>  ["either", head, body] 
       %}
+
+      head -> "(" _ (letty _):? condition _ ")" {% ([p1, ws1, letty, condition]) => [letty ? letty[0] : [], condition] %}
+      condition -> expression {% id %}
+           | block {% id %}
+
 
       statement -> "not" _ statement {% 
         ([not, ws1, body]) =>  ["not", body] 
       %}
 
-      head -> expression {% id %}
-            | block {% id %}
-
       statement -> block {% id %}
-
       block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
 
       statement -> "for" _ "(" _ quantifier _ variable _ ":" _ expression _ ")" _ statement {% 
@@ -87,9 +89,6 @@ const grammar = build(`
       conjunction -> terminal (_ "&&" _ terminal):* {% 
         ([t1, conjunction = []]) => [t1, ...conjunction.map(([ws1, op, ws2, t]) => t)] 
       %}
-      #conjunction -> conjunction _ "&&" _ terminal {% ([a, ws1, op, ws2, b]) => [a, b] %}
-      #             | conjunction _ "and" _ terminal {% ([a, ws1, op, ws2, b]) => [a, b] %}
-      #             | terminal {% id %}
 
       terminal -> predicate _ "(" _ args _ ")" {% ([pred, ws1, p1, ws2, args]) => [pred, args] %}
 

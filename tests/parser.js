@@ -218,17 +218,25 @@ describe("Parser", function() {
 
   it("either", function() {
     const results = new Parser().parse(`
-      either a() or b().
+      either (a()) or b().
 
-      either {
-        a().
-      } or {
+      either (a()) or {
+        b().
+      }
+
+      either ({a().}) or {
+        b().
+      }
+
+      either (let u: a(u)) or {
         b().
       }
     `);
     assertThat(results).equalsTo([[
-      ["either", [["a", []]], ["b", []]],
-      ["either", [["a", []]], [["b", []]]],
+      ["either", [[], [["a", []]]], ["b", []]],
+      ["either", [[], [["a", []]]], [["b", []]]],
+      ["either", [[], [["a", []]]], [["b", []]]],
+      ["either", [["u"], [["a", ["u"]]]], [["b", []]]],
     ]]);
   });
 
