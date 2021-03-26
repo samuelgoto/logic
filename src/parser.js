@@ -45,12 +45,12 @@ const grammar = build(`
 
       statement ->  terminal _ "." {% ([expression, ws, dot]) =>  expression %}
 
-      statement -> "if" _ "(" _ (letty _):? expression _ ")" _ statement {% 
-        ([iffy, ws1, p1, ws2, letty, head, ws3, p2, ws4, body]) =>  ["if", letty ? letty[0] : [], head, body] 
+      statement -> "if" _ head _ statement {% 
+        ([iffy, ws1, head, ws2, body]) =>  ["if", head[0], head[1], body] 
       %}
 
-      statement -> "if" _ "(" _ (letty _):? expression _ ")" _ statement _ "else" _ statement {% 
-        ([iffy, ws1, p1, ws2, letty, head, ws3, p2, ws4, body, ws5, elsy, ws6, tail]) =>  ["if", letty ? letty[0] : [], head, body, tail] 
+      statement -> "if" _ head _ statement _ "else" _ statement {% 
+        ([iffy, ws1, head, ws2, body, ws3, elsy, ws4, tail]) =>  ["if", head[0], head[1], body, tail] 
       %}
 
       letty -> "let" _ variable (_ "," _ variable):* _ ":" {% 
@@ -58,7 +58,7 @@ const grammar = build(`
       %}
 
       statement -> "either" _ head  _ "or" _ statement {% 
-        ([either, ws1, head, ws2, or, ws3, body]) =>  ["either", head, body] 
+        ([either, ws1, head, ws2, or, ws3, body]) =>  ["either", head[0], head[1], body] 
       %}
 
       head -> "(" _ (letty _):? condition _ ")" {% ([p1, ws1, letty, condition]) => [letty ? letty[0] : [], condition] %}
@@ -73,7 +73,7 @@ const grammar = build(`
       statement -> block {% id %}
       block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
 
-      statement -> "for" _ "(" _ quantifier _ variable _ ":" _ expression _ ")" _ statement {% 
+      statement -> "for" _ "(" _ quantifier _ variable _ ":" _ condition _ ")" _ statement {% 
         ([forall, ws1, p1, ws2, quantifier, ws3, arg, ws4, col, ws5, head, ws6, p2, ws7, tail]) =>  [quantifier, arg, head, tail] 
       %}
 

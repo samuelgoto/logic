@@ -120,7 +120,9 @@ describe("Parser", function() {
       for (only x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["only", "x", [["b", ["x"]]], ["a", ["x"]]],
+      ["only", "x", [
+        ["b", ["x"]]
+      ], ["a", ["x"]]],
     ]]);
   });
   
@@ -131,7 +133,33 @@ describe("Parser", function() {
         d(x).
       }
     `)).equalsTo([[
-      ["every", "x", [["a", ["x"]], ["b", ["x"]]], [["c", ["x"]], ["d", ["x"]]]], 
+      ["every", "x", [
+        ["a", ["x"]],
+        ["b", ["x"]]
+      ], [
+        ["c", ["x"]],
+        ["d", ["x"]]
+      ]], 
+    ]]);
+  });
+
+  it("for (every x: {a(x). b(x).}) { c(x). d(x).}", () => {
+    assertThat(new Parser().parse(`
+      for (every x: {
+        a(x).
+        b(x).
+      }) { 
+        c(x).
+        d(x).
+      }
+    `)).equalsTo([[
+      ["every", "x", [
+        ["a", ["x"]],
+        ["b", ["x"]]
+      ], [
+        ["c", ["x"]],
+        ["d", ["x"]]
+      ]]
     ]]);
   });
 
@@ -140,7 +168,25 @@ describe("Parser", function() {
       if (a())
         b(). 
     `)).equalsTo([[
-      ["if", [], [["a", []]], ["b", []]],
+      ["if", [], [
+        ["a", []]
+      ], ["b", []]],
+    ]]);
+  });
+
+  it("if ({a()}) {b().}", () => {
+    assertThat(new Parser().parse(`
+      if ({
+        a().
+      }) {
+        b(). 
+      }
+    `)).equalsTo([[
+      ["if", [], [
+        ["a", []]
+      ], [
+        ["b", []]
+      ]],
     ]]);
   });
 
@@ -233,10 +279,10 @@ describe("Parser", function() {
       }
     `);
     assertThat(results).equalsTo([[
-      ["either", [[], [["a", []]]], ["b", []]],
-      ["either", [[], [["a", []]]], [["b", []]]],
-      ["either", [[], [["a", []]]], [["b", []]]],
-      ["either", [["u"], [["a", ["u"]]]], [["b", []]]],
+      ["either", [], [["a", []]], ["b", []]],
+      ["either", [], [["a", []]], [["b", []]]],
+      ["either", [], [["a", []]], [["b", []]]],
+      ["either", ["u"], [["a", ["u"]]], [["b", []]]],
     ]]);
   });
 
