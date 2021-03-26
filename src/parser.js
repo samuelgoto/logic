@@ -39,6 +39,8 @@ const grammar = build(`
     
       statement -> expression _ "." {% ([expression, ws, dot]) =>  [expression, dot]%}
       command -> expression _ "!" {% ([expression]) => ["!", expression]  %}
+      command -> "do" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
+
       question -> expression _ "?" {% ([expression]) => ["?", expression]  %}
       question -> "question" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
 

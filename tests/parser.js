@@ -224,9 +224,13 @@ describe("Parser", function() {
   it("commands", function() {
     const results = new Parser().parse(`
       hello()!
+      do () {
+        hello().
+      } ?
     `);
     assertThat(results).equalsTo([[
       ["!", ["hello", []]],
+      ["!", [[["hello", []], "."]]],
     ]]);
   });
 
