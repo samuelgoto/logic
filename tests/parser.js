@@ -14,10 +14,17 @@ describe("Parser", function() {
 
   it("propositions", function() {
     const results = new Parser().parse(`
+      // Simple propositions start with letters.
       a().
+
+      // They can start with capital letters too.
       A().
       b(). 
+
+      // Or mixed characters
       aB(). 
+
+      // - is allowed to between characters
       a-b(). 
     `);
     assertThat(results).equalsTo([[
@@ -31,18 +38,29 @@ describe("Parser", function() {
 
   it("predicates", function() {
     const results = new Parser().parse(`
+      // Predicates can have zero arguments.
       a().
+
+      // Or one argument.
       a(b).
+
+      // Or two.
       a(b, c).
-      a(b, c).
+
+      // Or really any arbitrary number of arguments.
+      a(b, c, d).
+
+      // The arguments can be constants like strings ...
       a("b").
+
+      // or numbers.
       a(1).
     `);
     assertThat(results).equalsTo([[
       [["a", []], "."],
       [["a", ["b"]], "."],
       [["a", ["b", "c"]], "."],
-      [["a", ["b", "c"]], "."],
+      [["a", ["b", "c", "d"]], "."],
       [["a", ["'b'"]], "."],
       [["a", [1]], "."],
     ]]);
@@ -50,6 +68,7 @@ describe("Parser", function() {
 
   it("for (every x: b(x)) a(x).", () => {
     assertThat(new Parser().parse(`
+      // Basic quantifiers take a head and a tail.
       for (every x: b(x)) 
         a(x).
     `)).equalsTo([[
@@ -59,6 +78,7 @@ describe("Parser", function() {
 
   it("for (every x: b(x)) for (every y: b(y)) a(x, y).", () => {
     assertThat(new Parser().parse(`
+      // You can nest quantifiers.
       for (every x: b(x)) 
         for (every y: b(y))
           a(x, y).
@@ -69,6 +89,7 @@ describe("Parser", function() {
 
   it("for (every x: b(x)) a(x, c).", () => {
     assertThat(new Parser().parse(`
+      // Quantifiers take in the body an arbitrary predicate.
       for (every x: b(x)) 
         a(x, c).
     `)).equalsTo([[
