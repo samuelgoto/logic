@@ -8,7 +8,7 @@ describe("Parser", function() {
       hello().
     `);
     assertThat(results).equalsTo([[
-      [["hello", []], "."],
+      ["hello", []],
     ]]);
   });
 
@@ -28,11 +28,11 @@ describe("Parser", function() {
       a-b(). 
     `);
     assertThat(results).equalsTo([[
-      [["a", []], "."],
-      [["A", []], "."],
-      [["b", []], "."],
-      [["aB", []], "."],
-      [["a-b", []], "."],
+      ["a", []],
+      ["A", []],
+      ["b", []],
+      ["aB", []],
+      ["a-b", []],
     ]]);
   });
 
@@ -57,12 +57,12 @@ describe("Parser", function() {
       a(1).
     `);
     assertThat(results).equalsTo([[
-      [["a", []], "."],
-      [["a", ["b"]], "."],
-      [["a", ["b", "c"]], "."],
-      [["a", ["b", "c", "d"]], "."],
-      [["a", ["'b'"]], "."],
-      [["a", [1]], "."],
+      ["a", []],
+      ["a", ["b"]],
+      ["a", ["b", "c"]],
+      ["a", ["b", "c", "d"]],
+      ["a", ["'b'"]],
+      ["a", [1]],
     ]]);
   });
 
@@ -72,7 +72,7 @@ describe("Parser", function() {
       for (every x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["every", "x", [["b", ["x"]]], [["a", ["x"]], "."]],
+      ["every", "x", [["b", ["x"]]], ["a", ["x"]]],
     ]]);
   });
 
@@ -83,7 +83,7 @@ describe("Parser", function() {
         for (every y: b(y))
           a(x, y).
     `)).equalsTo([[
-      ["every", "x", [["b", ["x"]]], ["every", "y", [["b", ["y"]]], [["a", ["x", "y"]], "."]]],
+      ["every", "x", [["b", ["x"]]], ["every", "y", [["b", ["y"]]], ["a", ["x", "y"]]]],
     ]]);
   });
 
@@ -93,7 +93,7 @@ describe("Parser", function() {
       for (every x: b(x)) 
         a(x, c).
     `)).equalsTo([[
-      ["every", "x", [["b", ["x"]]], [["a", ["x", "c"]], "."]],
+      ["every", "x", [["b", ["x"]]], ["a", ["x", "c"]]],
     ]]);
   });
 
@@ -102,7 +102,7 @@ describe("Parser", function() {
       for (most x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["most", "x", [["b", ["x"]]], [["a", ["x"]], "."]],
+      ["most", "x", [["b", ["x"]]], ["a", ["x"]]],
     ]]);
   });
 
@@ -111,7 +111,7 @@ describe("Parser", function() {
       for (few x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["few", "x", [["b", ["x"]]], [["a", ["x"]], "."]],
+      ["few", "x", [["b", ["x"]]], ["a", ["x"]]],
     ]]);
   });
 
@@ -120,7 +120,7 @@ describe("Parser", function() {
       for (only x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["only", "x", [["b", ["x"]]], [["a", ["x"]], "."]],
+      ["only", "x", [["b", ["x"]]], ["a", ["x"]]],
     ]]);
   });
   
@@ -131,7 +131,7 @@ describe("Parser", function() {
         d(x).
       }
     `)).equalsTo([[
-      ["every", "x", [["a", ["x"]], ["b", ["x"]]], [[["c", ["x"]], "."], [["d", ["x"]], "."]]], 
+      ["every", "x", [["a", ["x"]], ["b", ["x"]]], [["c", ["x"]], ["d", ["x"]]]], 
     ]]);
   });
 
@@ -140,7 +140,7 @@ describe("Parser", function() {
       if (a())
         b(). 
     `)).equalsTo([[
-      ["if", [], [["a", []]], [["b", []], "."]],
+      ["if", [], [["a", []]], ["b", []]],
     ]]);
   });
 
@@ -149,7 +149,7 @@ describe("Parser", function() {
       if (a(b, c))
         d(e).
     `)).equalsTo([[
-      ["if", [], [["a", ["b", "c"]]], [["d", ["e"]], "."]],
+      ["if", [], [["a", ["b", "c"]]], ["d", ["e"]]],
     ]]);
   });
 
@@ -159,7 +159,7 @@ describe("Parser", function() {
         c(). d(). 
       }
     `)).equalsTo([[
-      ["if", [], [["a", []], ["b", []]], [[["c", []], "."], [["d", []], "."]]],
+      ["if", [], [["a", []], ["b", []]], [["c", []], ["d", []]]],
     ]]);
   });
 
@@ -169,7 +169,7 @@ describe("Parser", function() {
         b(). 
       }
     `)).equalsTo([[
-      ["if", [], [["a", []]], [[["b", []], "."]]],
+      ["if", [], [["a", []]], [["b", []]]],
     ]]);
   });
 
@@ -180,7 +180,7 @@ describe("Parser", function() {
         c(). 
       }
     `)).equalsTo([[
-      ["if", [], [["a", []]], [[["b", []], "."], [["c", []], "."]]],
+      ["if", [], [["a", []]], [["b", []], ["c", []]]],
     ]]);
   });
 
@@ -192,7 +192,7 @@ describe("Parser", function() {
         c().
       }
     `)).equalsTo([[
-      ["if", [], [["a", []]], [[["b", []], "."]], [[["c", []], "."]]],
+      ["if", [], [["a", []]], [["b", []]], [["c", []]]],
     ]]);
   });
 
@@ -202,7 +202,7 @@ describe("Parser", function() {
         bar(a).
       }
     `)).equalsTo([[
-      ["if", ["a"], [["foo", ["a"]]], [[["bar", ["a"]], "."]]],
+      ["if", ["a"], [["foo", ["a"]]], [["bar", ["a"]]]],
     ]]);
   });
 
@@ -212,7 +212,7 @@ describe("Parser", function() {
         bar(b).
       }
     `)).equalsTo([[
-      ["if", ["a", "b"], [["foo", ["a", "b"]]], [[["bar", ["b"]], "."]]],
+      ["if", ["a", "b"], [["foo", ["a", "b"]]], [["bar", ["b"]]]],
     ]]);
   });
 
@@ -227,8 +227,8 @@ describe("Parser", function() {
       }
     `);
     assertThat(results).equalsTo([[
-      ["either", [["a", []]], [["b", []], "."]],
-      ["either", [[["a", []], "."]], [[["b", []], "."]]],
+      ["either", [["a", []]], ["b", []]],
+      ["either", [["a", []]], [["b", []]]],
     ]]);
   });
 
@@ -241,8 +241,8 @@ describe("Parser", function() {
       }
     `);
     assertThat(results).equalsTo([[
-      ["not", [["a", []], "."]],
-      ["not", [[["a", []], "."], [["b", []], "."]]],
+      ["not", ["a", []]],
+      ["not", [["a", []], ["b", []]]],
     ]]);
   });
 
@@ -255,7 +255,7 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       // "// this is a comment",
-      ["if", [], [["a", []]], [["b", []], "."]],
+      ["if", [], [["a", []]], ["b", []]],
       // "// another comment",
       // "// this is another comment",
     ]]);
@@ -270,7 +270,7 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       ["?", ["hello", []]],
-      ["?", [[["hello", []], "."]]],
+      ["?", [["hello", []]]],
     ]]);
   });
 
@@ -283,7 +283,7 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       ["!", ["hello", []]],
-      ["!", [[["hello", []], "."]]],
+      ["!", [["hello", []]]],
     ]]);
   });
 
@@ -308,9 +308,9 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       // "// most basic logical program",
-      ["all", "x", [["man", ["x"]]], [["mortal", ["x"]], "."]],
-      [["Socrates", ["u"]], "."],
-      [["man", ["u"]], "."],
+      ["all", "x", [["man", ["x"]]], ["mortal", ["x"]]],
+      ["Socrates", ["u"]],
+      ["man", ["u"]],
       ["?", ["mortal", ["u"]]],
     ]]);
   });
@@ -322,9 +322,9 @@ describe("Parser", function() {
       admires(s0, a, b).
     `);
     assertThat(results).equalsTo([[
-      [["man", ["a"]], "."],
-      [["woman", ["b"]], "."],
-      [["admires", ["s0", "a", "b"]], "."],
+      ["man", ["a"]],
+      ["woman", ["b"]],
+      ["admires", ["s0", "a", "b"]],
     ]]);
   });
 
@@ -337,11 +337,11 @@ describe("Parser", function() {
       fascinate(s1, a, c).
     `);
     assertThat(results).equalsTo([[
-      [["man", ["a"]], "."],
-      [["Mary", ["b"]], "."],
-      [["Smith", ["c"]], "."],
-      [["love", ["s0", "a", "b"]], "."],
-      [["fascinate", ["s1", "a", "c"]], "."],
+      ["man", ["a"]],
+      ["Mary", ["b"]],
+      ["Smith", ["c"]],
+      ["love", ["s0", "a", "b"]],
+      ["fascinate", ["s1", "a", "c"]],
     ]]);
   });
 
@@ -354,10 +354,10 @@ describe("Parser", function() {
       }
     `);
     assertThat(results).equalsTo([[
-      [["Jones", ["a"]], "."],
+      ["Jones", ["a"]],
       ["not", [
-        [["porsche", ["b"]], "."],
-        [["own", ["s0", "a", "b"]], "."],
+        ["porsche", ["b"]],
+        ["own", ["s0", "a", "b"]],
       ]]
     ]]);
   });
@@ -374,12 +374,12 @@ describe("Parser", function() {
       }
     `);
     assertThat(results).equalsTo([[
-      [["Jones", ["a"]], "."],
+      ["Jones", ["a"]],
       ["not", [
-        [["porsche", ["b"]], "."],
-        [["own", ["s0", "a", "b"]], "."],
+        ["porsche", ["b"]],
+        ["own", ["s0", "a", "b"]],
         ["not", [
-          [["fascinate", ["s1", "b", "a"]], "."],
+          ["fascinate", ["s1", "b", "a"]],
         ]]
       ]]
     ]]);
@@ -392,9 +392,9 @@ describe("Parser", function() {
       happy-man(a).
     `);
     assertThat(results).equalsTo([[
-      [["Jones", ["a"]], "."],
-      [["man", ["a"]], "."],
-      [["happy-man", ["a"]], "."],
+      ["Jones", ["a"]],
+      ["man", ["a"]],
+      ["happy-man", ["a"]],
     ]]);
   });
 
@@ -408,11 +408,11 @@ describe("Parser", function() {
       }
     `);
     assertThat(results).equalsTo([[
-      [["Smith", ["a"]], "."],
-      [["Mary", ["b"]], "."],
+      ["Smith", ["a"]],
+      ["Mary", ["b"]],
       ["if", ["s0", "c", "b"], [["man", ["c"]], ["love", ["s0", "c", "b"]]], [
-        [["woman", ["d"]], "."],
-        [["like", ["s1", "a", "d"]], "."]
+        ["woman", ["d"]],
+        ["like", ["s1", "a", "d"]]
       ]],
     ]]);
   });
@@ -425,8 +425,8 @@ describe("Parser", function() {
       }
     `);
     assertThat(results).equalsTo([[
-      [["Jones", ["a"]], "."],
-      ["every", "b", [["man", ["b"]]], [[["love", ["s0", "a", "b"]], "."]]],
+      ["Jones", ["a"]],
+      ["every", "b", [["man", ["b"]]], [["love", ["s0", "a", "b"]]]],
     ]]);
   });
 
