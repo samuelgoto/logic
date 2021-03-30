@@ -405,28 +405,60 @@ describe("Parser", function() {
     ]]);
   });
   
-  it("questions", function() {
+  it("hello()?", function() {
     const results = new Parser().parse(`
       hello()?
-      question () {
-        hello().
-      } ?
     `);
     assertThat(results).equalsTo([[
-      ["?", [["hello", []]]],
       ["?", [["hello", []]]],
     ]]);
   });
 
-  it("commands", function() {
+  it("hello() world()?", function() {
+    const results = new Parser().parse(`
+      hello() world()?
+    `);
+    assertThat(results).equalsTo([[
+      ["?", [["hello", []], ["world", []]]],
+    ]]);
+  });
+
+  it("question() { hello() }", function() {
+    const results = new Parser().parse(`
+       question () {
+         hello().
+       }
+    `);
+    assertThat(results).equalsTo([[
+      ["?", [["hello", []]]],
+    ]]);
+  });
+
+  it("hello()!", function() {
     const results = new Parser().parse(`
       hello()!
-      do () {
-        hello().
-      } ?
     `);
     assertThat(results).equalsTo([[
       ["!", [["hello", []]]],
+    ]]);
+  });
+
+  it("hello() world()!", function() {
+    const results = new Parser().parse(`
+      hello() world()!
+    `);
+    assertThat(results).equalsTo([[
+      ["!", [["hello", []], ["world", []]]],
+    ]]);
+  });
+
+  it("do () { hello(). }", function() {
+    const results = new Parser().parse(`
+      do () {
+        hello().
+      }
+    `);
+    assertThat(results).equalsTo([[
       ["!", [["hello", []]]],
     ]]);
   });
@@ -567,10 +599,12 @@ describe("Parser", function() {
       for (every b: man(b)) {
         love(s0, a, b).
       }
+      love(s, a, u)?
     `);
     assertThat(results).equalsTo([[
       ["Jones", ["a"]],
       ["every", "b", [["man", ["b"]]], [["love", ["s0", "a", "b"]]]],
+      ["?", [["love", ["s", "a", "u"]]]],
     ]]);
   });
 

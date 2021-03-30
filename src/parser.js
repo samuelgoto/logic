@@ -37,11 +37,16 @@ const grammar = build(`
       line -> question {% id %}
       line -> command {% id %}
     
-      command -> terminal _ "!" {% ([expression]) => ["!", [expression]]  %}
-      command -> "do" _ "(" _ ")" _ block _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
+      command -> terminal (__ terminal):* _ "!" {% 
+        ([head, tail = []]) => ["!", [head, ...tail.map(([ws1, expression]) => expression)]]  
+      %}
+      # command -> terminal _ "!" {% ([expression]) => ["!", [expression]]  %}
+      command -> "do" _ "(" _ ")" _ block {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
 
-      question -> terminal _ "?" {% ([expression]) => ["?", [expression]]  %}
-      question -> "question" _ "(" _ ")" _ block _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
+      question -> terminal (__ terminal):* _ "?" {% 
+        ([head, tail = []]) => ["?", [head, ...tail.map(([ws1, expression]) => expression)]]  
+      %}
+      question -> "question" _ "(" _ ")" _ block {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
 
       statement ->  terminal _ "." {% ([expression, ws, dot]) =>  expression %}
 
