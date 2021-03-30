@@ -37,19 +37,19 @@ const grammar = build(`
       line -> question {% id %}
       line -> command {% id %}
     
-      command -> terminal _ "!" {% ([expression]) => ["!", expression]  %}
-      command -> "do" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
+      command -> terminal _ "!" {% ([expression]) => ["!", [expression]]  %}
+      command -> "do" _ "(" _ ")" _ block _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
 
-      question -> terminal _ "?" {% ([expression]) => ["?", expression]  %}
-      question -> "question" _ "(" _ ")" _ statement _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
+      question -> terminal _ "?" {% ([expression]) => ["?", [expression]]  %}
+      question -> "question" _ "(" _ ")" _ block _ "?" {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
 
       statement ->  terminal _ "." {% ([expression, ws, dot]) =>  expression %}
 
-      statement -> "if" _ head _ statement {% 
+      statement -> "if" _ head _ block {% 
         ([iffy, ws1, head, ws2, body]) =>  ["if", head[0], head[1], body] 
       %}
 
-      statement -> "if" _ head _ statement _ "else" _ statement {% 
+      statement -> "if" _ head _ block _ "else" _ block {% 
         ([iffy, ws1, head, ws2, body, ws3, elsy, ws4, tail]) =>  ["if", head[0], head[1], body, tail] 
       %}
 
@@ -57,7 +57,7 @@ const grammar = build(`
         ([letty, ws1, arg, args = []]) => [arg, ...args.map(([ws2, comma, ws3, b]) => b)] 
       %}
 
-      statement -> "either" _ head  _ "or" _ statement {% 
+      statement -> "either" _ head  _ "or" _ block {% 
         ([either, ws1, head, ws2, or, ws3, body]) =>  ["either", head[0], head[1], body] 
       %}
 
@@ -65,15 +65,14 @@ const grammar = build(`
       condition -> expression {% id %}
            | block {% id %}
 
-
-      statement -> "not" _ statement {% 
+      statement -> "not" _ block {% 
         ([not, ws1, body]) =>  ["not", body] 
       %}
 
-      statement -> block {% id %}
       block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
+      block -> statement {% ([statement]) => [statement] %}
 
-      statement -> "for" _ "(" _ quantifier _ variable _ ":" _ condition _ ")" _ statement {% 
+      statement -> "for" _ "(" _ quantifier _ variable _ ":" _ condition _ ")" _ block {% 
         ([forall, ws1, p1, ws2, quantifier, ws3, arg, ws4, col, ws5, head, ws6, p2, ws7, tail]) =>  [quantifier, arg, head, tail] 
       %}
 
