@@ -40,13 +40,13 @@ const grammar = build(`
       command -> terminal (__ terminal):* _ "!" {% 
         ([head, tail = []]) => ["!", [head, ...tail.map(([ws1, expression]) => expression)]]  
       %}
-      # command -> terminal _ "!" {% ([expression]) => ["!", [expression]]  %}
       command -> "do" _ "(" _ ")" _ block {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
 
-      question -> terminal (__ terminal):* _ "?" {% 
-        ([head, tail = []]) => ["?", [], [head, ...tail.map(([ws1, expression]) => expression)]]  
+      question -> expression _ "?" {% 
+        ([expression]) => ["?", [], expression]
       %}
-      question -> "question" _ "(" _ (letty _):? ")" _ block {% ([question, ws1, p1, ws2, letty, p2, ws3, statement]) => ["?", letty ? letty[0] : [], statement] %}
+
+      question -> "do" _ "(" _ (letty _):? ")" _ block _ "?" {% ([question, ws1, p1, ws2, letty, p2, ws3, statement]) => ["?", letty ? letty[0] : [], statement] %}
 
       statement ->  terminal _ "." {% ([expression, ws, dot]) =>  expression %}
 

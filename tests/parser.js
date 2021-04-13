@@ -416,32 +416,32 @@ describe("Parser", function() {
 
   it("hello() world()?", function() {
     const results = new Parser().parse(`
-      hello() world()?
+      hello() && world()?
     `);
     assertThat(results).equalsTo([[
       ["?", [], [["hello", []], ["world", []]]],
     ]]);
   });
 
-  it("question() { hello() }", function() {
+  it("do() { hello() } ?", function() {
     const results = new Parser().parse(`
-       question () {
+       do () {
          hello().
-       }
+       } ?
     `);
     assertThat(results).equalsTo([[
       ["?", [], [["hello", []]]],
     ]]);
   });
 
-  it("question(let x) { hello(x) }", function() {
+  it("do (let x, y) { hello(x, y) } ?", function() {
     const results = new Parser().parse(`
-       question (let x) {
-         hello(x).
-       }
+       do (let x, y) {
+         hello(x, y).
+       } ?
     `);
     assertThat(results).equalsTo([[
-      ["?", ["x"], [["hello", ["x"]]]],
+      ["?", ["x", "y"], [["hello", ["x", "y"]]]],
     ]]);
   });
 
