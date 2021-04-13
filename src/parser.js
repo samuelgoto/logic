@@ -44,9 +44,9 @@ const grammar = build(`
       command -> "do" _ "(" _ ")" _ block {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
 
       question -> terminal (__ terminal):* _ "?" {% 
-        ([head, tail = []]) => ["?", [head, ...tail.map(([ws1, expression]) => expression)]]  
+        ([head, tail = []]) => ["?", [], [head, ...tail.map(([ws1, expression]) => expression)]]  
       %}
-      question -> "question" _ "(" _ ")" _ block {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["?", statement] %}
+      question -> "question" _ "(" _ (letty _):? ")" _ block {% ([question, ws1, p1, ws2, letty, p2, ws3, statement]) => ["?", letty ? letty[0] : [], statement] %}
 
       statement ->  terminal _ "." {% ([expression, ws, dot]) =>  expression %}
 
@@ -58,7 +58,7 @@ const grammar = build(`
         ([iffy, ws1, head, ws2, body, ws3, elsy, ws4, tail]) =>  ["if", head[0], head[1], body, tail] 
       %}
 
-      letty -> "let" _ variable (_ "," _ variable):* _ ":" {% 
+      letty -> "let" _ variable (_ "," _ variable):* {% 
         ([letty, ws1, arg, args = []]) => [arg, ...args.map(([ws2, comma, ws3, b]) => b)] 
       %}
 
@@ -66,7 +66,7 @@ const grammar = build(`
         ([either, ws1, head, ws2, or, ws3, body]) =>  ["either", head[0], head[1], body] 
       %}
 
-      head -> "(" _ (letty _):? condition _ ")" {% ([p1, ws1, letty, condition]) => [letty ? letty[0] : [], condition] %}
+      head -> "(" _ (letty _ ":" _):? condition _ ")" {% ([p1, ws1, letty, condition]) => [letty ? letty[0] : [], condition] %}
       condition -> expression {% id %}
            | block {% id %}
 
