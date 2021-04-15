@@ -1,209 +1,431 @@
-const assert = require("assert");
-const {Solver, atMostOne, or} = require("logic-solver");
-const pl = require( "tau-prolog" );
+const Assert = require("assert");
+const {Parser} = require("../src/parser.js");
 
-describe("Solver", function() {
+function isVar(arg) {
+  return arg.match(/[a-z]+/);
+}
 
-  class Interpreter {
-    constructor() {
-      this.session = pl.create();
-    }
-    consult(code) {
-      const session = this.session;
-      return new Promise((resolve, reject) => {
-        session.consult(code, {
-          success: resolve,
-          error: reject
-        });
-      });
-    }
-    async query(code) {
-      const session = this.session;
-      await new Promise((resolve, reject) => {
-        session.query(code, {
-          success: resolve,
-          error: reject
-        });
-      });
+function arrayEquals(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (a == null || b == null) {
+    return false;
+  }
+  if (a.length !== b.length) {
+    return false;
+  }
 
-      let result = [];
-      for await (let {links} of await this.answer()) {
-        const keypairs = Object.entries(links).map(([key, value]) => [key, value.id]);
-        // console.log(JSON.stringify(links, undefined, 2));
-        result.push(Object.fromEntries(keypairs));
+  const result = {};
+  
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] == b[i]) {
+      continue;
+    } else if (isVar(a[i])) {
+      if (result[a[i]] && result[a[i]] != b[i]) {
+        // conflict
+        return false;
       }
+      result[a[i]] = b[i];
+    } else if (isVar(b[i])) {
+      if (result[b[i]] && result[b[i]] != a[i]) {
+        // conflict
+        return false;
+      }
+      result[b[i]] = a[i];
+    } else if (a[i] !== b[i]) {
+      // constant conflict
+      return false;
+    }
+  }
 
+  return result;
+}
+
+function unify(a, b) {
+  if (a[0] != b[0]) {
+    return false;
+  }
+  return arrayEquals(a[1], b[1]);
+}
+
+function bind([name, args], bindings) {
+  let result = [];
+  for (let arg of args) {
+    result.push(bindings[arg] || arg);
+  }
+  return [name, result];
+}
+
+describe.only("REPL", function() {
+  class KB {
+    constructor(kb = []) {
+      this.kb = kb;
+    }
+    read(code) {
+      const [program] = new Parser().parse(code);
+      let result;
+      for (const line of program) {
+        const [head, body] = line;
+        if (head == "?") {
+          let [heady, letty, query] = line;
+          result = this.query(query);
+        } else {
+          // console.log(line);
+          let [op] = line;
+          if (op == "every") {
+            // console.log(line);
+            this.push(line);
+          } else {
+            for (let statement of line) {
+              this.push(statement);
+            }
+          }
+        }
+      }
       return result;
     }
-
-    async *answer() {
-      const session = this.session;
-      const go = () => new Promise((resolve, reject) => {
-        session.answer({
-          success: (answer) => resolve(answer),
-          fail: () => resolve(false),
-          error: reject,
-          limit: reject,
-        });
-      });
-
-      do {
-        try {
-          const answer = await go();
-          if (!answer) {
-            return;
-          }
-          // console.log(answer);
-          yield answer;
-        } catch (e) {
-          // console.log(JSON.stringify(e));
-          return false;
+    push(s) {
+      this.kb.push(s);
+    }
+    entails(q) {
+      for (const s of this.kb) {
+        const binding = unify(q, s);
+        if (binding) {
+          // console.log(binding);
+          return binding;
         }
-      } while (true);
+        const [op, vars, head, body] = s;
+        // console.log(s);
+        if (op == "every") {
+          // console.log(body);
+          for (let part of body) {
+            const match = new KB(part).entails(q);
+            if (!match) {
+              continue;
+            }
+            let result = this.query(head.map((s) => bind(s, match)));
+            if (result) {
+              //console.log(q);
+              //console.log(match);
+              //console.log(result);
+              return Object.fromEntries(
+                Object.entries(match)
+                  .map(([key, value]) => [key, result[value]])
+                  .filter(([key, value]) => key != value)
+              );
+            }
+          }
+        }
+      }
+    }
+    query(list) {
+      // console.log(list);
+      //for (let q of list) {
+      //  q[1] = q[1].map(x => `@${x}`);
+      //}
+      const result = {};
+      for (const q of list) {
+        let binding = this.entails(bind(q, result));
+        if (!binding) {
+          return binding;
+        }
+        //console.log(result);
+        //console.log(binding);
+        Object.assign(result, binding);
+      }
+      return result;
     }
   }
   
-  it("likes(sam, X)?", async () => {
-    const prolog = new Interpreter();
-    await prolog.consult(`
-      likes(sam, salad).
-      likes(dean, pie).
-      likes(sam, apples).
-      likes(dean, whiskey).
-    `);
-    assertThat(await prolog.query(`likes(sam, X).`))
-      .equalsTo([{X: "salad"}, {X: "apples"}]);
-    assertThat(await prolog.query(`likes(X, whiskey).`))
-      .equalsTo([{X: "dean"}]);
-    assertThat(await prolog.query(`likes(sam, salad).`))
-      .equalsTo([{}]);
-    assertThat(await prolog.query(`likes(sam, whiskey).`))
-      .equalsTo([]);
+  it("P(). P()?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P().")).equalsTo(undefined);
+    assertThat(kb.read("P()?")).equalsTo({});
+  });
+    
+  it("P()?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P()?")).equalsTo(undefined);
+  });
+    
+  it("P(). Q()?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P().")).equalsTo(undefined);
+    assertThat(kb.read("Q()?")).equalsTo(undefined);
+  });
+    
+  it("P(). Q(). P()?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(). Q().")).equalsTo(undefined);
+    assertThat(kb.read("P()?")).equalsTo({});
+  });
+    
+  it("P(). Q(). Q()?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(). Q().")).equalsTo(undefined);
+    assertThat(kb.read("Q()?")).equalsTo({});
   });
   
-  it("mortal(socrates)?", async () => {
-    const prolog = new Interpreter();
-    await prolog.consult(`
-      man(socrates).
-      mortal(X) :- man(X).
-    `);
-    assertThat(await prolog.query(`mortal(socrates).`))
-      .equalsTo([{}]);
-    assertThat(await prolog.query(`mortal(foobar).`))
-      .equalsTo([]);
-    assertThat(await prolog.query(`imortal(socrates).`))
-      .equalsTo([]);
+  it("P(A). P(A)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A).")).equalsTo(undefined);
+    assertThat(kb.read("P(A)?")).equalsTo({});
+  });
+  
+  it("P(A). P(B)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A).")).equalsTo(undefined);
+    assertThat(kb.read("P(B)?")).equalsTo(undefined);
+  });
+    
+  it("P(A, B). P(A, B)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A, B).")).equalsTo(undefined);
+    assertThat(kb.read("P(A, B)?")).equalsTo({});
+  });
+  
+  it("P(). P()?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P().")).equalsTo(undefined);
+    assertThat(kb.read("P()?")).equalsTo({});
+  });
+  
+  it("P(). Q(). P() Q()?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(). Q().")).equalsTo(undefined);
+    assertThat(kb.read("P() Q()?")).equalsTo({});
+  });
+  
+  it("P(). Q(). P() R()?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(). Q().")).equalsTo(undefined);
+    assertThat(kb.read("P() R()?")).equalsTo(undefined);
+  });
+  
+  it("P(A). Q(B). P(A) Q(B)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A). Q(B).")).equalsTo(undefined);
+    assertThat(kb.read("P(A) Q(B)?")).equalsTo({});
+  });
+  
+  it("P(A). Q(B). P(A) R(B)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A). Q(B).")).equalsTo(undefined);
+    assertThat(kb.read("P(A) R(B)?")).equalsTo(undefined);
   });
 
-  it("likes(sam, dani)?", async () => {
-    const prolog = new Interpreter();
-    await prolog.consult(`
-      loves(sam, dani).
-      likes(sam, dani) :- loves(sam, dani).
-    `);
-    assertThat(await prolog.query(`likes(sam, dani).`))
-      .equalsTo([{}]);
-    assertThat(await prolog.query(`likes(sam, X).`))
-      .equalsTo([{X: "dani"}]);
-    assertThat(await prolog.query(`likes(X, dani).`))
-      .equalsTo([{X: "sam"}]);
+  it("P(u). P(x)?", function() {
+    assertThat(new KB().read(`
+      P(u).
+      P(x)?
+    `)).equalsTo({"x": "u"});
+  });
+  
+  it("P() + P() = P()", () => {
+    assertThat(unify(["P", []], ["P", []])).equalsTo({});
+    assertThat(bind(["P", []], {})).equalsTo(["P", []]);
   });
 
-  it("likes(sam, dani)?", async () => {
-    const prolog = new Interpreter();
-    await prolog.consult(`
-      loves(sam, dani).
-      likes(sam, dani) :- loves(sam, dani).
-    `);
-    assertThat(await prolog.query(`likes(sam, dani).`))
-      .equalsTo([{}]);
-    assertThat(await prolog.query(`likes(sam, X).`))
-      .equalsTo([{X: "dani"}]);
-    assertThat(await prolog.query(`likes(X, dani).`))
-      .equalsTo([{X: "sam"}]);
+  it("P() + Q() = false", () => {
+    assertThat(unify(["P", []], ["Q", []])).equalsTo(false);
   });
 
-  it("every brazilian politician is terribly corrupt", async () => {
-    const prolog = new Interpreter();
-    await prolog.consult(`
-      brazilian(foo).
-      politician(foo).
-      corrupt(X) :- brazilian(X), politician(X).
-      terribly-corrupt(X) :- brazilian(X), politician(X).
-    `);
-    assertThat(await prolog.query(`corrupt(foo).`))
-      .equalsTo([{}]);
-    assertThat(await prolog.query(`terribly-corrupt(foo).`))
-      .equalsTo([{}]);
-    assertThat(await prolog.query(`terribly-corrupt(X).`))
-      .equalsTo([{X: "foo"}]);
+  it("P(A) + P() = false", () => {
+    assertThat(unify(["P", ["A"]], ["P", []])).equalsTo(false);
   });
 
-  it("everything is awesome", async () => {
-    const prolog = new Interpreter();
-    await prolog.consult(`
-      awesome(X).
-    `);
-    assertThat(await prolog.query(`awesome(anything).`))
-      .equalsTo([{}]);
+  it("P() + P(A) = false", () => {
+    assertThat(unify(["P", []], ["P", ["A"]])).equalsTo(false);
   });
 
-  it("A farmer owns a donkey.", async () => {
-    const prolog = new Interpreter();
-    await prolog.consult(`
-      farmer([1]).
-      donkey([2]).
-      owns([1], [2]).
-    `);
-    // Does a man on a donkey?
-    assertThat(await prolog.query(`farmer(X1), donkey(X2), owns(X1, X2).`))
-      .equalsTo([{X1: ".", "X2": "."}]);
+  it("P(A) + P(A) = {}", () => {
+    assertThat(unify(["P", ["A"]], ["P", ["A"]])).equalsTo({});
+    assertThat(bind(["P", ["A"]], {})).equalsTo(["P", ["A"]]);
+  });
+  
+  it("P(A, B) + P(A, B) = {}", () => {
+    assertThat(unify(["P", ["A", "B"]], ["P", ["A", "B"]])).equalsTo({});
+    assertThat(bind(["P", ["A", "B"]], {})).equalsTo(["P", ["A", "B"]]);
+  });
+  
+  it("P(a) + P(A) = {}", () => {
+    assertThat(unify(["P", ["a"]], ["P", ["A"]])).equalsTo({"a": "A"});
+    assertThat(bind(["P", ["a"]], {"a": "A"})).equalsTo(["P", ["A"]], {"a": "A"});
+  });
+  
+  it("P(A) + P(a) = {}", () => {
+    assertThat(unify(["P", ["A"]], ["P", ["a"]])).equalsTo({"a": "A"});
+    assertThat(bind(["P", ["A"]], {"a": "A"})).equalsTo(bind(["P", ["a"]], {"a": "A"}));
+  });
+  
+  it("P(A, b) + P(A, B) = {}", () => {
+    assertThat(unify(["P", ["A", "b"]], ["P", ["A", "B"]])).equalsTo({"b": "B"});
+    assertThat(bind(["P", ["A", "b"]], {"b": "B"})).equalsTo(bind(["P", ["A", "B"]], {"b": "B"}));
+  });
+  
+  it("P(A, B) + P(A, b) = {}", () => {
+    assertThat(unify(["P", ["A", "B"]], ["P", ["A", "b"]])).equalsTo({"b": "B"});
+    assertThat(bind(["P", ["A", "B"]], {"b": "B"})).equalsTo(bind(["P", ["A", "b"]], {"b": "B"}));
+  });
+  
+  it("P(a, b) + P(A, B) = {}", () => {
+    assertThat(unify(["P", ["a", "b"]], ["P", ["A", "B"]])).equalsTo({"a": "A", "b": "B"});
+    assertThat(bind(["P", ["a", "b"]], {"a": "A", "b": "B"}))
+      .equalsTo(bind(["P", ["A", "B"]], {"a": "A", "b": "B"}));
+  });
+  
+  it("P(a, a) + P(A, A) = {}", () => {
+    assertThat(unify(["P", ["a", "a"]], ["P", ["A", "A"]])).equalsTo({"a": "A"});
+    assertThat(bind(["P", ["a", "a"]], {"a": "A"}))
+      .equalsTo(bind(["P", ["A", "A"]], {"a": "A"}));
+  });
+  
+  it("P(a, a) + P(A, B) = {}", () => {
+    assertThat(unify(["P", ["a", "a"]], ["P", ["A", "B"]])).equalsTo(false);
   });
 
-  it("Pedro owns a donkey.", async () => {
-    const prolog = new Interpreter();
-    await prolog.consult(`
-        named([1], 'Pedro').
-        owns([1],[2]).
-        donkey([2]).
-    `);
-    // Who owns a donkey?
-    assertThat(await prolog.query(`named(X1, X), donkey(X2), owns(X1, X2).`))
-      .equalsTo([{X: "Pedro", X1: ".", "X2": "."}]);
+  it("P(A). P(a)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A).")).equalsTo(undefined);
+    assertThat(kb.read("P(a)?")).equalsTo({"a": "A"});
   });
 
-
-  it("Every old donkey is gray and furry.", async () => {
-    const prolog = new Interpreter();
-    await prolog.consult(`
-        donkey(foo).
-        old(foo).
-        consequent(X) :- donkey(X), old(X).
-        gray(X) :- consequent(X).
-        furry(X) :- consequent(X).
-    `);
-    assertThat(await prolog.query(`gray(foo).`))
-      .equalsTo([{}]);
+  it("P(A, B). P(a, b)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A, B).")).equalsTo(undefined);
+    assertThat(kb.read("P(a, b)?")).equalsTo({"a": "A", "b": "B"});
   });
 
-  it("basic", function() {
-    // console.log(Solver);
-    const solver = new Solver();
-    // Don't invite both Alice and Bob
-    solver.require(atMostOne("Alice", "Bob"));
-    // Invite either Bob or Charlie
-    solver.require(or("Bob", "Charlie"));
-    var sol1 = solver.solve();
-    assertThat(sol1.getTrueVars()).equalsTo(["Bob"]);
-    var sol2 = solver.solveAssuming("Alice");
-    assertThat(sol2.getTrueVars()).equalsTo(["Alice", "Charlie"]);
+  it("P(A, B). P(A, b)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A, B).")).equalsTo(undefined);
+    assertThat(kb.read("P(A, b)?")).equalsTo({"b": "B"});
+  });
+
+  it("P(A). Q(A). P(a) Q(a)?", function() {
+    assertThat(new KB().read(`
+      P(A). Q(A).
+      P(a) Q(a)?
+    `)).equalsTo({"a": "A"});
+  });
+
+  it("P(a). Q(a). P(b) Q(b)?", function() {
+    assertThat(new KB().read(`
+      P(a). Q(a).
+      P(b) Q(b)?
+    `)).equalsTo({"b": "a"});
+  });
+
+  it.skip("P(a). Q(c). P(b) Q(b)?", function() {
+    assertThat(new KB().read(`
+      P(a). Q(c).
+      P(b) Q(b)?
+    `)).equalsTo(undefined);
+  });
+
+  it("P(A). P(a) Q(a)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A).")).equalsTo(undefined);
+    assertThat(kb.read("P(a) Q(a)?")).equalsTo(undefined);
+  });
+
+  it("P(A). Q(B). P(a) Q(a)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A). Q(B).")).equalsTo(undefined);
+    assertThat(kb.read("P(a) Q(a)?")).equalsTo(undefined);
+  });
+
+  it("P(A). Q(B). P(a) Q(b)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P(A). Q(B).")).equalsTo(undefined);
+    assertThat(kb.read("P(a) Q(b)?")).equalsTo({"a": "A", "b": "B"});
+  });
+
+  it("Sam(u). Dani(v). loves(u, v). Sam(a) Dani(b) loves(a, b)?", function() {
+    const kb = new KB();
+    assertThat(kb.read("Sam(u). Dani(v). loves(u, v).")).equalsTo(undefined);
+    // Does Sam love Dani?
+    assertThat(kb.read("Sam(a) Dani(b) loves(a, b)?"))
+      .equalsTo({"a": "u", "b": "v"});
+  });
+
+  it("Sam(u). Dani(v). loves(u, v). Sam(a) loves(a, b) ?", function() {
+    const kb = new KB();
+    assertThat(kb.read("Sam(u). Dani(v). loves(u, v).")).equalsTo(undefined);
+    // Who does Sam love?
+    assertThat(kb.read("Sam(a) loves(a, b)?"))
+      .equalsTo({"a": "u", "b": "v"});
+  });
+
+  it("Sam(u). Dani(v). loves(u, v). Sam(a) loves(a, b) ?", function() {
+    const kb = new KB();
+    assertThat(kb.read("Sam(u). Dani(v). loves(u, v).")).equalsTo(undefined);
+    // Who loves Dani?
+    assertThat(kb.read("Dani(b) loves(a, b)?"))
+      .equalsTo({"a": "u", "b": "v"});
+  });
+
+  it("P(u). for (every a: P(a)) Q(a). Q(v)?", function() {
+    assertThat(new KB().read(`
+      for (every a: P(a)) Q(a).
+      P(u).
+      Q(v)?
+    `)).equalsTo({"v": "u"});
+  });
+
+  it("for (every a: P(a)) Q(a). P(u). U(u). U(x) Q(x)?", function() {
+    assertThat(new KB().read(`
+      for (every a: P(a)) Q(a).
+      P(u). U(u).
+      U(x) Q(x)?
+    `)).equalsTo({"x": "u"});
+  });
+
+  it("for (every a: man(a)) mortal(a). Socrates(u). man(u). Socrates(v) mortal(v)?", function() {
+    assertThat(new KB().read(`
+      // Every man is mortal.
+      for (every a: man(a)) mortal(a).
+
+      // There is a man u, whose name is Socrates.
+      Socrates(u). man(u).
+
+      // Is there a man v, whose name is Socrates and who is mortal?
+      Socrates(v) mortal(v)?
+    `)).equalsTo({"v": "u"});
+  });
+
+  it.skip("for (every a: P(a)) Q(a). for (every a: Q(a)) R(a). P(u). R(v)?", function() {
+    assertThat(new KB().read(`
+      for (every a: P(a)) Q(a).
+      for (every a: Q(a)) R(a).
+      P(u).
+      R(v)?
+    `)).equalsTo({"v": "v"});
+  });
+
+  it("for (every a: P(a)) { Q(a). R(a).} P(u). R(v)?", function() {
+    assertThat(new KB().read(`
+      for (every a: P(a)) { Q(a). R(a). }
+      P(u).
+      R(v)?
+    `)).equalsTo({"v": "u"});
+  });
+
+  it.skip("for (every a: {P(a). Q(a).}) R(a). P(u). Q(u). R(v)?", function() {
+    assertThat(new KB().read(`
+      for (every a: {P(a). Q(a).}) R(a).
+      P(x). R(y).
+      R(v)?
+    `)).equalsTo({"v": "y"});
   });
 
   function assertThat(x) {
     return {
       equalsTo(y) {
-        assert.deepEqual(x, y);
+        Assert.deepEqual(x, y);
       }
     }
   }
 });
+
