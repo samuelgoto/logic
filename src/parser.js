@@ -48,7 +48,7 @@ const grammar = build(`
 
       question -> "do" _ "(" _ (letty _):? ")" _ block _ "?" {% ([question, ws1, p1, ws2, letty, p2, ws3, statement]) => ["?", letty ? letty[0] : [], statement] %}
 
-      statement ->  terminal _ "." {% ([expression, ws, dot]) =>  expression %}
+      statement ->  expression _ "." {% ([expression, ws, dot]) =>  expression %}
 
       statement -> "if" _ head _ block {% 
         ([iffy, ws1, head, ws2, body]) =>  ["if", head[0], head[1], body] 
@@ -90,8 +90,8 @@ const grammar = build(`
 
       expression -> conjunction {% id %}
 
-      conjunction -> terminal (_ "&&" _ terminal):* {% 
-        ([t1, conjunction = []]) => [t1, ...conjunction.map(([ws1, op, ws2, t]) => t)] 
+      conjunction -> terminal (__ terminal):* {% 
+        ([t1, conjunction = []]) => [t1, ...conjunction.map(([ws1, t]) => t)] 
       %}
 
       terminal -> predicate _ "(" _ args _ ")" {% ([pred, ws1, p1, ws2, args]) => [pred, args] %}
