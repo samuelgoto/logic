@@ -40,13 +40,13 @@ const grammar = build(`
       command -> terminal (__ terminal):* _ "!" {% 
         ([head, tail = []]) => ["!", [head, ...tail.map(([ws1, expression]) => expression)]]  
       %}
-      command -> "do" _ "(" _ ")" _ block {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
+      # command -> "do" _ "(" _ ")" _ block {% ([question, ws1, p1, ws2, p2, ws3, statement]) => ["!", statement] %}
 
-      question -> expression _ "?" {% 
-        ([expression]) => ["?", [], expression]
+      question -> declaration _ "?" {% 
+        ([[vars, expression]]) => ["?", vars, expression]
       %}
 
-      question -> "do" _ "(" _ (letty _):? ")" _ block _ "?" {% ([question, ws1, p1, ws2, letty, p2, ws3, statement]) => ["?", letty ? letty[0] : [], statement] %}
+      # question -> "do" _ "(" _ (letty _):? ")" _ block _ "?" {% ([question, ws1, p1, ws2, letty, p2, ws3, statement]) => ["?", letty ? letty[0] : [], statement] %}
 
       statement ->  expression _ "." {% ([expression, ws, dot]) =>  expression %}
 
@@ -66,9 +66,11 @@ const grammar = build(`
         ([either, ws1, head, ws2, or, ws3, body]) =>  ["either", head[0], head[1], body] 
       %}
 
-      head -> "(" _ (letty _ ":" _):? condition _ ")" {% ([p1, ws1, letty, condition]) => [letty ? letty[0] : [], condition] %}
+      declaration -> (letty _ ":" _):? condition {% ([letty, condition]) => [letty ? letty[0] : [], condition]%}
       condition -> expression {% id %}
            | block {% id %}
+
+      head -> "(" _ declaration _ ")" {% ([p1, ws1, declaration]) => declaration %}
 
       statement -> "not" _ block {% 
         ([not, ws1, body]) =>  ["not", body] 
