@@ -57,7 +57,7 @@ function bind([name, args], bindings) {
   return [name, result];
 }
 
-describe.only("REPL", function() {
+describe("REPL", function() {
   class KB {
     constructor(kb = []) {
       this.kb = kb;
