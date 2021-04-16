@@ -83,58 +83,58 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("for (every x: b(x)) a(x).", () => {
+  it("for (let every x: b(x)) a(x).", () => {
     assertThat(new Parser().parse(`
       // Basic quantifiers take a head and a tail.
-      for (every x: b(x)) 
+      for (let every x: b(x)) 
         a(x).
     `)).equalsTo([[
       ["every", "x", [["b", ["x"]]], [[["a", ["x"]]]]],
     ]]);
   });
 
-  it("for (every x: b(x)) for (every y: b(y)) a(x, y).", () => {
+  it("for (let every x: b(x)) for (let every y: b(y)) a(x, y).", () => {
     assertThat(new Parser().parse(`
       // You can nest quantifiers.
-      for (every x: b(x)) 
-        for (every y: b(y))
+      for (let every x: b(x)) 
+        for (let every y: b(y))
           a(x, y).
     `)).equalsTo([[
       ["every", "x", [["b", ["x"]]], [["every", "y", [["b", ["y"]]], [[["a", ["x", "y"]]]]]]],
     ]]);
   });
 
-  it("for (every x: b(x)) a(x, c).", () => {
+  it("for (let every x: b(x)) a(x, c).", () => {
     assertThat(new Parser().parse(`
       // Quantifiers take in the body an arbitrary predicate.
-      for (every x: b(x)) 
+      for (let every x: b(x)) 
         a(x, c).
     `)).equalsTo([[
       ["every", "x", [["b", ["x"]]], [[["a", ["x", "c"]]]]],
     ]]);
   });
 
-  it("for (most x: b(x)) a(x).", () => {
+  it("for (let most x: b(x)) a(x).", () => {
     assertThat(new Parser().parse(`
-      for (most x: b(x)) 
+      for (let most x: b(x)) 
         a(x).
     `)).equalsTo([[
       ["most", "x", [["b", ["x"]]], [[["a", ["x"]]]]],
     ]]);
   });
 
-  it("for (few x: b(x)) a(x).", () => {
+  it("for (let few x: b(x)) a(x).", () => {
     assertThat(new Parser().parse(`
-      for (few x: b(x)) 
+      for (let few x: b(x)) 
         a(x).
     `)).equalsTo([[
       ["few", "x", [["b", ["x"]]], [[["a", ["x"]]]]],
     ]]);
   });
 
-  it("for (only x: b(x)) a(x).", () => {
+  it("for (let only x: b(x)) a(x).", () => {
     assertThat(new Parser().parse(`
-      for (only x: b(x)) 
+      for (let only x: b(x)) 
         a(x).
     `)).equalsTo([[
       ["only", "x", [
@@ -143,9 +143,9 @@ describe("Parser", function() {
     ]]);
   });
   
-  it("for (every x: a(x) b(x)) {c(x). d(x).}", () => {
+  it("for (let every x: a(x) b(x)) {c(x). d(x).}", () => {
     assertThat(new Parser().parse(`
-      for (every x: a(x) b(x)) {
+      for (let every x: a(x) b(x)) {
         c(x).
         d(x).
       }
@@ -160,9 +160,9 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("for (every x: {a(x). b(x).}) { c(x). d(x).}", () => {
+  it("for (let every x: {a(x). b(x).}) { c(x). d(x).}", () => {
     assertThat(new Parser().parse(`
-      for (every x: {
+      for (let every x: {
         a(x).
         b(x).
       }) { 
@@ -519,7 +519,7 @@ describe("Parser", function() {
   it("Socrates(u). mortal(u)?", function() {
     const results = new Parser().parse(`
       // most basic logical program
-      for (all x: man(x)) mortal(x).
+      for (let all x: man(x)) mortal(x).
       Socrates(u).
       man(u).
       mortal(u)? 
@@ -638,7 +638,7 @@ describe("Parser", function() {
   it("Jones loves every man.", function() {
     const results = new Parser().parse(`
       Jones(a).
-      for (every b: man(b)) {
+      for (let every b: man(b)) {
         love(s0, a, b).
       }
       love(s, a, u)?
