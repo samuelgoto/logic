@@ -508,7 +508,8 @@ describe("REPL", function() {
 
   it("P(u). for (every a: P(a)) Q(a). Q(v)?", function() {
     assertThat(new KB().read(`
-      for (let every a: P(a)) Q(a).
+      for (let every a: P(a)) 
+        Q(a).
       P(u).
       let x: Q(x)?
     `)).equalsTo({"x": "u"});
@@ -516,7 +517,8 @@ describe("REPL", function() {
 
   it("for (let every a: P(a)) Q(a). P(u). U(u). U(x) Q(x)?", function() {
     assertThat(new KB().read(`
-      for (let every a: P(a)) Q(a).
+      for (let every a: P(a)) 
+        Q(a).
       P(u). U(u).
       let x: U(x) Q(x)?
     `)).equalsTo({"x": "u"});
@@ -525,7 +527,8 @@ describe("REPL", function() {
   it("for (let every a: man(a)) mortal(a). Socrates(u). man(u). Socrates(v) mortal(v)?", function() {
     assertThat(new KB().read(`
       // Every man is mortal.
-      for (let every a: man(a)) mortal(a).
+      for (let every a: man(a)) 
+        mortal(a).
 
       // There is a man u, whose name is Socrates.
       Socrates(u). man(u).
@@ -537,8 +540,10 @@ describe("REPL", function() {
 
   it("for (let every a: P(a)) Q(a). for (every a: Q(a)) R(a). P(u). R(v)?", function() {
     assertThat(new KB().read(`
-      for (let every a: P(a)) Q(a).
-      for (let every a: Q(a)) R(a).
+      for (let every a: P(a)) 
+        Q(a).
+      for (let every a: Q(a)) 
+        R(a).
       P(u).
       let x: R(x)?
     `)).equalsTo({"x": "u"});
@@ -546,7 +551,10 @@ describe("REPL", function() {
 
   it("for (let every a: P(a)) { Q(a). R(a).} P(u). R(v)?", function() {
     assertThat(new KB().read(`
-      for (let every a: P(a)) { Q(a). R(a). }
+      for (let every a: P(a)) { 
+        Q(a). 
+        R(a). 
+      }
       P(u).
       let x: R(x)?
     `)).equalsTo({"x": "u"});
@@ -554,7 +562,8 @@ describe("REPL", function() {
 
   it("for (let every a: P(a) Q(a)) R(a). P(u). Q(u). R(v)?", function() {
     assertThat(new KB().read(`
-      for (let every a: P(a) Q(a)) R(a).
+      for (let every a: P(a) Q(a)) 
+        R(a).
       P(u). R(u).
       let x: R(x)?
     `)).equalsTo({"x": "u"});
@@ -562,7 +571,8 @@ describe("REPL", function() {
 
   it.skip("for (every a: {P(a). Q(a).}) R(a). P(u). Q(u). R(v)?", function() {
     assertThat(new KB().read(`
-      for (let every a: {P(a). Q(a).}) R(a).
+      for (let every a: {P(a). Q(a).}) 
+        R(a).
       P(u). R(u).
       let x: R(x)?
     `)).equalsTo({"x": "u"});
@@ -570,10 +580,14 @@ describe("REPL", function() {
 
   it("let x: Socrates(x) animal(x)?", function() {
     assertThat(new KB().read(`
-      for (let every a: man(a)) human(a).
-      for (let every a: human(a)) animal(a).
+      for (let every a: man(a)) 
+        human(a).
+      for (let every a: human(a)) 
+        animal(a).
+
       man(u).
       Socrates(u).
+
       let x: Socrates(x) animal(x)?
     `)).equalsTo({"x": "u"});
   });
