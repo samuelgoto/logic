@@ -90,51 +90,57 @@ describe("REPL", function() {
       this.kb.push(s);
     }
     entails(q) {
-      //console.log("question");
-      //console.log(q);
       for (const s of this.kb) {
-        //console.log(s);
         const binding = unify(q, s);
         if (binding) {
-          // console.log(binding);
-          // console.log(s);
           let result = Object.fromEntries(
             Object.entries(binding)
               .map(([key, value]) => [key.substring(1), value])
           );
-          // console.log(result);
           return result;
-          // return binding;
         }
       }
 
       for (const s of this.kb) {
         const [op, vars, head, body] = s;
-        // console.log(s);
-        // console.log(s);
         if (op == "every") {
-          // console.log(body);
           for (let part of body) {
             // console.log(q);
             const match = new KB(part).entails(q);
             if (!match) {
               continue;
             }
-            // console.log("match!");
-            // console.log(head);
-            // console.log(match);
+            //console.log(match);
             let vars = Object.fromEntries(
               Object.entries(match)
-                .map(([key, value]) => [value, `@${value}`])
+                .map(([key, value]) => [`@${key}`, value])
             );
-            //console.log(vars);
-            // console.log(head.map((s) => bind(s, vars)));
-            let result = this.query(head.map((s) => bind(s, vars)));
+            // console.log(vars);
+            // console.log(match);
+            // const dep = head;
+            // console.log(head);
+            const dep = head.map((s) => bind(s, vars));
+            let result = this.query(dep);
             if (result) {
-              //console.log(q);
-              //console.log(match);
+              for (let [key, value] of Object.entries(match)) {
+                const arg = value.substring(1);
+                if (result[arg]) {
+                  match[key] = result[arg];
+                }
+              }
+              let [name, args] = q;
+              const bindings = {};
+              for (let arg of args) {
+                // console.log(arg);
+                if (arg[0] == "@" && match[arg.substring(1)]) {
+                  // console.log(arg.substring(1));
+                  bindings[arg.substring(1)] = match[arg.substring(1)];
+                }
+              }
               //console.log(result);
-              // console.log(result);
+              //console.log(match);
+              //console.log(q);
+              return bindings;
               return Object.fromEntries(
                 Object.entries(match)
                   .map(([key, value]) => [key, result[value]])
@@ -492,11 +498,11 @@ describe("REPL", function() {
     assertThat(new KB().read(`
       for (every a: P(a)) Q(a).
       P(u).
-      let v: Q(v)?
-    `)).equalsTo({"v": "u"});
+      let x: Q(x)?
+    `)).equalsTo({"x": "u"});
   });
 
-  it.skip("for (every a: P(a)) Q(a). P(u). U(u). U(x) Q(x)?", function() {
+  it("for (every a: P(a)) Q(a). P(u). U(u). U(x) Q(x)?", function() {
     assertThat(new KB().read(`
       for (every a: P(a)) Q(a).
       P(u). U(u).
@@ -504,7 +510,7 @@ describe("REPL", function() {
     `)).equalsTo({"x": "u"});
   });
 
-  it.skip("for (every a: man(a)) mortal(a). Socrates(u). man(u). Socrates(v) mortal(v)?", function() {
+  it("for (every a: man(a)) mortal(a). Socrates(u). man(u). Socrates(v) mortal(v)?", function() {
     assertThat(new KB().read(`
       // Every man is mortal.
       for (every a: man(a)) mortal(a).
@@ -512,9 +518,9 @@ describe("REPL", function() {
       // There is a man u, whose name is Socrates.
       Socrates(u). man(u).
 
-      // Is there a man v, whose name is Socrates and who is mortal?
-      Socrates(v) mortal(v)?
-    `)).equalsTo({"v": "u"});
+      // Is there a man u, whose name is Socrates and who is mortal?
+      let x: Socrates(x) mortal(x)?
+    `)).equalsTo({"x": "u"});
   });
 
   it.skip("for (every a: P(a)) Q(a). for (every a: Q(a)) R(a). P(u). R(v)?", function() {
@@ -522,8 +528,8 @@ describe("REPL", function() {
       for (every a: P(a)) Q(a).
       for (every a: Q(a)) R(a).
       P(u).
-      R(v)?
-    `)).equalsTo({"v": "v"});
+      let x: R(x)?
+    `)).equalsTo({"x": "v"});
   });
 
   it.skip("for (every a: P(a)) { Q(a). R(a).} P(u). R(v)?", function() {
