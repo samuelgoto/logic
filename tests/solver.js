@@ -568,6 +568,16 @@ describe("REPL", function() {
     `)).equalsTo({"x": "u"});
   });
 
+  it("let x: Socrates(x) animal(x)?", function() {
+    assertThat(new KB().read(`
+      for (every a: man(a)) human(a).
+      for (every a: human(a)) animal(a).
+      man(u).
+      Socrates(u).
+      let x: Socrates(x) animal(x)?
+    `)).equalsTo({"x": "u"});
+  });
+
   function assertThat(x) {
     return {
       equalsTo(y) {
