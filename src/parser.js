@@ -67,7 +67,7 @@ const grammar = build(`
       %}
 
       declaration -> (letty _ ":" _):? condition {% ([letty, condition]) => [letty ? letty[0] : [], condition]%}
-      condition -> expression {% id %}
+      condition -> expression {% ([expression]) => [expression] %}
            | block {% id %}
 
       head -> "(" _ declaration _ ")" {% ([p1, ws1, declaration]) => declaration %}

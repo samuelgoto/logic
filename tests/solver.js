@@ -71,6 +71,7 @@ describe("REPL", function() {
         const [head, body] = line;
         if (head == "?") {
           let [heady, letty, query] = line;
+          // console.log(query);
           result = this.query(query);
         } else {
           let [op] = line;
@@ -123,7 +124,11 @@ describe("REPL", function() {
             // console.log(match);
             // const dep = head;
             // console.log(head);
-            const dep = head.map((s) => bind(s, vars));
+            // console.log(head);
+            // const dep = head.map((s) => bind(s, vars));
+            const dep = head.map(
+              (statement) => statement.map(
+                (s) => bind(s, vars)));
             let result = this.query(dep);
             if (result) {
               const merged = Object.assign(match, result);
@@ -152,29 +157,20 @@ describe("REPL", function() {
         }
       }
     }
-    query(list) {
-      //console.log(list);
-      //for (let q of list) {
-      //  q[1] = q[1].map(x => `@${x}`);
-      //}
+    query(block) {
+      // console.log(statement);
       const result = {};
-      for (const q of list) {
-        // console.log(q);
-        const vars = bind(q, result);
-        // console.log(vars);
-        let binding = this.entails(vars);
-        if (!binding) {
-          // console.log("hi");
-          return undefined;
+      for (const statement of block) {
+        for (const term of statement) {
+          const vars = bind(term, result);
+          let binding = this.entails(vars);
+          if (!binding) {
+            return undefined;
+          }
+          Object.assign(result, Object.fromEntries(Object.entries(binding).map(([key, value]) => [`@${key}`, value])));
         }
-        // console.log(result);
-        Object.assign(result, Object.fromEntries(Object.entries(binding).map(([key, value]) => [`@${key}`, value])));
-        // Object.assign(result, binding);
-        // console.log(result);
       }
-      // console.log(result);
       return Object.fromEntries(Object.entries(result).map(([key, value]) => [key.substring(1), value]));
-      // return result;
     }
   }
 
@@ -192,9 +188,12 @@ describe("REPL", function() {
       for (const arg of args) {
         mapping[arg] = `@${arg}`;
       }
-      for (const expression of head) {
-        const [name, args] = expression;
-        expression[1] = args.map((arg) => mapping[arg] || arg)
+      // console.log(head);
+      for (const statement of head) {
+        for (const expression of statement) {
+          const [name, args] = expression;
+          expression[1] = args.map((arg) => mapping[arg] || arg)
+        }
       }
       for (const statement of body || []) {
         for (const expression of statement) {
@@ -225,7 +224,7 @@ describe("REPL", function() {
       for (let every a: P(a)) 
         Q(a).
     `))).equalsTo([
-      ["every", "a", [["P", ["@a"]]], [[["Q", ["@a"]]]]]
+      ["every", "a", [[["P", ["@a"]]]], [[["Q", ["@a"]]]]]
     ]);
   });
   
@@ -234,7 +233,7 @@ describe("REPL", function() {
       for (let every a: P(a, b)) 
         Q(a, c).
     `))).equalsTo([
-      ["every", "a", [["P", ["@a", "b"]]], [[["Q", ["@a", "c"]]]]]
+      ["every", "a", [[["P", ["@a", "b"]]]], [[["Q", ["@a", "c"]]]]]
     ]);
   });
   
@@ -243,7 +242,20 @@ describe("REPL", function() {
       for (let every a: P(a) Q(a)) 
         R(a).
     `))).equalsTo([
-      ["every", "a", [["P", ["@a"]], ["Q", ["@a"]]], [[["R", ["@a"]]]]]
+      ["every", "a", [[["P", ["@a"]], ["Q", ["@a"]]]], [[["R", ["@a"]]]]]
+    ]);
+  });
+  
+  it("for (let every a: {P(a). Q(a).}) R(a). => for (every a: {P(@a). Q(@a).}) R(@a)", () => {
+    assertThat(load(new Parser().parse(`
+      for (let every a: {
+        P(a). 
+        Q(a).
+      }) {
+        R(a).
+      }
+    `))).equalsTo([
+      ["every", "a", [[["P", ["@a"]]], [["Q", ["@a"]]]], [[["R", ["@a"]]]]]
     ]);
   });
   
@@ -251,31 +263,32 @@ describe("REPL", function() {
     assertThat(load(new Parser().parse(`
       let a: P(a)?
     `))).equalsTo([
-      ["?", ["a"], [["P", ["@a"]]]],
+      ["?", ["a"], [[["P", ["@a"]]]]],
     ]);
   });
 
   it("P(a). for (every a: P(a)) Q(a). let x: Q(x)?", () => {
     assertThat(load(new Parser().parse(`
       P(a). 
-      for (let every a: P(a)) Q(a). 
+      for (let every a: P(a)) 
+        Q(a). 
       let x: Q(x)?
     `))).equalsTo([
       [["P", ["a"]]],
-      ["every", "a", [["P", ["@a"]]], [[["Q", ["@a"]]]]],
-      ["?", ["x"], [["Q", ["@x"]]]],
+      ["every", "a", [[["P", ["@a"]]]], [[["Q", ["@a"]]]]],
+      ["?", ["x"], [[["Q", ["@x"]]]]],
     ]);
   });
 
+  it("P()?", function() {
+    const kb = new KB();
+    assertThat(kb.read("P()?")).equalsTo(undefined);
+  });
+    
   it("P(). P()?", function() {
     const kb = new KB();
     assertThat(kb.read("P().")).equalsTo(undefined);
     assertThat(kb.read("P()?")).equalsTo({});
-  });
-    
-  it("P()?", function() {
-    const kb = new KB();
-    assertThat(kb.read("P()?")).equalsTo(undefined);
   });
     
   it("P(). Q()?", function() {
@@ -419,32 +432,42 @@ describe("REPL", function() {
     assertThat(unify(["P", ["@a", "@a"]], ["P", ["A", "B"]])).equalsTo(false);
   });
 
-  it("P(A). P(a)?", function() {
+  it("P(A). let a: P(a)?", function() {
     const kb = new KB();
     assertThat(kb.read("P(A).")).equalsTo(undefined);
     assertThat(kb.read("let a: P(a)?")).equalsTo({"a": "A"});
   });
 
-  it("P(A, B). P(a, b)?", function() {
+  it("P(A, B). let a, b: P(a, b)?", function() {
     const kb = new KB();
     assertThat(kb.read("P(A, B).")).equalsTo(undefined);
     assertThat(kb.read("let a, b: P(a, b)?")).equalsTo({"a": "A", "b": "B"});
   });
 
-  it("P(A, B). P(A, b)?", function() {
+  it("P(A, B). let b: P(A, b)?", function() {
     const kb = new KB();
     assertThat(kb.read("P(A, B).")).equalsTo(undefined);
     assertThat(kb.read("let b: P(A, b)?")).equalsTo({"b": "B"});
   });
 
-  it("P(A). Q(A). P(a) Q(a)?", function() {
+  it("P(A). Q(A). let a: P(a) Q(a)?", function() {
     assertThat(new KB().read(`
       P(A). Q(A).
       let a: P(a) Q(a)?
     `)).equalsTo({"a": "A"});
   });
 
-  it("P(a). Q(a). P(b) Q(b)?", function() {
+  it("P(A). Q(A). let a: {P(a). Q(a).} ?", function() {
+    assertThat(new KB().read(`
+      P(A). Q(A).
+      let a: {
+        P(a). 
+        Q(a).
+      } ?
+    `)).equalsTo({"a": "A"});
+  });
+
+  it("P(a). Q(a). let b: P(b) Q(b)?", function() {
     assertThat(new KB().read(`
       P(a). Q(a).
       let b: P(b) Q(b)?
@@ -458,25 +481,25 @@ describe("REPL", function() {
     `)).equalsTo(undefined);
   });
 
-  it("P(A). P(a) Q(a)?", function() {
+  it("P(A). let a: P(a) Q(a)?", function() {
     const kb = new KB();
     assertThat(kb.read("P(A).")).equalsTo(undefined);
     assertThat(kb.read("let a: P(a) Q(a)?")).equalsTo(undefined);
   });
 
-  it("P(A). Q(B). P(a) Q(a)?", function() {
+  it("P(A). Q(B). let a: P(a) Q(a)?", function() {
     const kb = new KB();
     assertThat(kb.read("P(A). Q(B).")).equalsTo(undefined);
     assertThat(kb.read("let a: P(a) Q(a)?")).equalsTo(undefined);
   });
 
-  it("P(A). Q(B). P(a) Q(b)?", function() {
+  it("P(A). Q(B). let a, b: P(a) Q(b)?", function() {
     const kb = new KB();
     assertThat(kb.read("P(A). Q(B).")).equalsTo(undefined);
     assertThat(kb.read("let a, b: P(a) Q(b)?")).equalsTo({"a": "A", "b": "B"});
   });
 
-  it("Sam(u). Dani(v). loves(u, v). Sam(a) Dani(b) loves(a, b)?", function() {
+  it("Sam(u) Dani(v) loves(u, v). let a, b: Sam(a) Dani(b) loves(a, b)?", function() {
     const kb = new KB();
     assertThat(kb.read(`
       // There is a u named Sam and a v named Dani. u loves v.
@@ -487,26 +510,26 @@ describe("REPL", function() {
     `)).equalsTo({"a": "u", "b": "v"});
   });
 
-  it("Sam(u). Dani(v). loves(u, v). Sam(a) loves(a, b) ?", function() {
+  it("Sam(u) Dani(v) loves(u, v). let a, b: Sam(a) loves(a, b) ?", function() {
     const kb = new KB();
     assertThat(kb.read(`
-      Sam(u). Dani(v). loves(u, v). 
+      Sam(u) Dani(v) loves(u, v). 
 
       // Who does Sam love?
       let a, b: Sam(a) loves(a, b)?
     `)).equalsTo({"a": "u", "b": "v"});
   });
 
-  it("Sam(u). Dani(v). loves(u, v). Sam(a) loves(a, b) ?", function() {
+  it("Sam(u) Dani(v) loves(u, v). let a, b: Sam(a) loves(a, b) ?", function() {
     const kb = new KB();
     assertThat(kb.read(`
-      Sam(u) Dani(v) loves(u, v).
+      Sam(u) loves(u, v) Dani(v).
       // Who loves Dani?
       let a, b: Dani(b) loves(a, b)?
     `)).equalsTo({"a": "u", "b": "v"});
   });
 
-  it("P(u). for (every a: P(a)) Q(a). Q(v)?", function() {
+  it("P(u). for (let every a: P(a)) Q(a). let x: Q(x)?", function() {
     assertThat(new KB().read(`
       for (let every a: P(a)) 
         Q(a).
@@ -577,11 +600,18 @@ describe("REPL", function() {
     `)).equalsTo({"x": "u"});
   });
 
-  it.skip("for (every a: {P(a). Q(a).}) R(a). P(u). Q(u). R(v)?", function() {
+  it("for (every a: {P(a). Q(a).}) R(a). P(u). Q(u). R(v)?", function() {
     assertThat(new KB().read(`
-      for (let every a: {P(a). Q(a).}) 
+      for (let every a: {
+        P(a). 
+        Q(a).
+      }) {
         R(a).
-      P(u). R(u).
+      }
+
+      P(u). 
+      R(u).
+
       let x: R(x)?
     `)).equalsTo({"x": "u"});
   });
