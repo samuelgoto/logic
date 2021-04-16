@@ -90,6 +90,8 @@ describe("REPL", function() {
       this.kb.push(s);
     }
     entails(q) {
+      //console.log(`Question?`);
+      //console.log(q);
       for (const s of this.kb) {
         const binding = unify(q, s);
         if (binding) {
@@ -97,6 +99,8 @@ describe("REPL", function() {
             Object.entries(binding)
               .map(([key, value]) => [key.substring(1), value])
           );
+          //console.log("hi");
+          //console.log(result);
           return result;
         }
       }
@@ -122,30 +126,27 @@ describe("REPL", function() {
             const dep = head.map((s) => bind(s, vars));
             let result = this.query(dep);
             if (result) {
-              for (let [key, value] of Object.entries(match)) {
+              const merged = Object.assign(match, result);
+              for (let [key, value] of Object.entries(merged)) {
                 const arg = value.substring(1);
                 if (result[arg]) {
-                  match[key] = result[arg];
+                  merged[key] = result[arg];
                 }
               }
               let [name, args] = q;
               const bindings = {};
               for (let arg of args) {
                 // console.log(arg);
-                if (arg[0] == "@" && match[arg.substring(1)]) {
+                if (arg[0] == "@" && merged[arg.substring(1)]) {
                   // console.log(arg.substring(1));
-                  bindings[arg.substring(1)] = match[arg.substring(1)];
+                  bindings[arg.substring(1)] = merged[arg.substring(1)];
                 }
               }
-              //console.log(result);
-              //console.log(match);
+              // console.log(result);
+              //console.log(merged);
               //console.log(q);
+              //console.log(bindings);
               return bindings;
-              return Object.fromEntries(
-                Object.entries(match)
-                  .map(([key, value]) => [key, result[value]])
-                  .filter(([key, value]) => key != value)
-              );
             }
           }
         }
@@ -523,13 +524,13 @@ describe("REPL", function() {
     `)).equalsTo({"x": "u"});
   });
 
-  it.skip("for (every a: P(a)) Q(a). for (every a: Q(a)) R(a). P(u). R(v)?", function() {
+  it("for (every a: P(a)) Q(a). for (every a: Q(a)) R(a). P(u). R(v)?", function() {
     assertThat(new KB().read(`
       for (every a: P(a)) Q(a).
       for (every a: Q(a)) R(a).
       P(u).
       let x: R(x)?
-    `)).equalsTo({"x": "v"});
+    `)).equalsTo({"x": "u"});
   });
 
   it.skip("for (every a: P(a)) { Q(a). R(a).} P(u). R(v)?", function() {
