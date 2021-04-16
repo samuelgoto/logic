@@ -460,26 +460,32 @@ describe("REPL", function() {
 
   it("Sam(u). Dani(v). loves(u, v). Sam(a) Dani(b) loves(a, b)?", function() {
     const kb = new KB();
-    assertThat(kb.read("Sam(u). Dani(v). loves(u, v).")).equalsTo(undefined);
-    // Does Sam love Dani?
-    assertThat(kb.read("let a, b: Sam(a) Dani(b) loves(a, b)?"))
-      .equalsTo({"a": "u", "b": "v"});
+    assertThat(kb.read(`
+      // There is a u named Sam and a v named Dani. u loves v.
+      Sam(u). Dani(v). loves(u, v).
+
+      // Is there an "a" Sam who loves a "b" named Dani?
+      let a, b: Sam(a) Dani(b) loves(a, b)?
+    `)).equalsTo({"a": "u", "b": "v"});
   });
 
   it("Sam(u). Dani(v). loves(u, v). Sam(a) loves(a, b) ?", function() {
     const kb = new KB();
-    assertThat(kb.read("Sam(u). Dani(v). loves(u, v).")).equalsTo(undefined);
-    // Who does Sam love?
-    assertThat(kb.read("let a, b: Sam(a) loves(a, b)?"))
-      .equalsTo({"a": "u", "b": "v"});
+    assertThat(kb.read(`
+      Sam(u). Dani(v). loves(u, v). 
+
+      // Who does Sam love?
+      let a, b: Sam(a) loves(a, b)?
+    `)).equalsTo({"a": "u", "b": "v"});
   });
 
   it("Sam(u). Dani(v). loves(u, v). Sam(a) loves(a, b) ?", function() {
     const kb = new KB();
-    assertThat(kb.read("Sam(u). Dani(v). loves(u, v).")).equalsTo(undefined);
-    // Who loves Dani?
-    assertThat(kb.read("let a, b: Dani(b) loves(a, b)?"))
-      .equalsTo({"a": "u", "b": "v"});
+    assertThat(kb.read(`
+      Sam(u). Dani(v). loves(u, v).
+      // Who loves Dani?
+      let a, b: Dani(b) loves(a, b)?
+    `)).equalsTo({"a": "u", "b": "v"});
   });
 
   it("P(u). for (every a: P(a)) Q(a). Q(v)?", function() {
