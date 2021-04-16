@@ -222,7 +222,8 @@ describe("REPL", function() {
   
   it("for (every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
     assertThat(load(new Parser().parse(`
-      for (every a: P(a)) Q(a).
+      for (every a: P(a)) 
+        Q(a).
     `))).equalsTo([
       ["every", "a", [["P", ["@a"]]], [[["Q", ["@a"]]]]]
     ]);
@@ -230,9 +231,19 @@ describe("REPL", function() {
   
   it("for (every a: P(a, b)) Q(a, c). => for (every a: P(@a, b)) Q(@a, c)", () => {
     assertThat(load(new Parser().parse(`
-      for (every a: P(a, b)) Q(a, c).
+      for (every a: P(a, b)) 
+        Q(a, c).
     `))).equalsTo([
       ["every", "a", [["P", ["@a", "b"]]], [[["Q", ["@a", "c"]]]]]
+    ]);
+  });
+  
+  it("for (every a: P(a) Q(a)) R(a). => for (every a: P(@a) Q(@a)) R(@a)", () => {
+    assertThat(load(new Parser().parse(`
+      for (every a: P(a) Q(a)) 
+        R(a).
+    `))).equalsTo([
+      ["every", "a", [["P", ["@a"]], ["Q", ["@a"]]], [[["R", ["@a"]]]]]
     ]);
   });
   
@@ -533,20 +544,28 @@ describe("REPL", function() {
     `)).equalsTo({"x": "u"});
   });
 
-  it.skip("for (every a: P(a)) { Q(a). R(a).} P(u). R(v)?", function() {
+  it("for (every a: P(a)) { Q(a). R(a).} P(u). R(v)?", function() {
     assertThat(new KB().read(`
       for (every a: P(a)) { Q(a). R(a). }
       P(u).
-      R(v)?
-    `)).equalsTo({"v": "u"});
+      let x: R(x)?
+    `)).equalsTo({"x": "u"});
+  });
+
+  it("for (every a: P(a) Q(a)) R(a). P(u). Q(u). R(v)?", function() {
+    assertThat(new KB().read(`
+      for (every a: P(a) Q(a)) R(a).
+      P(u). R(u).
+      let x: R(x)?
+    `)).equalsTo({"x": "u"});
   });
 
   it.skip("for (every a: {P(a). Q(a).}) R(a). P(u). Q(u). R(v)?", function() {
     assertThat(new KB().read(`
       for (every a: {P(a). Q(a).}) R(a).
-      P(x). R(y).
-      R(v)?
-    `)).equalsTo({"v": "y"});
+      P(u). R(u).
+      let x: R(x)?
+    `)).equalsTo({"x": "u"});
   });
 
   function assertThat(x) {
