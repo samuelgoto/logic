@@ -75,7 +75,7 @@ describe("REPL", function() {
           result = this.query(query);
         } else {
           let [op] = line;
-          if (op == "every") {
+          if (op == "every" || op == "if") {
             this.push(line);
           } else {
             for (let statement of line) {
@@ -108,7 +108,7 @@ describe("REPL", function() {
 
       for (const s of this.kb) {
         const [op, vars, head, body] = s;
-        if (op == "every") {
+        if (op == "every" || op == "if") {
           for (let part of body) {
             // console.log(q);
             const match = new KB(part).entails(q);
@@ -629,6 +629,58 @@ describe("REPL", function() {
 
       let x: Socrates(x) animal(x)?
     `)).equalsTo({"x": "u"});
+  });
+
+  it("if (P()) Q(). P(). Q()?", function() {
+    assertThat(new KB().read(`
+      if (P()) 
+        Q().
+      P().
+      Q()?
+    `)).equalsTo({});
+  });
+
+  it("if (P()) Q(). Q()?", function() {
+    assertThat(new KB().read(`
+      if (P()) 
+        Q().
+      Q()?
+    `)).equalsTo(undefined);
+  });
+
+  it("if (P() Q()) R(). P(). Q(). R()?", function() {
+    assertThat(new KB().read(`
+      if (P() Q()) 
+        R().
+      P(). Q().
+      R()?
+    `)).equalsTo({});
+  });
+
+  it("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
+    assertThat(new KB().read(`
+      if (P(a) Q(b)) 
+        R(c).
+      P(a). Q(b).
+      let x: R(x)?
+    `)).equalsTo({x: "c"});
+  });
+
+  it("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
+    assertThat(new KB().read(`
+      Jones(u).
+      Mary(v).
+
+      // If Jones loves Mary, Jones marries her.
+      if (loves(u, v)) 
+        marry(u, v).
+
+      // Jones loves Mary.
+      loves(u, v).
+
+      // Who does Jones marry?
+      let x, y: Jones(x) marry(x, y)?
+    `)).equalsTo({x: "u", y: "v"});
   });
 
   function assertThat(x) {
