@@ -685,6 +685,69 @@ describe("REPL", function() {
     `)).equalsTo([{x: "u", y: "v"}]);
   });
 
+  it("let x: Socrates(x) mortal(x)?", function() {
+    assertThat(new KB().read(`
+      // Every greek man is mortal
+      for (let every a: greek(a) man(a))
+        mortal(a).
+
+      // Socrate is a greek man
+      Socrates(u).
+      greek(u).
+      man(u).
+ 
+      // Is Socrates mortal?
+      let x: Socrates(x) mortal(x)?
+    `)).equalsTo([{"x": "u"}]);
+  });
+
+  it("let x: Socrates(x) good-influence(x)?", function() {
+    assertThat(new KB().read(`
+      // Every greek philosopher is a good-influence.
+      for (let every a: greek(a) philosopher(a)) {
+        influence(a).
+        good-influence(a).
+      }
+
+      // Socrate is a greek man
+      Socrates(u).
+      greek(u).
+      philosopher(u).
+ 
+      // Is Socrates a good influence?
+      let x: Socrates(x) good-influence(x)?
+    `)).equalsTo([{"x": "u"}]);
+  });
+
+  it("let x, y: Sam(x) Leo(y) parent(x, y)?", function() {
+    assertThat(new KB().read(`
+      Sam(u).
+      Leo(v).
+      man(u).
+      parent(u, v).
+ 
+      // Is there a Sam who is a parent of a Leo?
+      let x, y: Sam(x) Leo(y) parent(x, y)?
+    `)).equalsTo([{"x": "u", "y": "v"}]);
+  });
+
+  it.skip("let x, y: R(x, y)?", function() {
+    assertThat(new KB().read(`
+      // Nested quantifiers
+      for (let every a: P(a)) {
+        for (let every b: Q(b)) {
+          R(a, b).
+        }
+      }
+
+      P(u).
+      Q(v).
+ 
+      // Are there x, y such that R(x, y)?
+      let x, y: R(x, y)?
+    `)).equalsTo([{"x": "u", "y": "v"}]);
+  });
+
   function assertThat(x) {
     return {
       equalsTo(y) {
