@@ -21,7 +21,7 @@ function build(sourceCode) {
   return module.exports;
 }
 
-const grammar = build(`
+const grammar = () => build(`
       @builtin "whitespace.ne"
       @builtin "string.ne"
       @builtin "number.ne"
@@ -116,7 +116,7 @@ const grammar = build(`
 
 class Parser {
   constructor() {
-    this.parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+    this.parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar()));
   }
   parse(source) {
     const {results} = this.parser.feed(source);
