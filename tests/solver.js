@@ -406,6 +406,49 @@ describe("REPL", function() {
     `))).equalsTo(true);
   });
 
+  it("P(). if (P() Q()) R(). R()?", () => {
+    assertThat(new DB().insert(parse(`
+      P().
+      if (P() Q()) 
+        R().
+    `)).select(first(`
+      R()?
+    `))).equalsTo(undefined);
+  });
+
+  it("P(). Q(). if (P() Q()) R(). R()?", () => {
+    assertThat(new DB().insert(parse(`
+      P().
+      Q().
+      if (P() Q()) 
+        R().
+    `)).select(first(`
+      R()?
+    `))).equalsTo(true);
+  });
+
+  it("P(). if (P()) Q() R(). R()?", () => {
+    assertThat(new DB().insert(parse(`
+      P().
+      if (P()) 
+        Q() R().
+    `)).select(first(`
+      R()?
+    `))).equalsTo(true);
+  });
+
+  it("P(). if (P()) {Q(). R().} R()?", () => {
+    assertThat(new DB().insert(parse(`
+      P().
+      if (P()) {
+        Q(). 
+        R().
+      }
+    `)).select(first(`
+      R()?
+    `))).equalsTo(true);
+  });
+
   it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
     assertThat(load(new Parser().parse(`
       for (let every a: P(a)) 
