@@ -8,20 +8,15 @@ describe("REPL", function() {
     const result = [];
     for (const statement of statements) {
       const [op] = statement;
-      if (op == "if") {
+      if (op == "if" || op == "every") {
         const [iffy, letty, [head], body] = statement;
         for (const part of preprocess([body])) {
-          //if (part[0] == "if") {
-          //  console.log("hi");
-          //}
-          // const 
           if (part[2]) {
             part[2].push(...head);
           } else {
             part.push(head);
           }
           result.push(part);
-          //result.push(["if", [], head, [part]]);
         }
         continue;
       }
@@ -109,6 +104,29 @@ describe("REPL", function() {
       }
     `))).equalsTo([
       ["R", [], [["Q", []], ["P", []]]],
+    ]);
+  });
+
+  it("if (P()) { if (Q()) if (R()) {S()}. } => if (R() Q() P()) S().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      if (P()) {
+        if (Q()) {
+          if (R()) {
+            S().
+          }
+        }
+      }
+    `))).equalsTo([
+      ["S", [], [["R", []], ["Q", []], ["P", []]]],
+    ]);
+  });
+
+  it("for (let every a: P(a)) Q(a). => let every a: Q(a) if (P(a)).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      for (let every a: P(a))
+        Q(a). 
+    `))).equalsTo([
+      ["Q", ["a"], [["P", ["a"]]]],
     ]);
   });
 
