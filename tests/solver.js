@@ -159,11 +159,11 @@ describe("REPL", function() {
         line.push(Object.entries(letty).map(([name, quantifier]) => `${quantifier} ${name}`).join(", "));
         line.push(": ");
       }
-      line.push(`${name}(${args.join(",")})`);
+      line.push(`${name}(${args.join(", ")})`);
       if (iffy) {
         line.push(" ");
         line.push("if (");
-        line.push(iffy.map(([name, args]) => `${name}(${args.join(",")})`).join(" "));
+        line.push(iffy.map(([name, args]) => `${name}(${args.join(", ")})`).join(" "));
         line.push(")");
       }
       line.push(`.`);
@@ -176,7 +176,7 @@ describe("REPL", function() {
     return code.split("\n").map(x => x.trim()).join("\n").trim();
   }
   
-  it("", () => {
+  it("unrollling", () => {
     assertThat(trim(print(preprocess(new Parser().parse(`
       P(a).
       P(b) Q(b).
@@ -200,6 +200,14 @@ describe("REPL", function() {
         U(a).
         V(a).
       }
+      if (T(d)) {
+        for (let every a: P(a)) {
+          for (let every b: Q(b)) {
+            if (R(c))
+              S(a, b).
+          }
+        }
+      }
     `))))).equalsTo(trim(`
       P(a).
       P(b).
@@ -215,6 +223,7 @@ describe("REPL", function() {
       let every a: T(a) if (P(a)).
       let every a: U(a) if (P(a)).
       let every a: V(a) if (P(a)).
+      let every a, every b: S(a, b) if (R(c) Q(b) P(a) T(d)).
     `));
   });
 
