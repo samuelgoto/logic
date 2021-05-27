@@ -150,6 +150,74 @@ describe("REPL", function() {
     ]);
   });
 
+  function print(statements) {
+    const result = [];
+    for (let [name, args, letty, iffy] of statements) {
+      const line = [];
+      if (Object.keys(letty || {}).length > 0) {
+        line.push("let ");
+        line.push(Object.entries(letty).map(([name, quantifier]) => `${quantifier} ${name}`).join(", "));
+        line.push(": ");
+      }
+      line.push(`${name}(${args.join(",")})`);
+      if (iffy) {
+        line.push(" ");
+        line.push("if (");
+        line.push(iffy.map(([name, args]) => `${name}(${args.join(",")})`).join(" "));
+        line.push(")");
+      }
+      line.push(`.`);
+      result.push(line.join(""));
+    }
+    return result.join("\n");
+  }
+
+  function trim(code) {
+    return code.split("\n").map(x => x.trim()).join("\n").trim();
+  }
+  
+  it("", () => {
+    assertThat(trim(print(preprocess(new Parser().parse(`
+      P(a).
+      P(b) Q(b).
+
+      if (P(c)) Q(c).
+      if (P(d) Q(d)) R(d).
+      if (P(e)) Q(e) R(e).
+
+      if (P(f)) {
+        if (Q(f)) {
+          R(f).
+        }
+      }
+
+      for (let every a: P(a)) Q(a).
+      for (let every a: P(a) Q(a)) R(a).
+      for (let every a: P(a)) {
+        S(a) T(a).
+      }
+      for (let every a: P(a)) {
+        U(a).
+        V(a).
+      }
+    `))))).equalsTo(trim(`
+      P(a).
+      P(b).
+      Q(b).
+      Q(c) if (P(c)).
+      R(d) if (P(d) Q(d)).
+      Q(e) if (P(e)).
+      R(e) if (P(e)).
+      R(f) if (Q(f) P(f)).
+      let every a: Q(a) if (P(a)).
+      let every a: R(a) if (P(a) Q(a)).
+      let every a: S(a) if (P(a)).
+      let every a: T(a) if (P(a)).
+      let every a: U(a) if (P(a)).
+      let every a: V(a) if (P(a)).
+    `));
+  });
+
   it("P() => P()", () => {
     assertThat(load(new Parser().parse(`
       P().
