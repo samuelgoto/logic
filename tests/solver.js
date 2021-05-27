@@ -11,10 +11,11 @@ describe("REPL", function() {
       if (op == "if" || op == "every") {
         const [iffy, letty, [head], body] = statement;
         for (const part of preprocess([body])) {
-          if (part[2]) {
-            part[2].push(...head);
+          part[2] = letty;
+          if (part[3]) {
+            part[3].push(...head);
           } else {
-            part[2] = head;
+            part[3] = head;
           }
           result.push(part);
         }
@@ -58,7 +59,7 @@ describe("REPL", function() {
         Q(b).
       }
     `))).equalsTo([
-      ["Q", ["b"], [["P", ["a"]]]] 
+      ["Q", ["b"], [], [["P", ["a"]]]] 
     ]);
   });
 
@@ -68,7 +69,7 @@ describe("REPL", function() {
         R(a).
       }
     `))).equalsTo([
-      ["R", ["a"], [["P", ["a"]], ["Q", ["a"]]]]
+      ["R", ["a"], [], [["P", ["a"]], ["Q", ["a"]]]]
     ]);
   });
 
@@ -78,8 +79,8 @@ describe("REPL", function() {
         Q(a) R(a).
       }
     `))).equalsTo([
-      ["Q", ["a"], [["P", ["a"]]]],
-      ["R", ["a"], [["P", ["a"]]]]
+      ["Q", ["a"], [], [["P", ["a"]]]],
+      ["R", ["a"], [], [["P", ["a"]]]]
     ]);
   });
 
@@ -90,8 +91,8 @@ describe("REPL", function() {
         S().
       }
     `))).equalsTo([
-      ["R", [], [["P", []], ["Q", []]]],
-      ["S", [], [["P", []], ["Q", []]]],
+      ["R", [], [], [["P", []], ["Q", []]]],
+      ["S", [], [], [["P", []], ["Q", []]]],
     ]);
   });
 
@@ -103,7 +104,7 @@ describe("REPL", function() {
         }
       }
     `))).equalsTo([
-      ["R", [], [["Q", []], ["P", []]]],
+      ["R", [], [], [["Q", []], ["P", []]]],
     ]);
   });
 
@@ -117,7 +118,7 @@ describe("REPL", function() {
         }
       }
     `))).equalsTo([
-      ["S", [], [["R", []], ["Q", []], ["P", []]]],
+      ["S", [], [], [["R", []], ["Q", []], ["P", []]]],
     ]);
   });
 
@@ -126,7 +127,7 @@ describe("REPL", function() {
       for (let every a: P(a))
         Q(a). 
     `))).equalsTo([
-      ["Q", ["a"], [["P", ["a"]]]],
+      ["Q", ["a"], "a", [["P", ["a"]]]],
     ]);
   });
 
