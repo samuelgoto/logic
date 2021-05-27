@@ -14,7 +14,7 @@ describe("REPL", function() {
           if (part[2]) {
             part[2].push(...head);
           } else {
-            part.push(head);
+            part[2] = head;
           }
           result.push(part);
         }
