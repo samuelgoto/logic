@@ -270,7 +270,7 @@ describe("REPL", function() {
       return false;
     }
     for (let i = 0; i < a[1].length; i++) {
-      if (a[i] != b[i]) {
+      if (a[1][i] != b[1][i]) {
         return false;
       }
     }
@@ -285,9 +285,11 @@ describe("REPL", function() {
       this.rules.push(...lines);
       return this;
     }
-    query(atom) {
+    query(q) {
       for (let rule of this.rules) {
-        if (equals(atom, rule)) {
+        if (equals(q, rule)) {
+          //console.log(q);
+          //console.log(rule);
           const [head, args, letty = {}, body = []] = rule;
           return this.select(["?", [], body]);
         }
@@ -469,6 +471,17 @@ describe("REPL", function() {
     `)).select(first(`
       R()?
     `))).equalsTo(true);
+  });
+
+  it.skip("for (let every a: P(a)) Q(a). P(u). Q(v)?", () => {
+    assertThat(new DB().insert(parse(`
+      for (let every a: P(a)) {
+        Q(a).
+      }
+      P(u).
+    `)).select(first(`
+      Q(v)?
+    `))).equalsTo(undefined);
   });
 
   it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
