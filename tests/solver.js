@@ -8,17 +8,18 @@ describe("REPL", function() {
     const result = [];
     for (const statement of statements) {
       const [op] = statement;
-      if (op == "if" || op == "every") {
+      if (op == "?") {
+        const [q, letty, body] = statement;
+        // console.log();
+        statement[2] = preprocess([body]);
+        result.push(statement);
+      } else if (op == "if" || op == "every") {
         const [iffy, letty, [head], body] = statement;
         for (const part of preprocess([body])) {
           let vars = {};
           if (typeof letty == "string") {
             vars = {[letty]: op};
           }
-          //else {
-          //  part[2] = {};
-          //}
-          // console.log(part[2]);
           part[2] = Object.assign(vars, part[2]);
           if (part[3]) {
             part[3].push(...head);
@@ -27,9 +28,9 @@ describe("REPL", function() {
           }
           result.push(part);
         }
-        continue;
+      } else {
+        result.push(...statement);
       }
-      result.push(...statement);
     }
     return result;
   }
@@ -225,6 +226,152 @@ describe("REPL", function() {
       let every a: V(a) if (P(a)).
       let every a, every b: S(a, b) if (R(c) Q(b) P(a) T(d)).
     `));
+  });
+  
+  it("P(a)? => P(a)?", () => {
+    assertThat(preprocess(new Parser().parse(`
+      P(a)?
+    `))).equalsTo([
+      ["?", [], [["P", ["a"]]]],
+    ]);
+  });
+
+  it("Q(a) P(b)? => Q(a) P(b)?", () => {
+    assertThat(preprocess(new Parser().parse(`
+      Q(a) P(b)?
+    `))).equalsTo([
+      ["?", [], [["Q", ["a"]], ["P", ["b"]]]],
+    ]);
+  });
+
+  it("{ Q(a). P(b). }? => Q(a) P(b)?", () => {
+    assertThat(preprocess(new Parser().parse(`
+      {
+        Q(a). 
+        P(b).
+      } ?
+    `))).equalsTo([
+      ["?", [], [["Q", ["a"]], ["P", ["b"]]]],
+    ]);
+  });
+
+  it("let x: P(x)? => let x: P(x)?", () => {
+    assertThat(preprocess(new Parser().parse(`
+      let x: P(x)?
+    `))).equalsTo([
+      ["?", ["x"], [["P", ["x"]]]],
+    ]);
+  });
+
+  function equals(a, b) {
+    if (a[0] != b[0]) {
+      return false;
+    }
+    if (a[1].length != b[1].length) {
+      return false;
+    }
+    for (let i = 0; i < a[1].length; i++) {
+      if (a[i] != b[i]) {
+        // console.log(`hi ${a} ${a[i]} ${b[i]}`);
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  class DB {
+    constructor() {
+      this.rules = [];
+    }
+    insert(lines) {
+      this.rules.push(...lines);
+      return this;
+    }
+    query(atom) {
+      for (let rule of this.rules) {
+        if (equals(atom, rule)) {
+          return true;
+        }
+      }
+      return undefined;
+    }
+    select(line) {
+      const [op, letty, body] = line;
+      for (let part of body) {
+        let q = this.query(part);
+        if (!q) {
+          return q;
+        }
+      }
+      return true;
+    }
+  }
+
+  function parse(code) {
+    return preprocess(new Parser().parse(code));
+  }
+
+  function first(code) {
+    return parse(code)[0];
+  }
+
+  it("P(). P()?", () => {
+    assertThat(new DB().insert(parse(`
+      P().
+    `)).select(first(`
+      P()?
+    `))).equalsTo(true);
+  });
+
+  it("P(). Q()?", () => {
+    assertThat(new DB().insert(parse(`
+      P().
+    `)).select(first(`
+      Q()?
+    `))).equalsTo(undefined);
+  });
+  
+  it("P() Q(). P()?", () => {
+    assertThat(new DB().insert(parse(`
+      P() Q().
+    `)).select(first(`
+      P()?
+    `))).equalsTo(true);
+  });
+
+  it("P() Q(). Q()?", () => {
+    assertThat(new DB().insert(parse(`
+      P() Q().
+    `)).select(first(`
+      Q()?
+    `))).equalsTo(true);
+  });
+
+  it("P() Q() R(). R()?", () => {
+    assertThat(new DB().insert(parse(`
+      P() Q() R().
+    `)).select(first(`
+      R()?
+    `))).equalsTo(true);
+  });
+
+  it("P() Q() R(). R()?", () => {
+    assertThat(new DB().insert(parse(`
+      P() Q() R().
+    `)).select(first(`
+      P() R()?
+    `))).equalsTo(true);
+  });
+
+  it("P() Q() R(). R()?", () => {
+    assertThat(new DB().insert(parse(`
+      P() Q() R().
+    `)).select(first(`
+      {
+        P().
+        R().
+      } ?
+    `))).equalsTo(true);
   });
 
   it("P() => P()", () => {
