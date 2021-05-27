@@ -10,7 +10,6 @@ describe("REPL", function() {
       const [op] = statement;
       if (op == "?") {
         const [q, letty, body] = statement;
-        // console.log();
         statement[2] = preprocess([body]);
         result.push(statement);
       } else if (op == "if" || op == "every") {
@@ -272,7 +271,6 @@ describe("REPL", function() {
     }
     for (let i = 0; i < a[1].length; i++) {
       if (a[i] != b[i]) {
-        // console.log(`hi ${a} ${a[i]} ${b[i]}`);
         return false;
       }
     }
@@ -290,7 +288,8 @@ describe("REPL", function() {
     query(atom) {
       for (let rule of this.rules) {
         if (equals(atom, rule)) {
-          return true;
+          const [head, args, letty = {}, body = []] = rule;
+          return this.select(["?", [], body]);
         }
       }
       return undefined;
@@ -388,6 +387,25 @@ describe("REPL", function() {
     ]);
   });
   
+  it("if (P()) Q(). Q()?", () => {
+    assertThat(new DB().insert(parse(`
+      if (P()) 
+        Q().
+    `)).select(first(`
+      Q()?
+    `))).equalsTo(undefined);
+  });
+
+  it("P(). if (P()) Q(). Q()?", () => {
+    assertThat(new DB().insert(parse(`
+      P().
+      if (P()) 
+        Q().
+    `)).select(first(`
+      Q()?
+    `))).equalsTo(true);
+  });
+
   it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
     assertThat(load(new Parser().parse(`
       for (let every a: P(a)) 
