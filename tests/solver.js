@@ -449,6 +449,16 @@ describe("REPL", function() {
     `))).equalsTo(true);
   });
 
+  it("P(a). if (P(a)) Q(b). Q(b)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a).
+      if (P(a))
+        Q(b). 
+    `)).select(first(`
+      Q(b)?
+    `))).equalsTo(true);
+  });
+
   it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
     assertThat(load(new Parser().parse(`
       for (let every a: P(a)) 
