@@ -11,11 +11,15 @@ describe("REPL", function() {
       if (op == "if" || op == "every") {
         const [iffy, letty, [head], body] = statement;
         for (const part of preprocess([body])) {
+          let vars = {};
           if (typeof letty == "string") {
-            part[2] = {[letty]: op};
-          } else {
-            part[2] = {};
+            vars = {[letty]: op};
           }
+          //else {
+          //  part[2] = {};
+          //}
+          // console.log(part[2]);
+          part[2] = Object.assign(vars, part[2]);
           if (part[3]) {
             part[3].push(...head);
           } else {
@@ -132,6 +136,17 @@ describe("REPL", function() {
         Q(a). 
     `))).equalsTo([
       ["Q", ["a"], {"a": "every"}, [["P", ["a"]]]],
+    ]);
+  });
+
+  it("for (let every a: P(a)) { for (let every b: Q(b)) R(a, b).} => let every a, b: R(a, b) if (P(a) Q(b)).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      for (let every a: P(a)) {
+        for (let every b: Q(b))
+          R(a, b). 
+      }
+    `))).equalsTo([
+      ["R", ["a", "b"], {"a": "every", "b": "every"}, [["Q", ["b"]], ["P", ["a"]]]],
     ]);
   });
 
