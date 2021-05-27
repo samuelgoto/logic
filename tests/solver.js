@@ -4,6 +4,114 @@ const {KB, unify, bind, load} = require("../src/solver.js");
 
 describe("REPL", function() {
 
+  function preprocess([statements]) {
+    const result = [];
+    for (const statement of statements) {
+      const [op] = statement;
+      if (op == "if") {
+        const [iffy, letty, [head], body] = statement;
+        for (const part of preprocess([body])) {
+          //if (part[0] == "if") {
+          //  console.log("hi");
+          //}
+          // const 
+          if (part[2]) {
+            part[2].push(...head);
+          } else {
+            part.push(head);
+          }
+          result.push(part);
+          //result.push(["if", [], head, [part]]);
+        }
+        continue;
+      }
+      result.push(...statement);
+    }
+    return result;
+  }
+  
+  it("P(a). => P(a).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      P(a).
+    `))).equalsTo([
+      ["P", ["a"]],
+    ]);
+  });
+
+  it("P(a) Q(b). => P(a). Q(b).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      P(a) Q(b).
+    `))).equalsTo([
+      ["P", ["a"]],
+      ["Q", ["b"]],
+    ]);
+  });
+  
+  it("P(a). Q(b). => P(a). Q(b).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      P(a).
+      Q(b).
+    `))).equalsTo([
+      ["P", ["a"]],
+      ["Q", ["b"]],
+    ]);
+  });
+
+  it("if (P(a)) Q(b). => if (P(a)) Q(b).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      if (P(a)) {
+        Q(b).
+      }
+    `))).equalsTo([
+      ["Q", ["b"], [["P", ["a"]]]] 
+    ]);
+  });
+
+  it("if (P(a) Q(a)) R(a). => if (P(a) Q(a)) R(a).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      if (P(a) Q(a)) {
+        R(a).
+      }
+    `))).equalsTo([
+      ["R", ["a"], [["P", ["a"]], ["Q", ["a"]]]]
+    ]);
+  });
+
+  it("if (P(a)) Q(a) R(a). => Q(a) if (P(a)). R(a) if (P(a))", () => {
+    assertThat(preprocess(new Parser().parse(`
+      if (P(a)) {
+        Q(a) R(a).
+      }
+    `))).equalsTo([
+      ["Q", ["a"], [["P", ["a"]]]],
+      ["R", ["a"], [["P", ["a"]]]]
+    ]);
+  });
+
+  it("if (P() Q()) {R(). S().} => if (P() Q()) R(). if (P() Q()) S(). ", () => {
+    assertThat(preprocess(new Parser().parse(`
+      if (P() Q()) {
+        R().
+        S().
+      }
+    `))).equalsTo([
+      ["R", [], [["P", []], ["Q", []]]],
+      ["S", [], [["P", []], ["Q", []]]],
+    ]);
+  });
+
+  it("if (P()) { if (Q()) R(). } => if (Q() P()) R().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      if (P()) {
+        if (Q()) {
+          R().
+        }
+      }
+    `))).equalsTo([
+      ["R", [], [["Q", []], ["P", []]]],
+    ]);
+  });
+
   it("P() => P()", () => {
     assertThat(load(new Parser().parse(`
       P().
