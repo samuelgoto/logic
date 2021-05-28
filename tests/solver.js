@@ -269,12 +269,36 @@ describe("REPL", function() {
     if (a[1].length != b[1].length) {
       return false;
     }
+    //console.log(a);
+    //console.log(b);
+    const vars = b[2] || {};
+    // console.log(vars);
+    const subs = {};
     for (let i = 0; i < a[1].length; i++) {
-      if (a[1][i] != b[1][i]) {
+      if (vars[b[1][i]]) {
+        subs[b[1][i]] = a[1][i];
+      } else if (a[1][i] != b[1][i]) {
         return false;
       }
     }
-    return true;
+    // console.log(subs);
+    // return true;
+    return subs;
+  }
+
+  function clone(a) {
+    return JSON.parse(JSON.stringify(a));
+  }
+
+  function apply(body, subs) {
+    for (let [name, args] of body) {
+      // console.log(part);
+      for (let i = 0; i < args.length; i++) {
+        if (subs[args[i]]) {
+          args[i] = subs[args[i]];
+        }
+      }
+    }
   }
   
   class DB {
@@ -287,10 +311,15 @@ describe("REPL", function() {
     }
     query(q) {
       for (let rule of this.rules) {
-        if (equals(q, rule)) {
-          //console.log(q);
-          //console.log(rule);
-          const [head, args, letty = {}, body = []] = rule;
+        // console.log(rule);
+        // console.log(q);
+        const matches = equals(q, rule);
+        if (matches) {
+          const [head, args, letty = {}, body = []] = clone(rule);
+          //console.log(matches);
+          //console.log(body);
+          apply(body, matches);
+          // console.log(body);
           return this.select(["?", [], body]);
         }
       }
@@ -473,15 +502,15 @@ describe("REPL", function() {
     `))).equalsTo(true);
   });
 
-  it.skip("for (let every a: P(a)) Q(a). P(u). Q(v)?", () => {
+  it("for (let every a: P(a)) Q(a). P(u). Q(v)?", () => {
     assertThat(new DB().insert(parse(`
       for (let every a: P(a)) {
         Q(a).
       }
       P(u).
     `)).select(first(`
-      Q(v)?
-    `))).equalsTo(undefined);
+      Q(u)?
+    `))).equalsTo(true);
   });
 
   it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
