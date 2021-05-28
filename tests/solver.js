@@ -310,9 +310,10 @@ describe("REPL", function() {
       return this;
     }
     query(q) {
+      //console.log("query: ");
+      //console.log(q);
       for (let rule of this.rules) {
-        // console.log(rule);
-        // console.log(q);
+        //console.log(rule);
         const matches = equals(q, rule);
         if (matches) {
           const [head, args, letty = {}, body = []] = clone(rule);
@@ -510,6 +511,55 @@ describe("REPL", function() {
       P(u).
     `)).select(first(`
       Q(u)?
+    `))).equalsTo(true);
+  });
+
+  it("for (let every a: P(a)) Q(a). P(u). Q(v)?", () => {
+    assertThat(new DB().insert(parse(`
+      for (let every a: P(a)) {
+        Q(a).
+      }
+      P(u).
+    `)).select(first(`
+      Q(v)?
+    `))).equalsTo(undefined);
+  });
+
+  it("for (let every a: P(a)) Q(a) R(a). P(u). R(u)?", () => {
+    assertThat(new DB().insert(parse(`
+      for (let every a: P(a)) {
+        Q(a) R(a).
+      }
+      P(u).
+    `)).select(first(`
+      R(u)?
+    `))).equalsTo(true);
+  });
+
+  it("for (let every a: P(a)) Q(a). for (let every a: Q(a)) R(a). P(u). R(u)?", () => {
+    assertThat(new DB().insert(parse(`
+      for (let every a: P(a)) {
+        Q(a).
+      }
+      for (let every a: Q(a)) {
+        R(a).
+      }
+      P(u).
+    `)).select(first(`
+      R(u)?
+    `))).equalsTo(true);
+  });
+
+  it("for (let every a: P(a)) { for (let every b: Q(b)) R(a, b) }. P(u). Q(v). R(u, v)?", () => {
+    assertThat(new DB().insert(parse(`
+      for (let every a: P(a)) {
+        for (let every b: Q(b)) {
+          R(a, b).
+        }
+      }
+      P(u) Q(v).
+    `)).select(first(`
+      R(u, v)?
     `))).equalsTo(true);
   });
 
