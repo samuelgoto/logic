@@ -271,18 +271,18 @@ describe("REPL", function() {
     }
     //console.log(a);
     //console.log(b);
-    const vars = b[2] || {};
-    // console.log(vars);
+    const vars1 = b[2] || {};
+    const vars2 = a[2] || {};
     const subs = {};
     for (let i = 0; i < a[1].length; i++) {
-      if (vars[b[1][i]]) {
+      if (vars1[b[1][i]]) {
         subs[b[1][i]] = a[1][i];
+      } else if (vars2[a[1][i]]) {
+        subs[a[1][i]] = b[1][i];
       } else if (a[1][i] != b[1][i]) {
         return false;
       }
     }
-    // console.log(subs);
-    // return true;
     return subs;
   }
 
@@ -310,31 +310,46 @@ describe("REPL", function() {
       return this;
     }
     query(q) {
-      //console.log("query: ");
-      //console.log(q);
       for (let rule of this.rules) {
-        //console.log(rule);
         const matches = equals(q, rule);
+        //console.log(q);
+        //console.log(rule);
+        //console.log(matches);
         if (matches) {
           const [head, args, letty = {}, body = []] = clone(rule);
-          //console.log(matches);
-          //console.log(body);
           apply(body, matches);
-          // console.log(body);
-          return this.select(["?", [], body]);
+          // console.log(letty);
+          //console.log(body);
+          const result = this.select(["?", [], body]);
+          if (!result) {
+            return result;
+          }
+          const vars = q[2];
+          for (let [key, value] of Object.entries(vars)) {
+            vars[key] = matches[key] || value;
+          }
+          // console.log(vars);
+          return Object.assign(result, vars);
         }
       }
       return undefined;
     }
     select(line) {
       const [op, letty, body] = line;
+      const vars = Object.fromEntries(
+        letty.map((arg) => [arg, "some"]));
+
       for (let part of body) {
-        let q = this.query(part);
+        const query = clone(part);
+        query[2] = vars;
+        let q = this.query(query);
         if (!q) {
           return q;
         }
+        // console.log(q);
+        Object.assign(vars, q);
       }
-      return true;
+      return vars;
     }
   }
 
@@ -351,7 +366,7 @@ describe("REPL", function() {
       P().
     `)).select(first(`
       P()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P(). Q()?", () => {
@@ -367,7 +382,7 @@ describe("REPL", function() {
       P() Q().
     `)).select(first(`
       P()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P() Q(). Q()?", () => {
@@ -375,7 +390,7 @@ describe("REPL", function() {
       P() Q().
     `)).select(first(`
       Q()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P() Q() R(). R()?", () => {
@@ -383,7 +398,7 @@ describe("REPL", function() {
       P() Q() R().
     `)).select(first(`
       R()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P() Q() R(). R()?", () => {
@@ -391,7 +406,7 @@ describe("REPL", function() {
       P() Q() R().
     `)).select(first(`
       P() R()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P() Q() R(). R()?", () => {
@@ -402,7 +417,7 @@ describe("REPL", function() {
         P().
         R().
       } ?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P() => P()", () => {
@@ -435,7 +450,7 @@ describe("REPL", function() {
         Q().
     `)).select(first(`
       Q()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P(). if (P() Q()) R(). R()?", () => {
@@ -456,7 +471,7 @@ describe("REPL", function() {
         R().
     `)).select(first(`
       R()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P(). if (P()) Q() R(). R()?", () => {
@@ -466,7 +481,7 @@ describe("REPL", function() {
         Q() R().
     `)).select(first(`
       R()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P(). if (P()) {Q(). R().} R()?", () => {
@@ -478,7 +493,7 @@ describe("REPL", function() {
       }
     `)).select(first(`
       R()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("P(a). if (P(a)) Q(b). Q(b)?", () => {
@@ -488,7 +503,7 @@ describe("REPL", function() {
         Q(b). 
     `)).select(first(`
       Q(b)?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("if (P()) Q(). if (Q()) R(). P(). R()?", () => {
@@ -500,7 +515,7 @@ describe("REPL", function() {
       P().
     `)).select(first(`
       R()?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("for (let every a: P(a)) Q(a). P(u). Q(v)?", () => {
@@ -511,7 +526,7 @@ describe("REPL", function() {
       P(u).
     `)).select(first(`
       Q(u)?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("for (let every a: P(a)) Q(a). P(u). Q(v)?", () => {
@@ -533,7 +548,7 @@ describe("REPL", function() {
       P(u).
     `)).select(first(`
       R(u)?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("for (let every a: P(a)) Q(a). for (let every a: Q(a)) R(a). P(u). R(u)?", () => {
@@ -547,7 +562,7 @@ describe("REPL", function() {
       P(u).
     `)).select(first(`
       R(u)?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
   it("for (let every a: P(a)) { for (let every b: Q(b)) R(a, b) }. P(u). Q(v). R(u, v)?", () => {
@@ -560,9 +575,17 @@ describe("REPL", function() {
       P(u) Q(v).
     `)).select(first(`
       R(u, v)?
-    `))).equalsTo(true);
+    `))).equalsTo({});
   });
 
+  it("P(a). let x: P(x)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a).
+    `)).select(first(`
+      let x: P(x)?
+    `))).equalsTo({"x": "a"});
+  });
+  
   it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
     assertThat(load(new Parser().parse(`
       for (let every a: P(a)) 
