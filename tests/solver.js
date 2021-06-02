@@ -297,7 +297,8 @@ describe("REPL", function() {
       // console.log(part);
       for (let i = 0; i < args.length; i++) {
         if (subs[args[i]] &&
-            subs[args[i]] != "some") {
+            subs[args[i]] != "some" &&
+            subs[args[i]] != "every") {
           args[i] = subs[args[i]];
         }
       }
@@ -313,6 +314,7 @@ describe("REPL", function() {
       return this;
     }
     query(q) {
+      //console.log(q);
       for (let rule of this.rules) {
         const matches = equals(q, rule);
         //console.log(q);
@@ -321,6 +323,7 @@ describe("REPL", function() {
         if (matches) {
           const [head, args, letty = {}, body = []] = clone(rule);
           apply(body, matches);
+          //console.log(matches);
           // console.log(letty);
           //console.log(body);
           const result = this.select(["?", [], body]);
@@ -345,10 +348,7 @@ describe("REPL", function() {
       for (let part of body) {
         const query = clone(part);
         apply([query], vars);
-        //console.log(query);
-        //console.log(vars);
         query[2] = vars;
-        //console.log(query);
         let q = this.query(query);
         if (!q) {
           return q;
@@ -597,6 +597,57 @@ describe("REPL", function() {
       let x: P(x)?
     `))).equalsTo({"x": "a"});
   });
+
+  it("P(a). let x: Q(x)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a).
+    `)).select(first(`
+      let x: Q(x)?
+    `))).equalsTo(undefined);
+  });
+
+  it("P(a, b). let x: P(x, b)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a, b).
+    `)).select(first(`
+      let x: P(x, b)?
+    `))).equalsTo({"x": "a"});
+  });
+
+  it("P(a, b). let x: P(a, x)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a, b).
+    `)).select(first(`
+      let x: P(a, x)?
+    `))).equalsTo({"x": "b"});
+  });
+
+  it.skip("P(a). P(b). let x: P(x)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a).
+      P(b).
+    `)).select(first(`
+      let x: P(x)?
+    `))).equalsTo([{"x": "a"}]);
+  });
+
+  it("P(a). Q(a). let x: P(x) Q(x)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a).
+      Q(a).
+    `)).select(first(`
+      let x: P(x) Q(x)?
+    `))).equalsTo({"x": "a"});
+  });
+  
+  it("P(a). Q(b). let x: P(x) Q(x)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a).
+      Q(b).
+    `)).select(first(`
+      let x: P(x) Q(x)?
+    `))).equalsTo(undefined);
+  });
   
   it("P(a) Q(b). let x: P(x) Q(x)?", () => {
     assertThat(new DB().insert(parse(`
@@ -606,6 +657,15 @@ describe("REPL", function() {
     `))).equalsTo(undefined);
   });
   
+  it.skip("for (let every x: P(x)) Q(x). P(a). let x: Q(x)?", () => {
+    assertThat(new DB().insert(parse(`
+      for (let every x: P(x)) Q(x). 
+      P(a).
+    `)).select(first(`
+      let x: Q(x)?
+    `))).equalsTo({"x": "a"});
+  });
+
   it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
     assertThat(load(new Parser().parse(`
       for (let every a: P(a)) 
