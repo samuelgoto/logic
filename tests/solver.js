@@ -291,10 +291,13 @@ describe("REPL", function() {
   }
 
   function apply(body, subs) {
+    //console.log(body);
+    //console.log(subs);
     for (let [name, args] of body) {
       // console.log(part);
       for (let i = 0; i < args.length; i++) {
-        if (subs[args[i]]) {
+        if (subs[args[i]] &&
+            subs[args[i]] != "some") {
           args[i] = subs[args[i]];
         }
       }
@@ -341,12 +344,15 @@ describe("REPL", function() {
 
       for (let part of body) {
         const query = clone(part);
+        apply([query], vars);
+        //console.log(query);
+        //console.log(vars);
         query[2] = vars;
+        //console.log(query);
         let q = this.query(query);
         if (!q) {
           return q;
         }
-        // console.log(q);
         Object.assign(vars, q);
       }
       return vars;
@@ -581,9 +587,23 @@ describe("REPL", function() {
   it("P(a). let x: P(x)?", () => {
     assertThat(new DB().insert(parse(`
       P(a).
+    `)).query(["P", ["x"], {x: "some"}])).equalsTo({"x": "a"});
+  });
+
+  it("P(a). let x: P(x)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a).
     `)).select(first(`
       let x: P(x)?
     `))).equalsTo({"x": "a"});
+  });
+  
+  it("P(a) Q(b). let x: P(x) Q(x)?", () => {
+    assertThat(new DB().insert(parse(`
+      P(a) Q(b).
+    `)).select(first(`
+      let x: P(x) Q(x)?
+    `))).equalsTo(undefined);
   });
   
   it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {

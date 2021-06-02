@@ -1,7 +1,6 @@
 const {Parser} = require("./parser.js");
 
 function isVar(arg) {
-  //return arg.match(/[a-z]+/);
   return arg[0] == "@";
 }
 
