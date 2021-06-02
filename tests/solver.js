@@ -291,10 +291,8 @@ describe("REPL", function() {
   }
 
   function apply(body, subs) {
-    //console.log(body);
-    //console.log(subs);
-    for (let [name, args] of body) {
-      // console.log(part);
+    for (let part of body) {
+      const [name, args] = part;
       for (let i = 0; i < args.length; i++) {
         if (subs[args[i]] &&
             subs[args[i]] != "some" &&
@@ -302,6 +300,7 @@ describe("REPL", function() {
           args[i] = subs[args[i]];
         }
       }
+      // part[2] = Object.assign(part[2] || {}, vars);
     }
   }
   
@@ -317,31 +316,54 @@ describe("REPL", function() {
       //console.log(q);
       for (let rule of this.rules) {
         const matches = equals(q, rule);
-        //console.log(q);
+        // console.log(q);
         //console.log(rule);
         //console.log(matches);
         if (matches) {
           const [head, args, letty = {}, body = []] = clone(rule);
           apply(body, matches);
           //console.log(matches);
+          // console.log(q);
           // console.log(letty);
-          //console.log(body);
-          const result = this.select(["?", [], body]);
+          // console.log(body);
+          if (body.length == 0) {
+            return matches;
+          }
+          const dep = ["?", Object.keys(q[2] || []), body];
+          //console.log(`rule: ${JSON.stringify(rule)}`);
+          //console.log(`sub task: ${JSON.stringify(dep)}`);
+          const result = this.select(dep);
           if (!result) {
             return result;
           }
           const vars = q[2];
+          //console.log("hi");
+          //console.log(vars);
+          //console.log(result);
+          //console.log(matches);
           for (let [key, value] of Object.entries(vars)) {
-            vars[key] = matches[key] || value;
+            if (result[key]) {
+              vars[key] = result[key];
+            } else if (matches[key]) {
+              vars[key] = matches[key];
+            }
+            // vars[key] = matches[key] || value;
           }
-          // console.log(vars);
+          //console.log(q);
+          //console.log(vars);
           return Object.assign(result, vars);
         }
       }
       return undefined;
     }
     select(line) {
+      // console.log(line);
       const [op, letty, body] = line;
+
+      //if (body.length == 0) {
+      //  return {};
+      //}
+
       const vars = Object.fromEntries(
         letty.map((arg) => [arg, "some"]));
 
@@ -656,8 +678,21 @@ describe("REPL", function() {
       let x: P(x) Q(x)?
     `))).equalsTo(undefined);
   });
+
+  it("equals(let x: Q(x), for (let every y: P(y)) Q(y))", () => {
+    const body = [["P", ["y"]]];
+    const matches = equals(
+      ["Q", ["x"], {x: "some"}, []],
+      ["Q", ["y"], {y: "every"}, body]);
+    assertThat(matches)
+      .equalsTo({y: "x"});
+    apply(body, matches);
+    assertThat(body)
+      .equalsTo([["P", ["x"]]]);
+
+  });
   
-  it.skip("for (let every x: P(x)) Q(x). P(a). let x: Q(x)?", () => {
+  it("for (let every x: P(x)) Q(x). P(a). let x: Q(x)?", () => {
     assertThat(new DB().insert(parse(`
       for (let every x: P(x)) Q(x). 
       P(a).
