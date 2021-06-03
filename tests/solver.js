@@ -972,39 +972,39 @@ describe("REPL", function() {
   });
 
   it("P(A). Q(B). let a, b: P(a) Q(b)?", function() {
-    const kb = new KB();
+    const kb = new DB();
     assertThat(unroll(kb.read("P(A). Q(B)."))).equalsTo([]);
     assertThat(unroll(kb.read("let a, b: P(a) Q(b)?"))).equalsTo([{"a": "A", "b": "B"}]);
   });
 
   it("Sam(u) Dani(v) loves(u, v). let a, b: Sam(a) Dani(b) loves(a, b)?", function() {
-    const kb = new KB();
-    assertThat(kb.read(`
+    const kb = new DB();
+    assertThat(unroll(kb.read(`
       // There is a u named Sam and a v named Dani. u loves v.
       Sam(u) Dani(v) loves(u, v).
 
       // Is there an "a" Sam who loves a "b" named Dani?
       let a, b: Sam(a) Dani(b) loves(a, b)?
-    `)).equalsTo([{"a": "u", "b": "v"}]);
+    `))).equalsTo([{"a": "u", "b": "v"}]);
   });
 
   it("Sam(u) Dani(v) loves(u, v). let a, b: Sam(a) loves(a, b) ?", function() {
-    const kb = new KB();
-    assertThat(kb.read(`
+    const kb = new DB();
+    assertThat(unroll(kb.read(`
       Sam(u) Dani(v) loves(u, v). 
 
       // Who does Sam love?
       let a, b: Sam(a) loves(a, b)?
-    `)).equalsTo([{"a": "u", "b": "v"}]);
+    `))).equalsTo([{"a": "u", "b": "v"}]);
   });
 
   it("Sam(u) Dani(v) loves(u, v). let a, b: Sam(a) loves(a, b) ?", function() {
-    const kb = new KB();
-    assertThat(kb.read(`
+    const kb = new DB();
+    assertThat(unroll(kb.read(`
       Sam(u) loves(u, v) Dani(v).
       // Who loves Dani?
       let a, b: Dani(b) loves(a, b)?
-    `)).equalsTo([{"a": "u", "b": "v"}]);
+    `))).equalsTo([{"a": "u", "b": "v"}]);
   });
 
   it("P(u). for (let every a: P(a)) Q(a). let x: Q(x)?", function() {
@@ -1079,7 +1079,7 @@ describe("REPL", function() {
   });
 
   it("for (every a: {P(a). Q(a).}) R(a). P(u). Q(u). R(v)?", function() {
-    assertThat(unroll(new KB().read(`
+    assertThat(unroll(new DB().read(`
       for (let every a: {
         P(a). 
         Q(a).
@@ -1091,7 +1091,7 @@ describe("REPL", function() {
       R(u).
 
       let x: R(x)?
-    `))).equalsTo([{"x": "u"}]);
+    `))).equalsTo([{"x": "u"}, {"x": "u"}]);
   });
 
   it("let x: Socrates(x) animal(x)?", function() {
@@ -1145,7 +1145,7 @@ describe("REPL", function() {
   });
 
   it("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
-    assertThat(new KB().read(`
+    assertThat(unroll(new KB().read(`
       Jones(u).
       Mary(v).
 
@@ -1158,7 +1158,7 @@ describe("REPL", function() {
 
       // Who does Jones marry?
       let x, y: Jones(x) marry(x, y)?
-    `)).equalsTo([{x: "u", y: "v"}]);
+    `))).equalsTo([{x: "u", y: "v"}]);
   });
 
   it("let x: Socrates(x) mortal(x)?", function() {
@@ -1196,7 +1196,7 @@ describe("REPL", function() {
   });
 
   it("let x, y: Sam(x) Leo(y) parent(x, y)?", function() {
-    assertThat(unroll(new KB().read(`
+    assertThat(unroll(new DB().read(`
       Sam(u).
       Leo(v).
       man(u).

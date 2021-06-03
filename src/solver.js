@@ -319,7 +319,7 @@ class DB {
     const vars = Object.fromEntries(
       letty.map((arg) => [arg, "some"]));
     
-    // console.log(`Select: ${JSON.stringify(line)}, vars: ${JSON.stringify(vars)}`);
+    //console.log(`Select: ${JSON.stringify(line)}, vars: ${JSON.stringify(vars)}`);
     const [head, ...tail] = body;
     
     const query = clone(head);
@@ -329,14 +329,15 @@ class DB {
     for (let q of this.query(query)) {
       const partial = clone(vars);
       const rest = clone(tail);
-      // console.log(`${JSON.stringify(q)}, partial: ${JSON.stringify(partial)}`);
+      //console.log(`Found a solution for the head: ${JSON.stringify(q)}, partial: ${JSON.stringify(partial)} ${rest}`);
       if (rest.length == 0) {
+        //console.log(`Empty tail, returning`);
         yield Object.assign(clone(partial), q);
         continue;
       }
       Object.assign(partial, q);
       apply(rest, partial);
-      // console.log(`Querying ${JSON.stringify(rest)}`);
+      //console.log(`Querying ${letty.filter((x) => !q[x])} ${JSON.stringify(rest)}`);
       for (let r of this.select(["?", letty.filter((x) => !q[x]), rest])) {
         // console.log(r);
         yield Object.assign(clone(partial), r);
