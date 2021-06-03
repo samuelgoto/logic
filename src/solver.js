@@ -75,13 +75,18 @@ class KB {
   }
   *read(code) {
     const lines = preprocess(new Parser().parse(code));
+    const q = [];
     for (let line of lines) {
       const [op] = line;
       if (op == "?") {
-        yield * this.select(line);
+        q.push(line);
       } else {
         this.insert([line]);
       }
+    }
+
+    if (q.length > 0) {
+      yield * this.select(q[q.length - 1]);
     }
   }
   insert(lines) {
