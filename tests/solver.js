@@ -1,10 +1,8 @@
 const Assert = require("assert");
 const {Parser} = require("../src/parser.js");
-const {KB, unify, bind, load, preprocess, DB, equals, apply, clone} = require("../src/solver.js");
+const {KB, unify, bind, load, preprocess, equals, apply, clone} = require("../src/solver.js");
 
 describe("REPL", function() {
-
-  
   it("P(a). => P(a).", () => {
     assertThat(preprocess(new Parser().parse(`
       P(a).
@@ -250,26 +248,26 @@ describe("REPL", function() {
   }
   
   it("P(). P()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P().
     `)).query(["P", []]))).equalsTo([{}]);
   });
 
   it("P(). Q()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P().
     `)).query(["Q", []]))).equalsTo([]);
   });
 
   it("P(a). let x: P(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
     `)).query(["P", ["x"], {"x": "some"}])))
       .equalsTo([{x: "a"}]);
   });
 
   it("P(a). P(b). let x: P(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
       P(b).
     `)).query(["P", ["x"], {"x": "some"}])))
@@ -277,7 +275,7 @@ describe("REPL", function() {
   });
 
   it("P(a, b). P(c, d). let x, y: P(x, y)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a, b).
       P(c, d).
     `)).query(["P", ["x", "y"], {"x": "some", "y": "some"}])))
@@ -285,7 +283,7 @@ describe("REPL", function() {
   });
 
   it("P(). P()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P().
     `)).select(first(`
       P()?
@@ -293,7 +291,7 @@ describe("REPL", function() {
   });
 
   it("P(). Q()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P().
     `)).select(first(`
       Q()?
@@ -301,7 +299,7 @@ describe("REPL", function() {
   });
   
   it("P() Q(). P()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P() Q().
     `)).select(first(`
       P()?
@@ -309,7 +307,7 @@ describe("REPL", function() {
   });
 
   it("P() Q(). Q()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P() Q().
     `)).select(first(`
       Q()?
@@ -317,7 +315,7 @@ describe("REPL", function() {
   });
 
   it("P() Q() R(). R()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P() Q() R().
     `)).select(first(`
       R()?
@@ -325,7 +323,7 @@ describe("REPL", function() {
   });
 
   it("P() Q() R(). R()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P() Q() R().
     `)).select(first(`
       P() R()?
@@ -333,7 +331,7 @@ describe("REPL", function() {
   });
 
   it("P() Q() R(). R()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P() Q() R().
     `)).select(first(`
       {
@@ -358,7 +356,7 @@ describe("REPL", function() {
   });
   
   it("if (P()) Q(). Q()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       if (P()) 
         Q().
     `)).select(first(`
@@ -367,7 +365,7 @@ describe("REPL", function() {
   });
 
   it("P(). if (P()) Q(). Q()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P().
       if (P()) 
         Q().
@@ -377,7 +375,7 @@ describe("REPL", function() {
   });
 
   it("P(). if (P() Q()) R(). R()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P().
       if (P() Q()) 
         R().
@@ -387,7 +385,7 @@ describe("REPL", function() {
   });
 
   it("P(). Q(). if (P() Q()) R(). R()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P().
       Q().
       if (P() Q()) 
@@ -398,7 +396,7 @@ describe("REPL", function() {
   });
 
   it("P(). if (P()) Q() R(). R()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P().
       if (P()) 
         Q() R().
@@ -408,7 +406,7 @@ describe("REPL", function() {
   });
 
   it("P(). if (P()) {Q(). R().} R()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P().
       if (P()) {
         Q(). 
@@ -420,7 +418,7 @@ describe("REPL", function() {
   });
 
   it("P(a). if (P(a)) Q(b). Q(b)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
       if (P(a))
         Q(b). 
@@ -430,7 +428,7 @@ describe("REPL", function() {
   });
 
   it("if (P()) Q(). if (Q()) R(). P(). R()?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       if (P()) 
         Q().
       if (Q()) 
@@ -442,7 +440,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) Q(a). P(u). Q(u)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every a: P(a)) {
         Q(a).
       }
@@ -453,7 +451,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) Q(a). P(u). Q(v)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every a: P(a)) {
         Q(a).
       }
@@ -464,7 +462,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) Q(a) R(a). P(u). R(u)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every a: P(a)) {
         Q(a) R(a).
       }
@@ -475,7 +473,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) Q(a). for (let every a: Q(a)) R(a). P(u). R(u)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every a: P(a)) {
         Q(a).
       }
@@ -489,7 +487,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) { for (let every b: Q(b)) R(a, b) }. P(u). Q(v). R(u, v)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every a: P(a)) {
         for (let every b: Q(b)) {
           R(a, b).
@@ -502,14 +500,14 @@ describe("REPL", function() {
   });
 
   it("P(a). let x: P(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
     `)).query(["P", ["x"], {x: "some"}])))
       .equalsTo([{"x": "a"}]);
   });
 
   it("P(a). let x: P(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
     `)).select(first(`
       let x: P(x)?
@@ -518,7 +516,7 @@ describe("REPL", function() {
   });
 
   it("P(a). let x: Q(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
     `)).select(first(`
       let x: Q(x)?
@@ -527,7 +525,7 @@ describe("REPL", function() {
   });
 
   it("P(a, b). let x: P(x, b)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a, b).
     `)).select(first(`
       let x: P(x, b)?
@@ -536,7 +534,7 @@ describe("REPL", function() {
   });
 
   it("P(a, b). let x: P(a, x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a, b).
     `)).select(first(`
       let x: P(a, x)?
@@ -545,7 +543,7 @@ describe("REPL", function() {
   });
 
   it("P(a). P(b). let x: P(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
       P(b).
     `)).select(first(`
@@ -554,7 +552,7 @@ describe("REPL", function() {
   });
 
   it("P(a). Q(a). let x: P(x) Q(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
       Q(a).
     `)).select(first(`
@@ -564,7 +562,7 @@ describe("REPL", function() {
   });
   
   it("P(a). Q(a). R(b). let x: P(x) Q(x) R(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
       Q(a).
       R(b).
@@ -575,7 +573,7 @@ describe("REPL", function() {
   });
   
   it("P(a). Q(a). R(a). let x: P(x) Q(x) R(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
       Q(a).
       R(a).
@@ -586,7 +584,7 @@ describe("REPL", function() {
   });
   
   it("P(a). Q(b). let x: P(x) Q(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
       Q(b).
     `)).select(first(`
@@ -596,7 +594,7 @@ describe("REPL", function() {
   });
   
   it("P(a) Q(b). let x: P(x) Q(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a) Q(b).
     `)).select(first(`
       let x: P(x) Q(x)?
@@ -605,7 +603,7 @@ describe("REPL", function() {
   });
 
   it("P(a, b). let x, y: P(x, y)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a, b).
     `)).select(first(`
       let x, y: P(x, y)?
@@ -614,7 +612,7 @@ describe("REPL", function() {
   });
 
   it("P(a). Q(b). let x, y: P(x) Q(y)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       P(a).
       Q(b).
     `)).select(first(`
@@ -637,7 +635,7 @@ describe("REPL", function() {
   });
   
   it("for (let every x: P(x)) Q(x). P(a). let x: Q(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x)) Q(x). 
       P(a).
     `)).select(first(`
@@ -646,7 +644,7 @@ describe("REPL", function() {
   });
 
   it("for (let every x: P(x) Q(x)) R(x). P(a). Q(a). let x: R(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x) Q(x)) R(x). 
       P(a).
       Q(a).
@@ -657,7 +655,7 @@ describe("REPL", function() {
   });
 
   it("for (let every x: P(x)) Q(x). for (let every x: Q(x)) R(x). P(a). let x: R(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x)) Q(x). 
       for (let every x: Q(x)) R(x). 
       P(a).
@@ -668,7 +666,7 @@ describe("REPL", function() {
   });
 
   it("for (let every x: P(x)) Q(x). for (let every x: Q(x)) R(x). P(a). let x: R(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x)) Q(x). 
       for (let every x: Q(x)) R(x). 
       P(a).
@@ -680,7 +678,7 @@ describe("REPL", function() {
   });
 
   it("for (let every x: P(x)) Q(x). for (let every x: R(x)) S(x). P(a). R(a). let x: Q(x) S(x)?", () => {
-    assertThat(unroll(new DB().insert(parse(`
+    assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x)) Q(x). 
       for (let every x: R(x)) S(x). 
       P(a).
@@ -759,84 +757,84 @@ describe("REPL", function() {
   });
 
   it("P()?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P()?"))).equalsTo([]);
   });
     
   it("P(). P()?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P()."))).equalsTo([]);
     assertThat(unroll(kb.read("P()?"))).equalsTo([{}]);
   });
     
   it("P(). Q()?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P()."))).equalsTo([]);
     assertThat(unroll(kb.read("Q()?"))).equalsTo([]);
   });
     
   it("P(). Q(). P()?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(). Q()."))).equalsTo([]);
     assertThat(unroll(kb.read("P()?"))).equalsTo([{}]);
   });
     
   it("P(). Q(). Q()?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(). Q()."))).equalsTo([]);
     assertThat(unroll(kb.read("Q()?"))).equalsTo([{}]);
   });
   
   it("P(A). P(A)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A)."))).equalsTo([]);
     assertThat(unroll(kb.read("P(A)?"))).equalsTo([{}]);
   });
   
   it("P(A). P(B)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A)."))).equalsTo([]);
     assertThat(unroll(kb.read("P(B)?"))).equalsTo([]);
   });
     
   it("P(A, B). P(A, B)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A, B)."))).equalsTo([]);
     assertThat(unroll(kb.read("P(A, B)?"))).equalsTo([{}]);
   });
   
   it("P(). P()?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P()."))).equalsTo([]);
     assertThat(unroll(kb.read("P()?"))).equalsTo([{}]);
   });
   
   it("P(). Q(). P() Q()?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(). Q()."))).equalsTo([]);
     assertThat(unroll(kb.read("P() Q()?"))).equalsTo([{}]);
   });
   
   it("P(). Q(). P() R()?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(). Q()."))).equalsTo([]);
     assertThat(unroll(kb.read("P() R()?"))).equalsTo([]);
   });
   
   it("P(A). Q(B). P(A) Q(B)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A). Q(B)."))).equalsTo([]);
     assertThat(unroll(kb.read("P(A) Q(B)?"))).equalsTo([{}]);
   });
   
   it("P(A). Q(B). P(A) R(B)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A). Q(B)."))).equalsTo([]);
     assertThat(unroll(kb.read("P(A) R(B)?"))).equalsTo([]);
   });
 
   it("P(u). P(x)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       P(u).
       let x: P(x)?
     `))).equalsTo([{"x": "u"}]);
@@ -911,32 +909,32 @@ describe("REPL", function() {
   });
 
   it("P(A). let a: P(a)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A)."))).equalsTo([]);
     assertThat(unroll(kb.read("let a: P(a)?"))).equalsTo([{"a": "A"}]);
   });
 
   it("P(A, B). let a, b: P(a, b)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A, B)."))).equalsTo([]);
     assertThat(unroll(kb.read("let a, b: P(a, b)?"))).equalsTo([{"a": "A", "b": "B"}]);
   });
 
   it("P(A, B). let b: P(A, b)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A, B)."))).equalsTo([]);
     assertThat(unroll(kb.read("let b: P(A, b)?"))).equalsTo([{"b": "B"}]);
   });
 
   it("P(A). Q(A). let a: P(a) Q(a)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       P(A). Q(A).
       let a: P(a) Q(a)?
     `))).equalsTo([{"a": "A"}]);
   });
 
   it("P(A). Q(A). let a: {P(a). Q(a).} ?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       P(A). Q(A).
       let a: {
         P(a). 
@@ -946,39 +944,39 @@ describe("REPL", function() {
   });
 
   it("P(a). Q(a). let b: P(b) Q(b)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       P(a). Q(a).
       let b: P(b) Q(b)?
     `))).equalsTo([{"b": "a"}]);
   });
 
   it("P(a). Q(c). P(b) Q(b)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       P(a). Q(c).
       P(b) Q(b)?
     `))).equalsTo([]);
   });
 
   it("P(A). let a: P(a) Q(a)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A)."))).equalsTo([]);
     assertThat(unroll(kb.read("let a: P(a) Q(a)?"))).equalsTo([]);
   });
 
   it("P(A). Q(B). let a: P(a) Q(a)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A). Q(B)."))).equalsTo([]);
     assertThat(unroll(kb.read("let a: P(a) Q(a)?"))).equalsTo([]);
   });
 
   it("P(A). Q(B). let a, b: P(a) Q(b)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read("P(A). Q(B)."))).equalsTo([]);
     assertThat(unroll(kb.read("let a, b: P(a) Q(b)?"))).equalsTo([{"a": "A", "b": "B"}]);
   });
 
   it("Sam(u) Dani(v) loves(u, v). let a, b: Sam(a) Dani(b) loves(a, b)?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read(`
       // There is a u named Sam and a v named Dani. u loves v.
       Sam(u) Dani(v) loves(u, v).
@@ -989,7 +987,7 @@ describe("REPL", function() {
   });
 
   it("Sam(u) Dani(v) loves(u, v). let a, b: Sam(a) loves(a, b) ?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read(`
       Sam(u) Dani(v) loves(u, v). 
 
@@ -999,7 +997,7 @@ describe("REPL", function() {
   });
 
   it("Sam(u) Dani(v) loves(u, v). let a, b: Sam(a) loves(a, b) ?", function() {
-    const kb = new DB();
+    const kb = new KB();
     assertThat(unroll(kb.read(`
       Sam(u) loves(u, v) Dani(v).
       // Who loves Dani?
@@ -1008,7 +1006,7 @@ describe("REPL", function() {
   });
 
   it("P(u). for (let every a: P(a)) Q(a). let x: Q(x)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       for (let every a: P(a)) 
         Q(a).
       P(u).
@@ -1017,7 +1015,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) Q(a). P(u). U(u). U(x) Q(x)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       for (let every a: P(a)) 
         Q(a).
 
@@ -1029,7 +1027,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: man(a)) mortal(a). Socrates(u). man(u). Socrates(v) mortal(v)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       // Every man is mortal.
       for (let every a: man(a)) 
         mortal(a).
@@ -1044,7 +1042,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) Q(a). for (every a: Q(a)) R(a). P(u). R(v)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       for (let every a: P(a)) 
         Q(a).
       for (let every a: Q(a)) 
@@ -1055,7 +1053,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) { Q(a). R(a).} P(u). R(v)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       for (let every a: P(a)) { 
         Q(a). 
         R(a). 
@@ -1068,7 +1066,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a) Q(a)) R(a). P(u). Q(u). R(v)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       for (let every a: P(a) Q(a)) 
         R(a).
 
@@ -1079,7 +1077,7 @@ describe("REPL", function() {
   });
 
   it("for (every a: {P(a). Q(a).}) R(a). P(u). Q(u). R(v)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       for (let every a: {
         P(a). 
         Q(a).
@@ -1095,7 +1093,7 @@ describe("REPL", function() {
   });
 
   it("let x: Socrates(x) animal(x)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       for (let every a: man(a)) 
         human(a).
 
@@ -1110,7 +1108,7 @@ describe("REPL", function() {
   });
 
   it("if (P()) Q(). P(). Q()?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       if (P()) 
         Q().
       P().
@@ -1119,7 +1117,7 @@ describe("REPL", function() {
   });
 
   it("if (P()) Q(). Q()?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       if (P()) 
         Q().
       Q()?
@@ -1127,7 +1125,7 @@ describe("REPL", function() {
   });
 
   it("if (P() Q()) R(). P(). Q(). R()?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       if (P() Q()) 
         R().
       P(). Q().
@@ -1136,7 +1134,7 @@ describe("REPL", function() {
   });
 
   it("if (P(a)) Q(c). P(a). let x: Q(x)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       if (P(a)) 
         Q(c).
       P(a).
@@ -1145,7 +1143,7 @@ describe("REPL", function() {
   });
 
   it("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       if (P(a) Q(b)) 
         R(c).
       P(a). Q(b).
@@ -1154,7 +1152,7 @@ describe("REPL", function() {
   });
 
   it("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       Jones(u).
       Mary(v).
 
@@ -1171,7 +1169,7 @@ describe("REPL", function() {
   });
 
   it("let x: Socrates(x) mortal(x)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       // Every greek man is mortal
       for (let every a: greek(a) man(a))
         mortal(a).
@@ -1187,7 +1185,7 @@ describe("REPL", function() {
   });
 
   it("let x: Socrates(x) good-influence(x)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       // Every greek philosopher is a good-influence.
       for (let every a: greek(a) philosopher(a)) {
         influence(a).
@@ -1205,7 +1203,7 @@ describe("REPL", function() {
   });
 
   it("let x, y: Sam(x) Leo(y) parent(x, y)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       Sam(u).
       Leo(v).
       man(u).
@@ -1217,7 +1215,7 @@ describe("REPL", function() {
   });
 
   it("let x, y: R(x, y)?", function() {
-    assertThat(unroll(new DB().read(`
+    assertThat(unroll(new KB().read(`
       // Nested quantifiers
       for (let every a: P(a)) {
         for (let every b: Q(b)) {

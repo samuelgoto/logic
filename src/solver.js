@@ -86,123 +86,6 @@ function preprocess([statements]) {
   return result;
 }
 
-class KB {
-  constructor(kb = []) {
-    this.kb = kb;
-  }
-  read(code) {
-    const [program] = new Parser().parse(code);
-    let result = [];
-    load([program]);
-    for (const line of program) {
-      const [head, body] = line;
-      if (head == "?") {
-        let [heady, letty, query] = line;
-        // console.log(query);
-        result.push(this.query(query));
-      } else {
-        this.push(line);
-      }
-    }
-    return result;
-  }
-  push(line) {
-    // console.log(s);
-    let [op] = line;
-    if (op == "every" || op == "if") {
-      this.kb.push(line);
-    } else {
-      for (let statement of line) {
-        this.kb.push(statement);
-      }
-    }
-    // this.kb.push(s);
-    return true;
-  }
-  entails(q) {
-    //console.log(`Question?`);
-    //console.log(q);
-    for (const s of this.kb) {
-      const binding = unify(q, s);
-      if (binding) {
-        let result = Object.fromEntries(
-          Object.entries(binding)
-            .map(([key, value]) => [key.substring(1), value])
-        );
-        //console.log("hi");
-        //console.log(result);
-        return result;
-      }
-    }
-    
-    for (const s of this.kb) {
-      const [op, vars, head, body] = s;
-      if (op == "every" || op == "if") {
-        for (let part of body) {
-          // console.log(q);
-          const match = new KB(part).entails(q);
-          if (!match) {
-            continue;
-          }
-          //console.log(match);
-          let vars = Object.fromEntries(
-            Object.entries(match)
-              .map(([key, value]) => [`@${key}`, value])
-          );
-          // console.log(vars);
-          // console.log(match);
-          // const dep = head;
-          // console.log(head);
-          // console.log(head);
-          // const dep = head.map((s) => bind(s, vars));
-          const dep = head.map(
-            (statement) => statement.map(
-              (s) => bind(s, vars)));
-          let result = this.query(dep);
-          if (result) {
-            const merged = Object.assign(match, result);
-            for (let [key, value] of Object.entries(merged)) {
-              const arg = value.substring(1);
-              if (result[arg]) {
-                merged[key] = result[arg];
-              }
-            }
-            let [name, args] = q;
-            const bindings = {};
-            for (let arg of args) {
-              // console.log(arg);
-              if (arg[0] == "@" && merged[arg.substring(1)]) {
-                // console.log(arg.substring(1));
-                bindings[arg.substring(1)] = merged[arg.substring(1)];
-              }
-            }
-            // console.log(result);
-            //console.log(merged);
-            //console.log(q);
-            //console.log(bindings);
-            return bindings;
-          }
-        }
-      }
-    }
-  }
-  query(block) {
-    // console.log(statement);
-    const result = {};
-    for (const statement of block) {
-      for (const term of statement) {
-        const vars = bind(term, result);
-        let binding = this.entails(vars);
-        if (!binding) {
-          return undefined;
-        }
-        Object.assign(result, Object.fromEntries(Object.entries(binding).map(([key, value]) => [`@${key}`, value])));
-      }
-    }
-    return Object.fromEntries(Object.entries(result).map(([key, value]) => [key.substring(1), value]));
-  }
-}
-
 function load([lines]) {
   for (let line of lines) {
     rewrite(line);
@@ -273,7 +156,7 @@ function apply(body, subs) {
   }
 }
 
-class DB {
+class KB {
   constructor() {
     this.rules = [];
   }
@@ -354,13 +237,12 @@ class DB {
 
 
 module.exports = {
-  KB: KB,
   unify: unify,
   bind: bind,
   load: load,
   preprocess: preprocess,
   equals: equals,
-  DB: DB,
+  KB: KB,
   clone: clone,
   apply: apply,
 }
