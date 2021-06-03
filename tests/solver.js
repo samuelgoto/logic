@@ -334,48 +334,39 @@ describe("REPL", function() {
       const vars = Object.fromEntries(
         letty.map((arg) => [arg, "some"]));
 
-      const [left, right] = body;
+      const [head, ...tail] = body;
 
-      //console.log(left);
-      //console.log(right);
-      
-      const query = clone(left);
+      // console.log(head);
+      // console.log(tail.length);
+
+      const query = clone(head);
       apply([query], vars);
       query[2] = vars;
       
       for (let q of this.query(query)) {
-        // found = true;
-        // console.log("returning");
-        if (!right) {
+        if (tail.length == 0) {
+          // console.log(q);
+          //console.log(q);
+          //console.log(Object.assign(clone(vars), q));
           yield Object.assign(clone(vars), q);
           continue;
         }
+        // console.log("hi");
         Object.assign(vars, q);
-        apply([right], vars);
-        right[2] = vars;
-        // console.log(right);
-        for (let r of this.query(right)) {
-          // console.log(r);
+        // console.log(tail);
+        //const dep = clone(tail);
+        apply(tail, vars);
+        // console.log(tail);
+        //for (let part of tail) {
+        //  console.log("hello");
+        //  console.log(part);
+        //  part[2] = vars; 
+        //}
+        for (let r of this.select(["?", letty.filter((x) => !vars[x]), tail])) {
+          // console.log(vars);
           yield Object.assign(clone(vars), r);
         }
-        // yield vars;
       }
-
-      //for (let part of body) {
-      //  const query = clone(part);
-      //  apply([query], vars);
-      //  query[2] = vars;
-        // let found = false;
-      //  for (let q of this.query(query)) {
-          // found = true;
-          // console.log("returning");
-      //    Object.assign(vars, q);
-      //    yield vars;
-      //  }
-        //if (!found) {
-        //  return;
-        //}
-      //}
     }
   }
 
@@ -707,6 +698,28 @@ describe("REPL", function() {
       let x: P(x) Q(x)?
     `))))
       .equalsTo([{"x": "a"}]);
+  });
+  
+  it("P(a). Q(a). R(b). let x: P(x) Q(x) R(x)?", () => {
+    assertThat(unroll(new DB().insert(parse(`
+      P(a).
+      Q(a).
+      R(b).
+    `)).select(first(`
+      let x: P(x) Q(x) R(x)?
+    `))))
+      .equalsTo([]);
+  });
+  
+  it("P(a). Q(a). R(a). let x: P(x) Q(x) R(x)?", () => {
+    assertThat(unroll(new DB().insert(parse(`
+      P(a).
+      Q(a).
+      R(a).
+    `)).select(first(`
+      let x: P(x) Q(x) R(x)?
+    `))))
+      .equalsTo([{x: "a"}]);
   });
   
   it("P(a). Q(b). let x: P(x) Q(x)?", () => {
