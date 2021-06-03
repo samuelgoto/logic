@@ -334,37 +334,26 @@ describe("REPL", function() {
       const vars = Object.fromEntries(
         letty.map((arg) => [arg, "some"]));
 
+      // console.log(`Select: ${JSON.stringify(line)}, vars: ${JSON.stringify(vars)}`);
       const [head, ...tail] = body;
-
-      // console.log(head);
-      // console.log(tail.length);
 
       const query = clone(head);
       apply([query], vars);
       query[2] = vars;
       
       for (let q of this.query(query)) {
-        if (tail.length == 0) {
-          // console.log(q);
-          //console.log(q);
-          //console.log(Object.assign(clone(vars), q));
-          yield Object.assign(clone(vars), q);
+        const partial = clone(vars);
+        const rest = clone(tail);
+        // console.log(`${JSON.stringify(q)}, partial: ${JSON.stringify(partial)}`);
+        if (rest.length == 0) {
+          yield Object.assign(clone(partial), q);
           continue;
         }
-        // console.log("hi");
-        Object.assign(vars, q);
-        // console.log(tail);
-        //const dep = clone(tail);
-        apply(tail, vars);
-        // console.log(tail);
-        //for (let part of tail) {
-        //  console.log("hello");
-        //  console.log(part);
-        //  part[2] = vars; 
-        //}
-        for (let r of this.select(["?", letty.filter((x) => !vars[x]), tail])) {
-          // console.log(vars);
-          yield Object.assign(clone(vars), r);
+        Object.assign(partial, q);
+        apply(rest, partial);
+        for (let r of this.select(["?", letty.filter((x) => !partial[x]), rest])) {
+          // console.log(r);
+          yield Object.assign(clone(partial), r);
         }
       }
     }
@@ -795,6 +784,24 @@ describe("REPL", function() {
       let x: R(x)?
     `))))
       .equalsTo([{"x": "a"}, {"x": "b"}]);
+  });
+
+  it("for (let every x: P(x)) Q(x). for (let every x: R(x)) S(x). P(a). R(a). let x: Q(x) S(x)?", () => {
+    assertThat(unroll(new DB().insert(parse(`
+      for (let every x: P(x)) Q(x). 
+      for (let every x: R(x)) S(x). 
+      P(a).
+      R(a).
+      P(b).
+      R(c).
+      Q(d) S(d).
+      Q(e).
+      S(f).
+      S(g) Q(g).
+    `)).select(first(`
+      let x: Q(x) S(x)?
+    `))))
+      .equalsTo([{"x": "a"}, {"x": "d"}, {"x": "g"}]);
   });
 
   it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
