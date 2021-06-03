@@ -304,11 +304,17 @@ class DB {
           yield matches;
           continue;
         }
-        
+
+        //console.log(matches);
         apply(body, matches);
-        const results = this.select(["?", Object.keys(q[2] || []), body]);
+        let letties = Object.keys(q[2])
+            .filter((x) => matches[x] == x ? true : !matches[x]);
+        const results = this.select(["?", letties, body]);
         for (let result of results) {
-          yield Object.assign(q[2], result);
+          const mapping = Object.fromEntries(
+            Object.entries(matches)
+              .filter(([key, value]) => q[2][key]));
+          yield Object.assign(Object.assign(q[2], mapping), result);
         }
       }
     }

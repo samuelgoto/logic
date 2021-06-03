@@ -441,7 +441,7 @@ describe("REPL", function() {
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every a: P(a)) Q(a). P(u). Q(v)?", () => {
+  it("for (let every a: P(a)) Q(a). P(u). Q(u)?", () => {
     assertThat(unroll(new DB().insert(parse(`
       for (let every a: P(a)) {
         Q(a).
@@ -1135,8 +1135,17 @@ describe("REPL", function() {
     `))).equalsTo([{}]);
   });
 
+  it("if (P(a)) Q(c). P(a). let x: Q(x)?", function() {
+    assertThat(unroll(new DB().read(`
+      if (P(a)) 
+        Q(c).
+      P(a).
+      let x: Q(x)?
+    `))).equalsTo([{x: "c"}]);
+  });
+
   it("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
-    assertThat(unroll(new KB().read(`
+    assertThat(unroll(new DB().read(`
       if (P(a) Q(b)) 
         R(c).
       P(a). Q(b).
@@ -1145,7 +1154,7 @@ describe("REPL", function() {
   });
 
   it("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
-    assertThat(unroll(new KB().read(`
+    assertThat(unroll(new DB().read(`
       Jones(u).
       Mary(v).
 
