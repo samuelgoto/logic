@@ -604,6 +604,25 @@ describe("REPL", function() {
       .equalsTo([]);
   });
 
+  it("P(a, b). let x, y: P(x, y)?", () => {
+    assertThat(unroll(new DB().insert(parse(`
+      P(a, b).
+    `)).select(first(`
+      let x, y: P(x, y)?
+    `))))
+      .equalsTo([{"x": "a", "y": "b"}]);
+  });
+
+  it("P(a). Q(b). let x, y: P(x) Q(y)?", () => {
+    assertThat(unroll(new DB().insert(parse(`
+      P(a).
+      Q(b).
+    `)).select(first(`
+      let x, y: P(x) Q(y)?
+    `))))
+      .equalsTo([{"x": "a", "y": "b"}]);
+  });
+
   it("equals(let x: Q(x), for (let every y: P(y)) Q(y))", () => {
     const body = [["P", ["y"]]];
     const matches = equals(

@@ -336,7 +336,8 @@ class DB {
       }
       Object.assign(partial, q);
       apply(rest, partial);
-      for (let r of this.select(["?", letty.filter((x) => !partial[x]), rest])) {
+      // console.log(`Querying ${JSON.stringify(rest)}`);
+      for (let r of this.select(["?", letty.filter((x) => !q[x]), rest])) {
         // console.log(r);
         yield Object.assign(clone(partial), r);
       }
