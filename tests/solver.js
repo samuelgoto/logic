@@ -1,6 +1,6 @@
 const Assert = require("assert");
 const {Parser} = require("../src/parser.js");
-const {KB, unify, bind, load, preprocess, equals, apply, clone} = require("../src/solver.js");
+const {KB, preprocess, equals, apply, clone} = require("../src/solver.js");
 
 describe("REPL", function() {
   it("P(a). => P(a).", () => {
@@ -339,20 +339,6 @@ describe("REPL", function() {
         R().
       } ?
     `)))).equalsTo([{}]);
-  });
-
-  it("P() => P()", () => {
-    assertThat(load(new Parser().parse(`
-      P().
-      P() Q().
-      P(a) Q(b).
-      P(a, b) Q(c, d).
-    `))).equalsTo([
-      [["P", []]],
-      [["P", []], ["Q", []]],
-      [["P", ["a"]], ["Q", ["b"]]],
-      [["P", ["a", "b"]], ["Q", ["c", "d"]]],
-    ]);
   });
   
   it("if (P()) Q(). Q()?", () => {
@@ -695,67 +681,6 @@ describe("REPL", function() {
       .equalsTo([{"x": "a"}, {"x": "d"}, {"x": "g"}]);
   });
 
-  it("for (let every a: P(a)) Q(a). => for (every a: P(@a)) Q(@a)", () => {
-    assertThat(load(new Parser().parse(`
-      for (let every a: P(a)) 
-        Q(a).
-    `))).equalsTo([
-      ["every", "a", [[["P", ["@a"]]]], [[["Q", ["@a"]]]]]
-    ]);
-  });
-  
-  it("for (let every a: P(a, b)) Q(a, c). => for (every a: P(@a, b)) Q(@a, c)", () => {
-    assertThat(load(new Parser().parse(`
-      for (let every a: P(a, b)) 
-        Q(a, c).
-    `))).equalsTo([
-      ["every", "a", [[["P", ["@a", "b"]]]], [[["Q", ["@a", "c"]]]]]
-    ]);
-  });
-  
-  it("for (let every a: P(a) Q(a)) R(a). => for (every a: P(@a) Q(@a)) R(@a)", () => {
-    assertThat(load(new Parser().parse(`
-      for (let every a: P(a) Q(a)) 
-        R(a).
-    `))).equalsTo([
-      ["every", "a", [[["P", ["@a"]], ["Q", ["@a"]]]], [[["R", ["@a"]]]]]
-    ]);
-  });
-  
-  it("for (let every a: {P(a). Q(a).}) R(a). => for (every a: {P(@a). Q(@a).}) R(@a)", () => {
-    assertThat(load(new Parser().parse(`
-      for (let every a: {
-        P(a). 
-        Q(a).
-      }) {
-        R(a).
-      }
-    `))).equalsTo([
-      ["every", "a", [[["P", ["@a"]]], [["Q", ["@a"]]]], [[["R", ["@a"]]]]]
-    ]);
-  });
-  
-  it("let a: P(a)? => let a: P(@a)?", () => {
-    assertThat(load(new Parser().parse(`
-      let a: P(a)?
-    `))).equalsTo([
-      ["?", ["a"], [[["P", ["@a"]]]]],
-    ]);
-  });
-
-  it("P(a). for (every a: P(a)) Q(a). let x: Q(x)?", () => {
-    assertThat(load(new Parser().parse(`
-      P(a). 
-      for (let every a: P(a)) 
-        Q(a). 
-      let x: Q(x)?
-    `))).equalsTo([
-      [["P", ["a"]]],
-      ["every", "a", [[["P", ["@a"]]]], [[["Q", ["@a"]]]]],
-      ["?", ["x"], [[["Q", ["@x"]]]]],
-    ]);
-  });
-
   it("P()?", function() {
     const kb = new KB();
     assertThat(unroll(kb.read("P()?"))).equalsTo([]);
@@ -840,74 +765,6 @@ describe("REPL", function() {
     `))).equalsTo([{"x": "u"}]);
   });
   
-  it("P() + P() = P()", () => {
-    assertThat(unify(["P", []], ["P", []])).equalsTo({});
-    assertThat(bind(["P", []], {})).equalsTo(["P", []]);
-  });
-
-  it("P() + Q() = false", () => {
-    assertThat(unify(["P", []], ["Q", []])).equalsTo(false);
-  });
-
-  it("P(A) + P() = false", () => {
-    assertThat(unify(["P", ["A"]], ["P", []])).equalsTo(false);
-  });
-
-  it("P() + P(A) = false", () => {
-    assertThat(unify(["P", []], ["P", ["A"]])).equalsTo(false);
-  });
-
-  it("P(A) + P(A) = {}", () => {
-    assertThat(unify(["P", ["A"]], ["P", ["A"]])).equalsTo({});
-    assertThat(bind(["P", ["A"]], {})).equalsTo(["P", ["A"]]);
-  });
-  
-  it("P(A, B) + P(A, B) = {}", () => {
-    assertThat(unify(["P", ["A", "B"]], ["P", ["A", "B"]])).equalsTo({});
-    assertThat(bind(["P", ["A", "B"]], {})).equalsTo(["P", ["A", "B"]]);
-  });
-  
-  it("P(@a) + P(A) = {}", () => {
-    assertThat(unify(["P", ["@a"]], ["P", ["A"]])).equalsTo({"@a": "A"});
-    assertThat(bind(["P", ["@a"]], {"@a": "A"})).equalsTo(["P", ["A"]], {"@a": "A"});
-  });
-  
-  it("P(@a) + P(@b) = {}", () => {
-    assertThat(unify(["P", ["@a"]], ["P", ["@b"]])).equalsTo({"@a": "@b"});
-    assertThat(bind(["P", ["@a"]], {"@a": "@b"})).equalsTo(["P", ["@b"]], {"@a": "@b"});
-  });
-  
-  it("P(A) + P(@a) = {}", () => {
-    assertThat(unify(["P", ["A"]], ["P", ["@a"]])).equalsTo({"@a": "A"});
-    assertThat(bind(["P", ["A"]], {"@a": "A"})).equalsTo(bind(["P", ["@a"]], {"@a": "A"}));
-  });
-  
-  it("P(A, @b) + P(A, B) = {}", () => {
-    assertThat(unify(["P", ["A", "@b"]], ["P", ["A", "B"]])).equalsTo({"@b": "B"});
-    assertThat(bind(["P", ["A", "@b"]], {"@b": "B"})).equalsTo(bind(["P", ["A", "B"]], {"@b": "B"}));
-  });
-  
-  it("P(A, B) + P(A, b) = {}", () => {
-    assertThat(unify(["P", ["A", "B"]], ["P", ["A", "@b"]])).equalsTo({"@b": "B"});
-    assertThat(bind(["P", ["A", "B"]], {"@b": "B"})).equalsTo(bind(["P", ["A", "@b"]], {"@b": "B"}));
-  });
-  
-  it("P(@a, @b) + P(A, B) = {}", () => {
-    assertThat(unify(["P", ["@a", "@b"]], ["P", ["A", "B"]])).equalsTo({"@a": "A", "@b": "B"});
-    assertThat(bind(["P", ["@a", "@b"]], {"@a": "A", "@b": "B"}))
-      .equalsTo(bind(["P", ["A", "B"]], {"@a": "A", "@b": "B"}));
-  });
-  
-  it("P(@a, @a) + P(A, A) = {}", () => {
-    assertThat(unify(["P", ["@a", "@a"]], ["P", ["A", "A"]])).equalsTo({"@a": "A"});
-    assertThat(bind(["P", ["@a", "@a"]], {"@a": "A"}))
-      .equalsTo(bind(["P", ["A", "A"]], {"@a": "A"}));
-  });
-  
-  it("P(@a, @a) + P(A, B) = {}", () => {
-    assertThat(unify(["P", ["@a", "@a"]], ["P", ["A", "B"]])).equalsTo(false);
-  });
-
   it("P(A). let a: P(a)?", function() {
     const kb = new KB();
     assertThat(unroll(kb.read("P(A)."))).equalsTo([]);
