@@ -1216,8 +1216,8 @@ describe("REPL", function() {
     `))).equalsTo([{"x": "u", "y": "v"}]);
   });
 
-  it.skip("let x, y: R(x, y)?", function() {
-    assertThat(new KB().read(`
+  it("let x, y: R(x, y)?", function() {
+    assertThat(unroll(new DB().read(`
       // Nested quantifiers
       for (let every a: P(a)) {
         for (let every b: Q(b)) {
@@ -1230,7 +1230,7 @@ describe("REPL", function() {
  
       // Are there x, y such that R(x, y)?
       let x, y: R(x, y)?
-    `)).equalsTo([{"x": "u", "y": "v"}]);
+    `))).equalsTo([{"x": "u", "y": "v"}]);
   });
 
   function assertThat(x) {
