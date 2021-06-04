@@ -231,6 +231,73 @@ describe("REPL", function() {
     ]);
   });
 
+  it("not P(). => not P().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      not P().
+    `))).equalsTo([
+      ["P", [], , , false]
+    ]);
+  });
+
+  it("not P() Q(). => not P(). not Q().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      not P() Q().
+    `))).equalsTo([
+      ["P", [], , , false],
+      ["Q", [], , , false]
+    ]);
+  });
+
+  it("not P(a) Q(b). => not P(a). not Q(b).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      not P(a) Q(b).
+    `))).equalsTo([
+      ["P", ["a"], , , false],
+      ["Q", ["b"], , , false]
+    ]);
+  });
+
+  it("not not P(). => P().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      not not P().
+    `))).equalsTo([
+      ["P", [], , , true]
+    ]);
+  });
+
+  it("not not not P(). => not P().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      not not not P().
+    `))).equalsTo([
+      ["P", [], , , false]
+    ]);
+  });
+
+  it("not not P() Q(). => P(). Q().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      not not P() Q().
+    `))).equalsTo([
+      ["P", [], , , true],
+      ["Q", [], , , true]
+    ]);
+  });
+
+  it("if (P()) not Q(). => not Q() if (P()).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      if (P()) not Q().
+    `))).equalsTo([
+      ["Q", [], {}, [["P", []]], false],
+    ]);
+  });
+
+  it.skip("either (P()) or Q(). => P() if not Q(). Q() if not P().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      either (P()) or Q().
+    `))).equalsTo([
+      // ["P", ["a"]],
+    ]);
+  });
+  
   function parse(code) {
     return preprocess(new Parser().parse(code));
   }

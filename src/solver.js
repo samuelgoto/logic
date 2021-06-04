@@ -8,6 +8,13 @@ function preprocess([statements]) {
       const [q, letty, body] = statement;
       statement[2] = preprocess([body]);
       result.push(statement);
+    } else if (op == "not") {
+      const [not, head] = statement;
+      for (const part of preprocess([head])) {
+        part[4] = !(part[4] == undefined ? true : part[4]);
+        // part[4] = !(part[4] || true);
+        result.push(part);
+      }
     } else if (op == "if" || op == "every") {
       const [iffy, letty, [head], body] = statement;
       for (const part of preprocess([body])) {
