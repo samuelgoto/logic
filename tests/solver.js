@@ -290,11 +290,32 @@ describe("REPL", function() {
     ]);
   });
 
-  it.skip("either (P()) or Q(). => P() if not Q(). Q() if not P().", () => {
+  it("either (P()) or Q(). => P() if not Q(). Q() if not P().", () => {
     assertThat(preprocess(new Parser().parse(`
       either (P()) or Q().
     `))).equalsTo([
-      // ["P", ["a"]],
+      ["P", [], {}, ["not", [[[["Q", []]]]]]],
+      ["Q", [], {}, ["not", [[[["P", []]]]]]],
+    ]);
+  });
+
+  it("either (P() Q()) or R(). => P() if not R(). Q() if not R(). R() if not P() Q().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      either (P() Q()) or R().
+    `))).equalsTo([
+      ["P", [], {}, ["not", [[[["R", []]]]]]],
+      ["Q", [], {}, ["not", [[[["R", []]]]]]],
+      ["R", [], {}, ["not", [[[["P", []], ["Q", []]]]]]],
+    ]);
+  });
+  
+  it("either (R()) or P() Q(). => R() if not P() Q(). P() if not R(). Q() if not R().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      either (R()) or P() Q().
+    `))).equalsTo([
+      ["R", [], {}, ["not", [[[["P", []], ["Q", []]]]]]],
+      ["P", [], {}, ["not", [[[["R", []]]]]]],
+      ["Q", [], {}, ["not", [[[["R", []]]]]]],
     ]);
   });
   

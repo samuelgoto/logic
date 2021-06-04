@@ -12,8 +12,21 @@ function preprocess([statements]) {
       const [not, head] = statement;
       for (const part of preprocess([head])) {
         part[4] = !(part[4] == undefined ? true : part[4]);
-        // part[4] = !(part[4] || true);
         result.push(part);
+      }
+    } else if (op == "either") {
+      const [either, letty, head, body] = statement;
+      for (const part of preprocess([head])) {
+        const rule = clone(part);
+        rule[2] = {};
+        rule[3] = ["not", [body]];
+        result.push(rule);
+      }
+      for (const part of preprocess([body])) {
+        const rule = clone(part);
+        rule[2] = {};
+        rule[3] = ["not", [head]];
+        result.push(rule);
       }
     } else if (op == "if" || op == "every") {
       const [iffy, letty, [head], body] = statement;
