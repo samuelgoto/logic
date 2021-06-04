@@ -239,18 +239,27 @@ describe("REPL", function() {
     ]);
   });
 
-  it("not P() Q(). => not P(). not Q().", () => {
+  it("not P() Q(). => not P(). Q().", () => {
     assertThat(preprocess(new Parser().parse(`
       not P() Q().
+    `))).equalsTo([
+      ["P", [], {}, [], false],
+      ["Q", []]
+    ]);
+  });
+
+  it("not (P() Q()). => not P(). not Q().", () => {
+    assertThat(preprocess(new Parser().parse(`
+      not (P() Q()).
     `))).equalsTo([
       ["P", [], {}, [], false],
       ["Q", [], {}, [], false]
     ]);
   });
 
-  it("not P(a) Q(b). => not P(a). not Q(b).", () => {
+  it("not (P(a) Q(b)). => not P(a). not Q(b).", () => {
     assertThat(preprocess(new Parser().parse(`
-      not P(a) Q(b).
+      not (P(a) Q(b)).
     `))).equalsTo([
       ["P", ["a"], {}, [], false],
       ["Q", ["b"], {}, [], false]
@@ -273,9 +282,9 @@ describe("REPL", function() {
     ]);
   });
 
-  it("not not P() Q(). => P(). Q().", () => {
+  it("not not (P() Q()). => P(). Q().", () => {
     assertThat(preprocess(new Parser().parse(`
-      not not P() Q().
+      not not (P() Q()).
     `))).equalsTo([
       ["P", [], {}, [], true],
       ["Q", [], {}, [], true]
@@ -1196,6 +1205,14 @@ describe("REPL", function() {
     `)))).equalsTo([false]);
   });
 
+  it("not P(). not P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      not P().
+    `)).select(first(`
+      not P()?
+    `)))).equalsTo([{}]);
+  });
+
   it("not P() Q(). P()?", () => {
     assertThat(unroll(new KB().insert(parse(`
       not P() Q().
@@ -1204,9 +1221,9 @@ describe("REPL", function() {
     `)))).equalsTo([false]);
   });
 
-  it("not P() Q(). P()?", () => {
+  it("not (P() Q()). P()?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      not P() Q().
+      not (P() Q()).
     `)).select(first(`
       Q()?
     `)))).equalsTo([false]);

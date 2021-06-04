@@ -72,9 +72,9 @@ const grammar = () => build(`
 
       head -> "(" _ declaration _ ")" {% ([p1, ws1, declaration]) => declaration %}
 
-      statement -> "not" _ block {% 
-        ([not, ws1, body]) =>  ["not", body] 
-      %}
+      # statement -> "not" _ block {% 
+      #   ([not, ws1, body]) =>  ["not", body] 
+      # %}
 
       block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
       block -> statement {% ([statement]) => [statement] %}
@@ -92,9 +92,15 @@ const grammar = () => build(`
 
       expression -> conjunction {% id %}
 
-      conjunction -> terminal (__ terminal):* {% 
+      conjunction -> negation (__ negation):* {% 
         ([t1, conjunction = []]) => [t1, ...conjunction.map(([ws1, t]) => t)] 
       %}
+
+      negation -> "not" _ negation {% ([not, ws, group]) => ["not", group] %}
+               | group {% id %}
+
+      group -> "(" _ expression _ ")" {% ([p1, ws1, group]) => group %}
+             | terminal {% id %}
 
       terminal -> predicate _ "(" _ args _ ")" {% ([pred, ws1, p1, ws2, args]) => [pred, args] %}
 
@@ -115,8 +121,14 @@ const grammar = () => build(`
     `);
 
 class Parser {
-  constructor() {
-    this.parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar()));
+  constructor(start) {
+    // console.log(nearley.Grammar.fromCompiled(grammar()));
+    // console.log(start);
+    const compiled = grammar();
+    if (start) {
+      compiled.ParserStart = start;
+    }    
+    this.parser = new nearley.Parser(nearley.Grammar.fromCompiled(compiled));
   }
   parse(source) {
     const {results} = this.parser.feed(source);

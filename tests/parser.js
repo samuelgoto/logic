@@ -420,30 +420,62 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("not", function() {
+  it("not a().", function() {
     const results = new Parser().parse(`
       not a().
-      not {
-        a().
-        b().
-      }
     `);
     assertThat(results).equalsTo([[
-      ["not", [[["a", []]]]],
-      ["not", [[["a", []]], [["b", []]]]],
+      [["not", ["a", []]]],
     ]]);
   });
 
-  it("not a(). ?", function() {
+  it("not (a() b()).", function() {
     const results = new Parser().parse(`
-      // This isn't allowed:
-      // not a() ?
-      // Whereas this is:
-      not a(). ?
+      not (a() b()).
     `);
     assertThat(results).equalsTo([[
-      ["?", [], [["not", [[["a", []]]]]]],
+      [["not", [["a", []], ["b", []]]]],
     ]]);
+  });
+
+  it("not a()?", function() {
+    const results = new Parser().parse(`
+      not a()?
+    `);
+    assertThat(results).equalsTo([[
+      ["?", [], [[["not", ["a", []]]]]],
+    ]]);
+  });
+
+  it("not a()", function() {
+    assertThat(new Parser("expression").parse(`not a()`))
+      .equalsTo([
+        [["not", ["a", []]]]
+      ]);
+    assertThat(new Parser("expression").parse(`not not a()`))
+      .equalsTo([
+        [["not", ["not", ["a", []]]]]
+      ]);
+    assertThat(new Parser("expression").parse(`(a())`))
+      .equalsTo([
+        [[["a", []]]]
+      ]);
+    assertThat(new Parser("expression").parse(`((a()))`))
+      .equalsTo([
+        [[[["a", []]]]]
+      ]);
+    assertThat(new Parser("expression").parse(`(a() b())`))
+      .equalsTo([
+        [[["a", []], ["b", []]]]
+      ]);
+    assertThat(new Parser("expression").parse(`(a() (b()))`))
+      .equalsTo([
+        [[["a", []], [["b", []]]]]
+      ]);
+    assertThat(new Parser("expression").parse(`(a() not b())`))
+      .equalsTo([
+        [[["a", []], ["not", ["b", []]]]]
+      ]);
   });
 
   it("// comments", function() {
@@ -567,40 +599,32 @@ describe("Parser", function() {
   it("Jones does not own a porsche.", function() {
     const results = new Parser().parse(`
       Jones(a).
-      not {
-        porsche(b).
-        own(s0, a, b).
-      }
+      not (porsche(b) own(s0, a, b)).
     `);
     assertThat(results).equalsTo([[
       [["Jones", ["a"]]],
-      ["not", [
-        [["porsche", ["b"]]],
-        [["own", ["s0", "a", "b"]]],
-      ]]
+      [["not", 
+        [["porsche", ["b"]], ["own", ["s0", "a", "b"]]],
+       ]]
     ]]);
   });
 
   it("Jones does not own a porsche which does not fascinate him.", function() {
     const results = new Parser().parse(`
       Jones(a).
-      not {
-        porsche(b).
-        own(s0, a, b).
-        not {
-          fascinate(s1, b, a).
-        }
-      }
+      not (
+        porsche(b) 
+        own(s0, a, b)
+        not fascinate(s1, b, a)
+      ).
     `);
     assertThat(results).equalsTo([[
       [["Jones", ["a"]]],
-      ["not", [
-        [["porsche", ["b"]]],
-        [["own", ["s0", "a", "b"]]],
-        ["not", [
-          [["fascinate", ["s1", "b", "a"]]],
-        ]]
-      ]]
+      [["not", [
+        ["porsche", ["b"]],
+        ["own", ["s0", "a", "b"]],
+        ["not", ["fascinate", ["s1", "b", "a"]]]
+      ]]]
     ]]);
   });
 
