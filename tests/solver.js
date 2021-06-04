@@ -235,7 +235,7 @@ describe("REPL", function() {
     assertThat(preprocess(new Parser().parse(`
       not P().
     `))).equalsTo([
-      ["P", [], , , false]
+      ["P", [], {}, [], false]
     ]);
   });
 
@@ -243,8 +243,8 @@ describe("REPL", function() {
     assertThat(preprocess(new Parser().parse(`
       not P() Q().
     `))).equalsTo([
-      ["P", [], , , false],
-      ["Q", [], , , false]
+      ["P", [], {}, [], false],
+      ["Q", [], {}, [], false]
     ]);
   });
 
@@ -252,8 +252,8 @@ describe("REPL", function() {
     assertThat(preprocess(new Parser().parse(`
       not P(a) Q(b).
     `))).equalsTo([
-      ["P", ["a"], , , false],
-      ["Q", ["b"], , , false]
+      ["P", ["a"], {}, [], false],
+      ["Q", ["b"], {}, [], false]
     ]);
   });
 
@@ -261,7 +261,7 @@ describe("REPL", function() {
     assertThat(preprocess(new Parser().parse(`
       not not P().
     `))).equalsTo([
-      ["P", [], , , true]
+      ["P", [], {}, [], true]
     ]);
   });
 
@@ -269,7 +269,7 @@ describe("REPL", function() {
     assertThat(preprocess(new Parser().parse(`
       not not not P().
     `))).equalsTo([
-      ["P", [], , , false]
+      ["P", [], {}, [], false]
     ]);
   });
 
@@ -277,8 +277,8 @@ describe("REPL", function() {
     assertThat(preprocess(new Parser().parse(`
       not not P() Q().
     `))).equalsTo([
-      ["P", [], , , true],
-      ["Q", [], , , true]
+      ["P", [], {}, [], true],
+      ["Q", [], {}, [], true]
     ]);
   });
 
@@ -368,6 +368,12 @@ describe("REPL", function() {
       P(c, d).
     `)).query(["P", ["x", "y"], {"x": "some", "y": "some"}])))
       .equalsTo([{x: "a", y: "b"}, {x: "c", y: "d"}]);
+  });
+
+  it("not P(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      not P().
+    `)).query(["P", []]))).equalsTo([false]);
   });
 
   it("P(). P()?", () => {
@@ -1174,6 +1180,67 @@ describe("REPL", function() {
       // Are there x, y such that R(x, y)?
       let x, y: R(x, y)?
     `))).equalsTo([{"x": "u", "y": "v"}]);
+  });
+
+  it("not P(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      not P().
+    `)).select(first(`
+      P()?
+    `)))).equalsTo([false]);
+  });
+
+  it("not P() Q(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      not P() Q().
+    `)).select(first(`
+      P()?
+    `)))).equalsTo([false]);
+  });
+
+  it("not P() Q(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      not P() Q().
+    `)).select(first(`
+      Q()?
+    `)))).equalsTo([false]);
+  });
+
+  it("not not P(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      not not P().
+    `)).select(first(`
+      P()?
+    `)))).equalsTo([{}]);
+  });
+
+  it("if (P()) not Q(). P(). Q()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      if (P()) not Q().
+      P().
+    `)).select(first(`
+      Q()?
+    `)))).equalsTo([false]);
+  });
+
+  it("if (P(a) Q(b)) not Q(c). P(a). Q(b). Q(c)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      if (P(a) Q(b)) not Q(c).
+      P(a).
+      Q(b).
+    `)).select(first(`
+      Q(c)?
+    `)))).equalsTo([false]);
+  });
+
+  it("for (let x: even(x)) not odd(x). even(u). odd(u)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      for (let every x: even(x))
+        not odd(x).
+      even(u).
+    `)).select(first(`
+      odd(u)?
+    `)))).equalsTo([false]);
   });
 
   function assertThat(x) {

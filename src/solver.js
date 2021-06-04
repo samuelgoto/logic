@@ -11,6 +11,8 @@ function preprocess([statements]) {
     } else if (op == "not") {
       const [not, head] = statement;
       for (const part of preprocess([head])) {
+        part[2] = {};
+        part[3] = [];
         part[4] = !(part[4] == undefined ? true : part[4]);
         result.push(part);
       }
@@ -117,9 +119,9 @@ class KB {
     for (let rule of this.rules) {
       const matches = equals(q, rule);
       if (matches) {
-        const [head, args, letty = {}, body = []] = clone(rule);
+        const [head, args, letty = {}, body = [], pos = true] = clone(rule);
         if (body.length == 0) {
-          yield matches;
+          yield pos ? matches : false;
           continue;
         }
 
@@ -128,10 +130,11 @@ class KB {
             .filter((x) => matches[x] == x ? true : !matches[x]);
         const results = this.select(["?", letties, body]);
         for (let result of results) {
+          // console.log(result);
           const mapping = Object.fromEntries(
             Object.entries(matches)
               .filter(([key, value]) => q[2][key]));
-          yield Object.assign(Object.assign(q[2], mapping), result);
+          yield pos ? Object.assign(Object.assign(q[2], mapping), result) : false;
         }
       }
     }
@@ -148,9 +151,15 @@ class KB {
     apply([query], vars);
     query[2] = vars;
     
+    // console.log(query);
+
     for (let q of this.query(query)) {
       const partial = clone(vars);
       const rest = clone(tail);
+      if (q == false) {
+        yield false;
+        return;
+      }
       if (rest.length == 0) {
         yield Object.assign(clone(partial), q);
         continue;
@@ -158,6 +167,7 @@ class KB {
       Object.assign(partial, q);
       apply(rest, partial);
       for (let r of this.select(["?", letty.filter((x) => !q[x]), rest])) {
+        // console.log(r);
         yield Object.assign(clone(partial), r);
       }
     }
