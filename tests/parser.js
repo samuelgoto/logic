@@ -434,6 +434,18 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("not a(). ?", function() {
+    const results = new Parser().parse(`
+      // This isn't allowed:
+      // not a() ?
+      // Whereas this is:
+      not a(). ?
+    `);
+    assertThat(results).equalsTo([[
+      ["?", [], [["not", [[["a", []]]]]]],
+    ]]);
+  });
+
   it("// comments", function() {
     const results = new Parser().parse(`
       // this is a comment
