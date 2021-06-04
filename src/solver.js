@@ -17,17 +17,24 @@ function preprocess([statements]) {
         result.push(part);
       }
     } else if (op == "either") {
-      const [either, letty, head, body] = statement;
-      for (const part of preprocess([head])) {
+      const [either, letty, [head], [body]] = statement;
+      for (const part of preprocess([[head]])) {
         const rule = clone(part);
         rule[2] = {};
-        rule[3] = ["not", [body]];
+        // rule[3] = ["not", [body]];
+        rule[3] = clone(body);
+        for (let el of rule[3]) {
+          el[4] = false;
+        }
         result.push(rule);
       }
-      for (const part of preprocess([body])) {
+      for (const part of preprocess([[body]])) {
         const rule = clone(part);
         rule[2] = {};
-        rule[3] = ["not", [head]];
+        rule[3] = clone(head);
+        for (let el of rule[3]) {
+          el[4] = false;
+        }
         result.push(rule);
       }
     } else if (op == "if" || op == "every") {

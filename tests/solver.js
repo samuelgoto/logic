@@ -294,8 +294,8 @@ describe("REPL", function() {
     assertThat(preprocess(new Parser().parse(`
       either (P()) or Q().
     `))).equalsTo([
-      ["P", [], {}, ["not", [[[["Q", []]]]]]],
-      ["Q", [], {}, ["not", [[[["P", []]]]]]],
+      ["P", [], {}, [["Q", [], , , false]]],
+      ["Q", [], {}, [["P", [], , , false]]],
     ]);
   });
 
@@ -303,9 +303,9 @@ describe("REPL", function() {
     assertThat(preprocess(new Parser().parse(`
       either (P() Q()) or R().
     `))).equalsTo([
-      ["P", [], {}, ["not", [[[["R", []]]]]]],
-      ["Q", [], {}, ["not", [[[["R", []]]]]]],
-      ["R", [], {}, ["not", [[[["P", []], ["Q", []]]]]]],
+      ["P", [], {}, [["R", [], , , false]]],
+      ["Q", [], {}, [["R", [], , , false]]],
+      ["R", [], {}, [["P", [], , , false], ["Q", [], , , false]]],
     ]);
   });
   
@@ -313,9 +313,9 @@ describe("REPL", function() {
     assertThat(preprocess(new Parser().parse(`
       either (R()) or P() Q().
     `))).equalsTo([
-      ["R", [], {}, ["not", [[[["P", []], ["Q", []]]]]]],
-      ["P", [], {}, ["not", [[[["R", []]]]]]],
-      ["Q", [], {}, ["not", [[[["R", []]]]]]],
+      ["R", [], {}, [["P", [], , , false], ["Q", [], , , false]]],
+      ["P", [], {}, [["R", [], , , false]]],
+      ["Q", [], {}, [["R", [], , , false]]],
     ]);
   });
   
@@ -1241,6 +1241,15 @@ describe("REPL", function() {
     `)).select(first(`
       odd(u)?
     `)))).equalsTo([false]);
+  });
+
+  it.skip("either (P()) or Q(). not Q(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      either (P()) or Q().
+      not Q().
+    `)).select(first(`
+      P()?
+    `)))).equalsTo([{}]);
   });
 
   function assertThat(x) {
