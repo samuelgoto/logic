@@ -62,9 +62,9 @@ const grammar = () => build(`
         ([letty, ws1, arg, args = []]) => [arg, ...args.map(([ws2, comma, ws3, b]) => b)] 
       %}
 
-      statement -> "either" _ head  _ "or" _ block {% 
-        ([either, ws1, head, ws2, or, ws3, body]) =>  ["either", head[0], head[1], body] 
-      %}
+      #statement -> "either" _ head  _ "or" _ block {% 
+      #  ([either, ws1, head, ws2, or, ws3, body]) =>  ["either", head[0], head[1], body] 
+      #%}
 
       declaration -> (letty _ ":" _):? condition {% ([letty, condition]) => [letty ? letty[0] : [], condition]%}
       condition -> expression {% ([expression]) => [expression] %}
@@ -90,7 +90,12 @@ const grammar = () => build(`
                  | "few" {% id %}
                  | "only" {% id %}
 
-      expression -> conjunction {% id %}
+      expression -> disjunction {% id %}
+
+      disjunction -> "either" _ disjunction _ "or" _ conjunction {% 
+          ([either, ws1, head, ws2, or, ws3, tail]) => ["either", [], head, tail]
+        %}
+                  | conjunction {% id %}
 
       conjunction -> negation (__ negation):* {% 
         ([t1, conjunction = []]) => [t1, ...conjunction.map(([ws1, t]) => t)] 
@@ -100,6 +105,7 @@ const grammar = () => build(`
                | group {% id %}
 
       group -> "(" _ expression _ ")" {% ([p1, ws1, group]) => group %}
+             | "(" (_ statement):* _ ")" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
              | terminal {% id %}
 
       terminal -> predicate _ "(" _ args _ ")" {% ([pred, ws1, p1, ws2, args]) => [pred, args] %}

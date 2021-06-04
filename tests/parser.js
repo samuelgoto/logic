@@ -373,40 +373,40 @@ describe("Parser", function() {
       ["either", [], [
         [["a", []]]
       ], [
-        [["b", []]]
+        ["b", []]
       ]],
     ]]);
   });
 
   it("either (a()) or { b(). }", () => {
     assertThat(new Parser().parse(`
-      either (a()) or { 
-        b(). 
-      }
+      either (a()) or (b().).
     `)).equalsTo([[
       ["either", [], [
         [["a", []]]
       ], [
-        [["b", []]]
+        [[["b", []]]]
       ]],
     ]]);
   });
 
-  it("either ({a().}) or { b(). }", () => {
+  it("either (a().) or (b().).", () => {
     assertThat(new Parser().parse(`
-      either ({a().}) or { 
+      either (
+        a().
+      ) or (
         b(). 
-      }
+      ).
     `)).equalsTo([[
       ["either", [], [
-        [["a", []]]
+        [[["a", []]]]
       ], [
-        [["b", []]]
+        [[["b", []]]]
       ]],
     ]]);
   });
 
-  it("either (let u: a(u)) or { b(). }", () => {
+  it.skip("either (let u: a(u)) or { b(). }", () => {
     assertThat(new Parser().parse(`
       either (let u: a(u)) or { 
         b(). 
@@ -445,6 +445,13 @@ describe("Parser", function() {
     assertThat(results).equalsTo([[
       ["?", [], [[["not", ["a", []]]]]],
     ]]);
+  });
+
+  it("(a().).", function() {
+    assertThat(new Parser("statement").parse(`(a().).`))
+      .equalsTo([
+        [[[["a", []]]]]
+      ]);
   });
 
   it("not a()", function() {
