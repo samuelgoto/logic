@@ -122,22 +122,25 @@ class KB {
     this.rules.push(...lines);
     return this;
   }
-  *query(q) {
+  *query(q, path) {
     for (let rule of this.rules) {
       const matches = equals(q, rule);
       if (matches) {
         const [head, args, letty = {}, body = [], pos = true] = clone(rule);
         if (body.length == 0) {
-          yield pos ? matches : false;
+          if (pos == (q[4] == undefined ? true : q[4])) {
+            yield matches;
+          } else {
+            yield false;
+          }
           continue;
         }
 
         apply(body, matches);
         let letties = Object.keys(q[2])
             .filter((x) => matches[x] == x ? true : !matches[x]);
-        const results = this.select(["?", letties, body]);
+        const results = this.select(["?", letties, body], path);
         for (let result of results) {
-          // console.log(result);
           const mapping = Object.fromEntries(
             Object.entries(matches)
               .filter(([key, value]) => q[2][key]));
@@ -146,8 +149,14 @@ class KB {
       }
     }
   }
-  *select(line) {
+  *select(line, path = []) {
     const [op, letty, body = []] = line;
+
+    // Return early if a cycle is detected
+    if (path.find((el) => JSON.stringify(el)==JSON.stringify(line))) {
+      return;
+    }
+    path.push(line);
     
     const vars = Object.fromEntries(
       letty.map((arg) => [arg, "some"]));
@@ -158,9 +167,7 @@ class KB {
     apply([query], vars);
     query[2] = vars;
     
-    // console.log(query);
-
-    for (let q of this.query(query)) {
+    for (let q of this.query(query, path)) {
       const partial = clone(vars);
       const rest = clone(tail);
       if (q == false) {
@@ -173,8 +180,7 @@ class KB {
       }
       Object.assign(partial, q);
       apply(rest, partial);
-      for (let r of this.select(["?", letty.filter((x) => !q[x]), rest])) {
-        // console.log(r);
+      for (let r of this.select(["?", letty.filter((x) => !q[x]), rest], path)) {
         yield Object.assign(clone(partial), r);
       }
     }

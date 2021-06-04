@@ -376,6 +376,12 @@ describe("REPL", function() {
     `)).query(["P", []]))).equalsTo([false]);
   });
 
+  it("not P(). not P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      not P().
+    `)).query(["P", [], {}, [], false]))).equalsTo([{}]);
+  });
+
   it("P(). P()?", () => {
     assertThat(unroll(new KB().insert(parse(`
       P().
@@ -1243,13 +1249,58 @@ describe("REPL", function() {
     `)))).equalsTo([false]);
   });
 
-  it.skip("either (P()) or Q(). not Q(). P()?", () => {
+  it("either (P()) or Q(). not Q(). P()?", () => {
     assertThat(unroll(new KB().insert(parse(`
       either (P()) or Q().
       not Q().
     `)).select(first(`
       P()?
     `)))).equalsTo([{}]);
+  });
+
+  it("either (P() Q()) or R(). not R(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      either (P() Q()) or R().
+      not R().
+    `)).select(first(`
+      P()?
+    `)))).equalsTo([{}]);
+  });
+
+  it("either (R()) or P() Q(). not R(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      either (R()) or P() Q().
+      not R().
+    `)).select(first(`
+      P()?
+    `)))).equalsTo([{}]);
+  });
+
+  it("either (P(a)) or Q(a). not Q(a). let x: P(x)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      either (P(a)) or Q(a).
+      not Q(a).
+    `)).select(first(`
+      let x: P(x)?
+    `)))).equalsTo([{"x": "a"}]);
+  });
+
+  it("for (let every x: U(x)) either (P(x)) or Q(x). not Q(a). U(a). let x: P(x)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      for (let every x: U(x)) {
+        either (P(x)) or Q(x).
+      }
+      not Q(a).
+      U(a).
+      not Q(b).
+      U(b).
+      not Q(c).
+      U(d).
+      not Q(e).
+      U(e).
+    `)).select(first(`
+      let x: P(x)?
+    `)))).equalsTo([{"x": "a"}, {"x": "b"}, {"x": "e"}]);
   });
 
   function assertThat(x) {
