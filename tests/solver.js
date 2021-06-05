@@ -1275,6 +1275,15 @@ describe("REPL", function() {
     `)))).equalsTo([{}]);
   });
 
+  it.skip("either P() or Q(). not Q(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      either P() or Q().
+      not Q().
+    `)).select(first(`
+      P()?
+    `)))).equalsTo([{}]);
+  });
+
   it("either (P() Q()) or R(). not R(). P()?", () => {
     assertThat(unroll(new KB().insert(parse(`
       either (P() Q()) or R().
