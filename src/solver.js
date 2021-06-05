@@ -182,7 +182,9 @@ class KB {
     for (let q of this.query(query, path)) {
       const partial = clone(vars);
       const rest = clone(tail);
+      //console.log(q);
       if (q == false) {
+        // console.log("hi");
         yield false;
         return;
       }

@@ -399,6 +399,14 @@ describe("REPL", function() {
     `)))).equalsTo([{}]);
   });
 
+  it("not P(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      not P().
+    `)).select(first(`
+      P()?
+    `)))).equalsTo([false]);
+  });
+
   it("P(). Q()?", () => {
     assertThat(unroll(new KB().insert(parse(`
       P().
@@ -510,6 +518,14 @@ describe("REPL", function() {
     `)).select(first(`
       R()?
     `)))).equalsTo([{}]);
+  });
+
+  it("not P(a). P(a)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      not P(a).
+    `)).select(first(`
+      P(a)?
+    `)))).equalsTo([false]);
   });
 
   it("P(a). if (P(a)) Q(b). Q(b)?", () => {
