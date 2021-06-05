@@ -20,7 +20,8 @@ function preprocess([statements]) {
         result.push(part);
       }
     } else if (op == "either") {
-      const [either, letty, [head], body] = statement;
+      const [either, letty, head, body] = statement;
+      // console.log("hi");
       for (const part of preprocess([[head]])) {
         const rule = clone(part);
         rule[2] = {};

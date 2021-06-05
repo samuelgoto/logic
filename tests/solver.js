@@ -244,7 +244,7 @@ describe("REPL", function() {
       not P() Q().
     `))).equalsTo([
       ["P", [], {}, [], false],
-      ["Q", []]
+      ["Q", [], {}, [], false]
     ]);
   });
 
