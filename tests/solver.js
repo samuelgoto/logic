@@ -1361,6 +1361,20 @@ describe("REPL", function() {
     `)))).equalsTo([{}]);
   });
 
+  it.skip("for (let every x: P(x)) Q(x). (for (let every x: P(x)) Q(x).) ?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      for (let every x: P(x)) Q(x).
+    `)).query(["Q", ["x"], {"x": "every"}, [["P", ["x"]]]]))).equalsTo([{}]);
+  });
+
+  it.skip("for (let every x: P(x)) Q(x). (for (let every x: P(x)) Q(x).) ?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      for (let every x: P(x)) Q(x).
+    `)).select(first(`
+      (for (let every x: P(x)) Q(x).)?
+    `)))).equalsTo([{}]);
+  });
+
   function assertThat(x) {
     return {
       equalsTo(y) {
