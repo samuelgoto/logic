@@ -1336,12 +1336,12 @@ describe("REPL", function() {
     `)))).equalsTo([{"x": "a"}, {"x": "b"}, {"x": "e"}]);
   });
 
-  it.skip("either (not P()) or not Q(). not Q(). P()?", () => {
+  it.skip("either not P() or Q(). not Q(). not P()?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      either (not P()) or not Q().
+      either P() or Q().
       not Q().
     `)).select(first(`
-      P()?
+      not P()?
     `)))).equalsTo([{}]);
   });
 
