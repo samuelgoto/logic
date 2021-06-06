@@ -110,7 +110,7 @@ const grammar = () => build(`
       arg -> variable {% id %} 
            | constant {% id %}
 
-      variable -> [a-z] [a-zA-Z0-9]:* {% ([head, body]) => head + body.join("")  %}
+      variable -> [a-z\\_] [a-zA-Z0-9\\-\\_]:* {% ([head, body]) => head + body.join("")  %}
       constant -> dqstring {% ([str]) => "'" + str + "'" %}
                 | sqstring {% ([str]) => "'" + str + "'" %}
                 | int {% id %}

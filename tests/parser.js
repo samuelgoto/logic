@@ -124,6 +124,14 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("a > __b__.", function() {
+    assertThat(new Parser().parse(`
+      a > __b__.
+    `)).equalsTo([[
+      [[">", ["a", "__b__"]]],
+    ]]);
+  });
+
   it("a() b().", function() {
     const results = new Parser().parse(`
       a() b().
