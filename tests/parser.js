@@ -74,7 +74,47 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("a() && b().", function() {
+  it("a = b.", function() {
+    assertThat(new Parser().parse(`
+      a = b.
+    `)).equalsTo([[
+      [["=", ["a", "b"]]],
+    ]]);
+  });
+
+  it("a > b.", function() {
+    assertThat(new Parser().parse(`
+      a > b.
+    `)).equalsTo([[
+      [[">", ["a", "b"]]],
+    ]]);
+  });
+
+  it("a < b.", function() {
+    assertThat(new Parser().parse(`
+      a < b.
+    `)).equalsTo([[
+      [["<", ["a", "b"]]],
+    ]]);
+  });
+
+  it("a <= b.", function() {
+    assertThat(new Parser().parse(`
+      a <= b.
+    `)).equalsTo([[
+      [["<=", ["a", "b"]]],
+    ]]);
+  });
+
+  it("a >= b.", function() {
+    assertThat(new Parser().parse(`
+      a >= b.
+    `)).equalsTo([[
+      [[">=", ["a", "b"]]],
+    ]]);
+  });
+
+  it("a() b().", function() {
     const results = new Parser().parse(`
       a() b().
     `);

@@ -99,6 +99,8 @@ const grammar = () => build(`
 
       terminal -> predicate _ "(" _ args _ ")" {% ([pred, ws1, p1, ws2, args]) => [pred, args] %}
 
+      terminal -> arg _ ("=" | ">" | "<" | ">=" | "<=") _ arg {% ([arg1, ws1, [op], ws2, arg2]) => [op, [arg1, arg2]] %}
+
       term -> constant {% id %}
 
       predicate -> [a-zA-Z\\-\\_]:+ {% ([body]) => body.join("")  %}
