@@ -3,7 +3,7 @@ const {Parser} = require("../src/parser.js");
 
 describe("Parser", function() {
 
-  it("statements", function() {
+  it("hello().", function() {
     const results = new Parser().parse(`
       hello().
     `);
@@ -26,6 +26,15 @@ describe("Parser", function() {
 
       // - is allowed to between characters
       a-b(). 
+
+      // names can start with _
+      __a(). 
+
+      // names can't start with _
+      // -a(). 
+
+      // names can't start with @
+      // @a(). 
     `);
     assertThat(results).equalsTo([[
       [["a", []]],
@@ -33,6 +42,7 @@ describe("Parser", function() {
       [["b", []]],
       [["aB", []]],
       [["a-b", []]],
+      [["__a", []]],
     ]]);
   });
 
