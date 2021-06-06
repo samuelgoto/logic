@@ -262,6 +262,45 @@ describe("Parser", function() {
     ]]);
   });
   
+  it("for (let at-least(3) x: b(x)) a(x).", () => {
+    assertThat(new Parser().parse(`
+      for (let at-least(3) x: b(x)) 
+        a(x).
+    `)).equalsTo([[
+      ["at-least(3)", "x", [
+        [["b", ["x"]]]
+      ], [
+        [["a", ["x"]]]
+      ]],
+    ]]);
+  });
+
+  it("for (let at-most(3) x: b(x)) a(x).", () => {
+    assertThat(new Parser().parse(`
+      for (let at-most(3) x: b(x)) 
+        a(x).
+    `)).equalsTo([[
+      ["at-most(3)", "x", [
+        [["b", ["x"]]]
+      ], [
+        [["a", ["x"]]]
+      ]],
+    ]]);
+  });
+
+  it("for (let exactly(3) x: b(x)) a(x).", () => {
+    assertThat(new Parser().parse(`
+      for (let exactly(3) x: b(x)) 
+        a(x).
+    `)).equalsTo([[
+      ["exactly(3)", "x", [
+        [["b", ["x"]]]
+      ], [
+        [["a", ["x"]]]
+      ]],
+    ]]);
+  });
+
   it("for (let every x: a(x) b(x)) {c(x). d(x).}", () => {
     assertThat(new Parser().parse(`
       for (let every x: a(x) b(x)) {
