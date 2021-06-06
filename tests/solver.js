@@ -1386,6 +1386,30 @@ describe("REPL", function() {
     `)))).equalsTo([{}]);
   });
   
+  it("P() and Q(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      P() and Q().
+    `)).select(first(`
+      P()?
+    `)))).equalsTo([{}]);
+  });
+
+  it("P() and Q() and R(). P() and R()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      P() and Q() and R().
+    `)).select(first(`
+      P() and R()?
+    `)))).equalsTo([{}]);
+  });
+
+  it("P() and Q() and R(). P()?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      (P(a). Q(a).) and (U(b). V(b).).
+    `)).select(first(`
+      let x: P(x)?
+    `)))).equalsTo([{"x": "a"}]);
+  });
+
   function assertThat(x) {
     return {
       equalsTo(y) {
