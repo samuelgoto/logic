@@ -141,6 +141,42 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("a() and b().", function() {
+    const results = new Parser().parse(`
+      a() and b().
+    `);
+    assertThat(results).equalsTo([[
+      [[["a", []]], [["b", []]]],
+    ]]);
+  });
+
+  it("not a() and b().", function() {
+    const results = new Parser().parse(`
+      not a() and b().
+    `);
+    assertThat(results).equalsTo([[
+      [["not", [["a", []]]], [["b", []]]],
+    ]]);
+  });
+
+  it("not a() and b().", function() {
+    const results = new Parser().parse(`
+      a() and not b().
+    `);
+    assertThat(results).equalsTo([[
+      [[["a", []]], ["not", [["b", []]]]],
+    ]]);
+  });
+
+  it("(a().) and (b().).", function() {
+    const results = new Parser().parse(`
+      a() and b().
+    `);
+    assertThat(results).equalsTo([[
+      [[["a", []]], [["b", []]]],
+    ]]);
+  });
+
   it("for (let every x: b(x)) a(x).", () => {
     assertThat(new Parser().parse(`
       // Basic quantifiers take a head and a tail.

@@ -81,8 +81,13 @@ const grammar = () => build(`
 
       expression -> disjunction {% id %}
 
-      disjunction -> "either" _ disjunction _ "or" _ negation {% 
+      disjunction -> "either" _ disjunction _ "or" _ conjunction {% 
           ([either, ws1, head, ws2, or, ws3, tail]) => ["either", [], head, tail]
+        %}
+                  | conjunction {% id %}
+
+      conjunction -> conjunction _ "and" _ negation {% 
+          ([left, ws1, and, ws2, right]) => [left, right]
         %}
                   | negation {% id %}
 
@@ -91,10 +96,10 @@ const grammar = () => build(`
 
       group -> "(" _ expression _ ")" {% ([p1, ws1, group]) => group %}
              | "(" (_ statement):* _ ")" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
-             | conjunction {% id %}
+             | list {% id %}
 
-      conjunction -> terminal (__ terminal):* {% 
-        ([t1, conjunction = []]) => [t1, ...conjunction.map(([ws1, t]) => t)] 
+      list -> terminal (__ terminal):* {% 
+        ([t1, list = []]) => [t1, ...list.map(([ws1, t]) => t)] 
       %}
 
       terminal -> predicate _ "(" _ args _ ")" {% ([pred, ws1, p1, ws2, args]) => [pred, args] %}
