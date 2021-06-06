@@ -1375,6 +1375,17 @@ describe("REPL", function() {
     `)))).equalsTo([{}]);
   });
 
+  it("for (let every x: R(x)) P(x) Q(x). P(c) Q(c)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+    for (let every x: R(x)) {
+      P(x) Q(x).
+    }
+    R(c).
+    `)).select(first(`
+      P(c) Q(c)?
+    `)))).equalsTo([{}]);
+  });
+  
   function assertThat(x) {
     return {
       equalsTo(y) {

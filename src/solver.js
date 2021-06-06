@@ -148,11 +148,6 @@ class KB {
           continue;
         }
 
-        // console.log("hi");
-        // Object.entries(matches).
-        //console.log(Object.entries(q[2]).filter(([key, value]) => !(matches[key] && value == "every")));
-        // console.log(q[2]);
-        
         apply(body, matches);
         let letties = Object.keys(q[2])
             .filter((x) => matches[x] == x ? true : !matches[x]);
@@ -167,17 +162,14 @@ class KB {
     }
   }
   *select(line, path = []) {
-
-    // console.log(line);
-    
     const [op, letty, body = []] = line;
-
-    // Return early if a cycle is detected
+    
     if (path.find((el) => JSON.stringify(el)==JSON.stringify(line))) {
       return;
     }
+
     path.push(line);
-    
+
     const vars = Object.fromEntries(
       letty.map((arg) => [arg, "some"]));
     
@@ -186,15 +178,11 @@ class KB {
     const query = clone(head);
     apply([query], vars);
     query[2] = vars;
-
-    // console.log(head);
     
-    for (let q of this.query(query, path)) {
+    for (let q of this.query(query, clone(path))) {
       const partial = clone(vars);
       const rest = clone(tail);
-      //console.log(q);
       if (q == false) {
-        // console.log("hi");
         yield false;
         return;
       }
@@ -203,8 +191,8 @@ class KB {
         continue;
       }
       Object.assign(partial, q);
-      apply(rest, partial);
-      for (let r of this.select(["?", letty.filter((x) => !q[x]), rest], path)) {
+      apply(rest, partial);      
+      for (let r of this.select(["?", letty.filter((x) => !q[x]), rest], clone(path))) {
         yield Object.assign(clone(partial), r);
       }
     }
