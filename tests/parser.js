@@ -288,6 +288,32 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("for (let more-than(3) x: b(x)) a(x).", () => {
+    assertThat(new Parser().parse(`
+      for (let more-than(3) x: b(x)) 
+        a(x).
+    `)).equalsTo([[
+      ["more-than(3)", "x", [
+        [["b", ["x"]]]
+      ], [
+        [["a", ["x"]]]
+      ]],
+    ]]);
+  });
+
+  it("for (let fewer-than(3) x: b(x)) a(x).", () => {
+    assertThat(new Parser().parse(`
+      for (let fewer-than(3) x: b(x)) 
+        a(x).
+    `)).equalsTo([[
+      ["fewer-than(3)", "x", [
+        [["b", ["x"]]]
+      ], [
+        [["a", ["x"]]]
+      ]],
+    ]]);
+  });
+
   it("for (let exactly(3) x: b(x)) a(x).", () => {
     assertThat(new Parser().parse(`
       for (let exactly(3) x: b(x)) 

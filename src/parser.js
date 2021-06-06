@@ -80,6 +80,8 @@ const grammar = () => build(`
                  | "only" {% id %}
                  | "at-least(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
                  | "at-most(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
+                 | "more-than(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
+                 | "fewer-than(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
                  | "exactly(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
 
       expression -> disjunction {% id %}
