@@ -354,6 +354,22 @@ describe("REPL", function() {
     return result;
   }
   
+  it.skip("P(). P()?", () => {
+    const rule = parse(`
+      P().
+    `);
+    const query = parse(`
+      P()?
+    `);
+    console.log(rule);
+    console.log(query);
+    return;
+    
+    assertThat(unroll(new KB().insert(parse(`
+      P().
+    `)).query(["P", []]))).equalsTo([{}]);
+  });
+
   it("P(). P()?", () => {
     assertThat(unroll(new KB().insert(parse(`
       P().

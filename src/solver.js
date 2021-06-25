@@ -1,18 +1,15 @@
 const {Parser} = require("./parser.js");
 
-function preprocess([statements]) {
+function preprocess(statements) {
   const result = [];
-  // console.log(statements);
   for (const statement of statements) {
     const [op] = statement;
-    // console.log(statement);
     if (op == "?") {
       const [q, letty, body] = statement;
-      statement[2] = preprocess([body]);
+      statement[2] = preprocess(body);
       result.push(statement);
     } else if (op == "not") {
       const [not, head] = statement;
-      // console.log(head);
       for (const part of preprocess([[head]])) {
         part[2] = {};
         part[3] = [];
@@ -57,14 +54,9 @@ function preprocess([statements]) {
         result.push(part);
       }
     } else if (Array.isArray(statement[0])) {
-      // console.log(statement);
-      const conjunction = preprocess([statement]);
-      // console.log(conjunction);
+      const conjunction = preprocess(statement);
       result.push(...conjunction);
     } else {
-      //console.log(statement);
-      // preprocess([statement]);
-      // console.log();
       result.push(statement);
     }
   }
