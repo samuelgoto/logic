@@ -140,7 +140,9 @@ class KB {
       if (!matches) {
         continue;
       }
+      // console.log(matches);
       const [head, args, letty = {}, body = [], pos = true] = clone(rule);
+      // console.log(q);
       if (body.length == 0) {
         if (pos == (q[4] == undefined ? true : q[4])) {
           yield matches;
@@ -151,6 +153,23 @@ class KB {
       }
 
       apply(body, matches);
+
+      const sillogism = Object.entries(matches).find(([key, value]) => {
+        return rule[2][key] == "every" && q[2][value] == "every"
+      });
+
+      if (sillogism) {
+        const grounded = body.filter(([name, args]) => args.find((arg) => {
+          return matches[arg];
+        }));
+        if (grounded.length == 0) {
+          yield Object.fromEntries(
+            Object.entries(matches)
+              .map(([key, value]) => [value, key]));
+          return;
+        }
+      }
+            
       let letties = Object.keys(q[2])
           .filter((x) => matches[x] == x ? true : !matches[x]);
       const results = this.select(["?", letties, body], path);
@@ -171,17 +190,21 @@ class KB {
 
     path.push(line);
 
-    // console.log(line);
-    
     const vars = Object.fromEntries(
       letty.map((arg) => [arg, "some"]));
+    
+    // console.log(line);
     
     const [head, ...tail] = body;
     
     const query = clone(head);
     apply([query], vars);
-    query[2] = vars;
-    
+    query[2] = Object.assign(vars, head[2]);
+
+    // console.log(query);
+    //console.log(vars);
+    //console.log(head);
+
     for (let q of this.query(query, clone(path))) {
       const partial = clone(vars);
       const rest = clone(tail);

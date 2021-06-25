@@ -1371,22 +1371,36 @@ describe("REPL", function() {
     `)))).equalsTo([{}]);
   });
 
-  it.skip("for (let every x: P(x)) Q(x). (for (let every x: P(x)) Q(x).) ?", () => {
+  it("for (let every x: P(x)) Q(x). == for (let every y: P(y)) Q(y)?", () => {
+    assertThat(equals(
+      ["Q", ["y"], {"y": "every"}, [["P", ["y"]]]],
+      ["Q", ["x"], {"x": "every"}, [["P", ["x"]]]]
+    )).equalsTo({"x": "y"});
+  });
+  
+  it("Q(a). == for (let every y: P(y)) Q(y)?", () => {
+    assertThat(equals(
+      ["Q", ["a"]],
+      ["Q", ["x"], {"x": "every"}, [["P", ["x"]]]]
+    )).equalsTo({"x": "a"});
+  });
+  
+  it("for (let every x: P(x)) { Q(x). } for (let every y: P(y)) { Q(y). } ?", () => {
     assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x)) Q(x).
-    `)).query(["Q", ["x"], {"x": "every"}, [["P", ["x"]]]]))).equalsTo([{}]);
+    `)).query(["Q", ["y"], {"y": "every"}, [["P", ["y"]]]]))).equalsTo([{"y": "x"}]);
   });
 
-  it.skip("for (let every x: P(x)) Q(x). (for (let every x: P(x)) Q(x).) ?", () => {
+  it("for (let every x: P(x)) { Q(x). } for (let every x: P(x)) { Q(x). } ?", () => {
     assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x)) {
         Q(x).
       }
     `)).select(first(`
-      for (let every x: P(x)) {
-        Q(x).
+      for (let every y: P(y)) {
+        Q(y).
       } ?
-    `)))).equalsTo([{}]);
+    `)))).equalsTo([{"y": "x"}]);
   });
 
   it("for (let every x: R(x)) P(x) Q(x). P(c) Q(c)?", () => {
