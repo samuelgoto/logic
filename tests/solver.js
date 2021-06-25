@@ -1,6 +1,6 @@
 const Assert = require("assert");
 const {Parser} = require("../src/parser.js");
-const {KB, preprocess, equals, apply, clone} = require("../src/solver.js");
+const {KB, stepback, preprocess, equals, apply, clone} = require("../src/solver.js");
 
 describe("REPL", function() {
   function literal(a) {
@@ -413,24 +413,7 @@ describe("REPL", function() {
       }
     }
     return true;
-  }
-  
-  function stepback(rule, q) {
-    const matches = equals(q, rule);
-
-    if (!matches) {
-      return undefined;
-    }
-
-    const [name, args, value = true, deps = []] = rule;
-    const [ , , ask = true] = q;
-
-    if (value != ask) {
-      return [false, deps];
-    }
-    
-    return [matches, deps];
-  }
+  }  
 
   it("P(). P()?", () => {
     assertThat(stepback(first(`
@@ -554,6 +537,33 @@ describe("REPL", function() {
     `), q(`
       not P()?
     `))).equalsTo([false, []]);
+  });
+
+  it("for (let every x: P(x)) Q(x).  let x: P(x)?", () => {
+    assertThat(stepback(first(`
+      for (let every x: P(x))
+        Q(x).
+    `), q(`
+      let x: Q(x)?
+    `))).equalsTo([{"x": x()}, [P(free("x"))]]);
+  });
+
+  it("for (let every x: P(x) Q(x)) R(x).  let x: R(x)?", () => {
+    assertThat(stepback(first(`
+      for (let every x: P(x) Q(x))
+        R(x).
+    `), q(`
+      let x: R(x)?
+    `))).equalsTo([{"x": x()}, [P(free("x")), Q(free("x"))]]);
+  });
+
+  it("either P(a) or Q(a). not Q(a). let x: P(x)?", () => {
+    assertThat(stepback(first(`
+      either P(a) or Q(a).
+      not Q(a).
+    `), q(`
+      let x: P(x)?
+    `))).equalsTo([{"x": a()}, [NOT(Q(a()))]]);
   });
 
   it("P(). P()?", () => {

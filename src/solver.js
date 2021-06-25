@@ -118,6 +118,25 @@ function apply(body, subs) {
   }
 }
 
+function stepback(rule, q) {
+  const matches = equals(q, rule);
+  
+  if (!matches) {
+    return undefined;
+  }
+  
+  const [name, args, value = true, deps = []] = rule;
+  const [ , , ask = true] = q;
+  
+  apply(deps, matches);
+  
+  if (value != ask) {
+    return [false, deps];
+  }
+  
+  return [matches, deps];
+}
+
 class KB {
   constructor() {
     this.rules = [];
@@ -214,6 +233,7 @@ class KB {
 
 
 module.exports = {
+  stepback: stepback,
   preprocess: preprocess,
   equals: equals,
   KB: KB,
