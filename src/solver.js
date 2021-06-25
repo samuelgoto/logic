@@ -161,22 +161,6 @@ class KB {
 
       apply(body, matches);
 
-      const sillogism = Object.entries(matches).find(([key, value]) => {
-        return rule[2][key] == "every" && q[2][value] == "every"
-      });
-
-      if (sillogism) {
-        const grounded = body.filter(([name, args]) => args.find((arg) => {
-          return matches[arg];
-        }));
-        if (grounded.length == 0) {
-          yield Object.fromEntries(
-            Object.entries(matches)
-              .map(([key, value]) => [value, key]));
-          return;
-        }
-      }
-            
       const results = this.select(["?", body], path);
       const free = q[1]
             .filter(([name, type]) => type == "free")
