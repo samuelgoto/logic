@@ -346,6 +346,10 @@ describe("REPL", function() {
     return parse(code)[0];
   }
 
+  function q(code) {
+    return first(code)[2][0];
+  }
+
   function unroll(gen) {
     const result = [];
     for (let entry of gen) {
@@ -354,20 +358,97 @@ describe("REPL", function() {
     return result;
   }
   
-  it.skip("P(). P()?", () => {
-    const rule = parse(`
+  function stepback(rule, q) {
+    if (equals(q, rule)) {
+      const [name, args, vars, deps = [], value = true] = rule;
+      const [, , , , ask = true] = q;
+      return [value == ask, deps];
+    }
+    return undefined;
+  }
+
+  it("P(). P()?", () => {
+    assertThat(stepback(first(`
       P().
-    `);
-    const query = parse(`
+    `), q(`
       P()?
-    `);
-    console.log(rule);
-    console.log(query);
-    return;
-    
-    assertThat(unroll(new KB().insert(parse(`
+    `))).equalsTo([true, []]);
+  });
+
+  it("P(a). P(a)?", () => {
+    assertThat(stepback(first(`
+      P(a).
+    `), q(`
+      P(a)?
+    `))).equalsTo([true, []]);
+  });
+
+  it("P(a, b). P(a, b)?", () => {
+    assertThat(stepback(first(`
+      P(a, b).
+    `), q(`
+      P(a, b)?
+    `))).equalsTo([true, []]);
+  });
+
+  it("P(). Q()?", () => {
+    assertThat(stepback(first(`
       P().
-    `)).query(["P", []]))).equalsTo([{}]);
+    `), q(`
+      Q()?
+    `))).equalsTo(undefined);
+  });
+
+  it("P(a). P(b)?", () => {
+    assertThat(stepback(first(`
+      P(a).
+    `), q(`
+      P(b)?
+    `))).equalsTo(undefined);
+  });
+
+  function P(...args) {
+    return ["P", args];
+  }
+
+  function Q(...args) {
+    return ["Q", args];
+  }
+  
+  function R(...args) {
+    return ["R", args];
+  }
+  
+  it("if (Q(a)) P(a). P(a)?", () => {
+    assertThat(stepback(first(`
+      if (Q(a)) P(a).
+    `), q(`
+      P(a)?
+    `))).equalsTo([true, [Q("a")]]);
+  });
+
+  it("if (P(a) Q(a)) R(a). R(a)?", () => {
+    assertThat(stepback(first(`
+      if (P(a) Q(a)) R(a).
+    `), q(`
+      R(a)?
+    `))).equalsTo([true, [P("a"), Q("a")]]);
+  });
+
+  it("not P(). P()?", () => {
+    assertThat(stepback(first(`
+      not P().
+    `), q(`
+      P()?
+    `))).equalsTo([false, []]);
+  });
+
+  it("P(). P()?", () => {
+    assertThat(stepback(first(`
+      P().
+    `), q(`
+      not P()?
+    `))).equalsTo([false, []]);
   });
 
   it("P(). P()?", () => {
