@@ -26,17 +26,19 @@ function preprocess(statements, scope = {}) {
       }
     } else if (op == "either") {
       const [either, letty, head, body] = statement;
-      for (const part of preprocess([[head]], scope)) {
+      const left = preprocess([[head]], scope);
+      const right = preprocess([[body]], scope);
+      for (const part of left) {
         const rule = clone(part);
-        rule[3] = clone(body);
+        rule[3] = clone(right);
         for (let el of rule[3]) {
           el[2] = false;
         }
         result.push(rule);
       }
-      for (const part of preprocess([[body]], scope)) {
+      for (const part of right) {
         const rule = clone(part);
-        rule[3] = clone(head);
+        rule[3] = clone(left);
         for (let el of rule[3]) {
           el[2] = false;
         }
@@ -80,13 +82,13 @@ function equals(a, b) {
   }
   const subs = {};
   for (let i = 0; i < a[1].length; i++) {
-    if (a[1][i][1] != "const") {
-      subs[a[1][i][0]] = b[1][i];
+    if (b[1][i][1] != "const") {
+      subs[b[1][i][0]] = a[1][i];
       continue;
     }
 
-    if (b[1][i][1] != "const") {
-      subs[b[1][i][0]] = a[1][i];
+    if (a[1][i][1] != "const") {
+      subs[a[1][i][0]] = b[1][i];
       continue;
     }
 
@@ -141,9 +143,9 @@ class KB {
     return this;
   }
   *query(q, path) {
+    //console.log(q);
     for (let rule of this.rules) {
       const matches = equals(q, rule);
-      //console.log(q);
       //console.log(rule);
       //console.log(matches);
       if (!matches) {
@@ -153,6 +155,7 @@ class KB {
 
       if (body.length == 0) {
         if (pos == (q[2] == undefined ? true : q[2])) {
+          // console.log(matches);
           yield matches;
         } else {
           // console.log(q[2]);
@@ -162,8 +165,8 @@ class KB {
       }
 
       apply(body, matches);
-      //console.log(matches);
       //console.log(JSON.stringify(body));
+      //console.log(matches);
 
       const sillogism = Object.entries(matches).find(([key, value]) => {
         return rule[2][key] == "every" && q[2][value] == "every"
@@ -184,27 +187,34 @@ class KB {
       }
             
       const results = this.select(["?", body], path);
-      //const free = q[1]
-      //      .filter(([name, type]) => type == "free")
-      //      .map(([name]) => name);
-      //const mapping = Object.fromEntries(
-      //  Object.entries(matches)
-      //    .filter(([key, value]) => free.includes(key)));
-      const mapping = matches;
+      const free = q[1]
+            .filter(([name, type]) => type == "free")
+            .map(([name]) => name);
+      const mapping = Object.fromEntries(
+        Object.entries(matches)
+          .filter(([key, value]) => free.includes(key)));
+      //const mapping = matches;
       //console.log(q);
       //console.log(free);
       //console.log(matches);
       for (let result of results) {
-        // console.log(result);
+        //console.log("hello");
+        //console.log(free);
+        //console.log(matches);
+        //console.log(result);
+        //console.log(mapping);
+        //console.log("world");
         //console.log(matches);
         if (pos) {
+          yield Object.assign(mapping, result);
           //console.log(result);
+          //console.log(matches);
           //console.log(mapping);
-          yield Object.fromEntries(
-            Object.entries(mapping)
-              .filter(([key, [name]]) => result[name])
-              .map(([key, [name]]) => [key, result[name]])
-          );
+          //yield Object.fromEntries(
+          //  Object.entries(mapping)
+              // .filter(([key, [name]]) => result[name])
+          //    .map(([key, [name]]) => result[name] ? [key, result[name]] : [key, mapping[key]])
+          //);
           // yield mapping;
         } else {
           yield false;

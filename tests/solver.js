@@ -258,6 +258,14 @@ describe("REPL", function() {
     ]);
   });
 
+  it("not P(a). => not P(a).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      not P(a).
+    `))).equalsTo([
+      NOT(P(literal("a")))
+    ]);
+  });
+
   it("not P() Q(). => not P(). Q().", () => {
     assertThat(preprocess(new Parser().parse(`
       not P() Q().
@@ -324,6 +332,15 @@ describe("REPL", function() {
     `))).equalsTo([
       IF([NOT(Q())], P()),
       IF([NOT(P())], Q()),
+    ]);
+  });
+
+  it("either (P(a)) or Q(b). => P(a) if not Q(b). Q(b) if not P(a).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      either (P(a)) or Q(b).
+    `))).equalsTo([
+      IF([NOT(Q(literal("b")))], P(literal("a"))),
+      IF([NOT(P(literal("a")))], Q(literal("b"))),
     ]);
   });
 
@@ -919,16 +936,17 @@ describe("REPL", function() {
       .equalsTo([{"x": literal("a"), "y": literal("b")}]);
   });
 
-  it.skip("equals(let x: Q(x), for (let every y: P(y)) Q(y))", () => {
+  it("equals(let x: Q(x), for (let every y: P(y)) Q(y))", () => {
     const body = [["P", ["y"]]];
     const matches = equals(
-      ["Q", ["x"], {x: "some"}, []],
-      ["Q", ["y"], {y: "every"}, body]);
+      ["Q", [free("x")], []],
+      ["Q", [["y", "every"]], body]
+    );
     assertThat(matches)
-      .equalsTo({y: "x"});
+      .equalsTo({"y": ["x", "free"]});
     apply(body, matches);
     assertThat(body)
-      .equalsTo([["P", ["x"]]]);
+      .equalsTo([["P", [["x", "free"]]]]);
 
   });
   
@@ -952,6 +970,14 @@ describe("REPL", function() {
       .equalsTo([{"x": a()}]);
   });
 
+  it("", () => {
+    const match = equals(Q(free("y")), FORALL([P(x())], Q(x())));
+    assertThat(match).equalsTo({"x": ["y", "free"]});
+    const deps = [P(x())];
+    apply(deps, match);
+    assertThat(deps).equalsTo([P(free("y"))]);
+  });
+  
   it("for (let every x: P(x)) Q(x). for (let every x: Q(x)) R(x). P(a). let x: R(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x)) Q(x). 
@@ -1320,13 +1346,13 @@ describe("REPL", function() {
     `))).equalsTo([{}]);
   });
 
-  it.skip("if (P(a)) Q(c). P(a). let x: Q(x)?", function() {
+  it("if (P(a)) Q(c). P(a). let x: Q(x)?", function() {
     assertThat(unroll(new KB().read(`
       if (P(a)) 
         Q(c).
       P(a).
       let x: Q(x)?
-    `))).equalsTo([{x: "c"}]);
+    `))).equalsTo([{x: literal("c")}]);
   });
 
   it.skip("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
