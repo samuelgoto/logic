@@ -162,6 +162,8 @@ class KB {
         const grounded = body.filter(([name, args]) => args.find((arg) => {
           return matches[arg];
         }));
+        // console.log(body);
+        // console.log(q);
         if (grounded.length == 0) {
           yield Object.fromEntries(
             Object.entries(matches)
