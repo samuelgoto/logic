@@ -1,63 +1,71 @@
 const {Parser} = require("./parser.js");
 
-function preprocess(statements) {
+function preprocess(statements, scope = {}) {
   const result = [];
   for (const statement of statements) {
     const [op] = statement;
     if (op == "?") {
       const [q, letty, body] = statement;
-      statement[2] = preprocess(body);
-      result.push(statement);
+      const vars = {};
+      if (letty) {
+        if (Array.isArray(letty)) {
+          for (let arg of letty) {
+            vars[arg] = "free";
+          }
+        } else {
+          vars[letty] = "free";
+        }
+      }
+      result.push([q, preprocess(body, Object.assign(scope, vars))]);
     } else if (op == "not") {
       const [not, head] = statement;
-      for (const part of preprocess([[head]])) {
-        part[2] = {};
-        part[3] = [];
-        part[4] = !(part[4] == undefined ? true : part[4]);
+      for (const part of preprocess([[head]], scope)) {
+        const [name, args, value = true] = part;
+        part[2] = !value;
         result.push(part);
       }
     } else if (op == "either") {
       const [either, letty, head, body] = statement;
-      // console.log("hi");
-      for (const part of preprocess([[head]])) {
+      for (const part of preprocess([[head]], scope)) {
         const rule = clone(part);
-        rule[2] = {};
-        // rule[3] = ["not", [body]];
         rule[3] = clone(body);
         for (let el of rule[3]) {
-          el[4] = false;
+          el[2] = false;
         }
         result.push(rule);
       }
-      for (const part of preprocess([[body]])) {
+      for (const part of preprocess([[body]], scope)) {
         const rule = clone(part);
-        rule[2] = {};
         rule[3] = clone(head);
         for (let el of rule[3]) {
-          el[4] = false;
+          el[2] = false;
         }
         result.push(rule);
       }
     } else if (op == "if" || op == "every") {
       const [iffy, letty, [head], body] = statement;
-      for (const part of preprocess([body])) {
-        let vars = {};
-        if (typeof letty == "string") {
-          vars = {[letty]: op};
-        }
-        part[2] = Object.assign(vars, part[2]);
+      const vars = {};
+      if (letty) {
+        vars[letty] = "every";
+      }
+      const heady = preprocess(head, Object.assign(scope, vars));
+      for (const part of preprocess([body], scope)) {
         if (part[3]) {
-          part[3].push(...head);
+          part[3].push(...heady);
         } else {
-          part[3] = head;
+          part[3] = heady;
         }
         result.push(part);
       }
     } else if (Array.isArray(statement[0])) {
-      const conjunction = preprocess(statement);
+      const conjunction = preprocess(statement, scope);
       result.push(...conjunction);
     } else {
-      result.push(statement);
+      const [name, args] = statement;
+      const vars = args.map((x) =>
+        scope[x] ? [x, scope[x]] : [x, "const"]
+      );
+      result.push([name, vars, true]);
     }
   }
   return result;
@@ -70,15 +78,22 @@ function equals(a, b) {
   if (a[1].length != b[1].length) {
     return false;
   }
-  const vars1 = b[2] || {};
-  const vars2 = a[2] || {};
   const subs = {};
   for (let i = 0; i < a[1].length; i++) {
-    if (vars1[b[1][i]]) {
-      subs[b[1][i]] = a[1][i];
-    } else if (vars2[a[1][i]]) {
-      subs[a[1][i]] = b[1][i];
-    } else if (a[1][i] != b[1][i]) {
+    if (a[1][i][1] != "const") {
+      subs[a[1][i][0]] = b[1][i];
+      continue;
+    }
+
+    if (b[1][i][1] != "const") {
+      subs[b[1][i][0]] = a[1][i];
+      continue;
+    }
+
+    if (a[1][i][1] != b[1][i][1]) {
+      return false;
+    }
+    if (a[1][i][0] != b[1][i][0]) {
       return false;
     }
   }
@@ -93,10 +108,9 @@ function apply(body, subs) {
   for (let part of body) {
     const [name, args] = part;
     for (let i = 0; i < args.length; i++) {
-      if (subs[args[i]] &&
-          subs[args[i]] != "some" &&
-          subs[args[i]] != "every") {
-        args[i] = subs[args[i]];
+      const [name, type] = args[i];
+      if (subs[name]) {
+        args[i] = subs[name];
       }
     }
   }
@@ -129,22 +143,27 @@ class KB {
   *query(q, path) {
     for (let rule of this.rules) {
       const matches = equals(q, rule);
+      //console.log(q);
+      //console.log(rule);
+      //console.log(matches);
       if (!matches) {
         continue;
       }
-      // console.log(matches);
-      const [head, args, letty = {}, body = [], pos = true] = clone(rule);
-      // console.log(q);
+      const [head, args, pos = true, body = []] = clone(rule);
+
       if (body.length == 0) {
-        if (pos == (q[4] == undefined ? true : q[4])) {
+        if (pos == (q[2] == undefined ? true : q[2])) {
           yield matches;
         } else {
+          // console.log(q[2]);
           yield false;
         }
         continue;
       }
 
       apply(body, matches);
+      //console.log(matches);
+      //console.log(JSON.stringify(body));
 
       const sillogism = Object.entries(matches).find(([key, value]) => {
         return rule[2][key] == "every" && q[2][value] == "every"
@@ -164,19 +183,38 @@ class KB {
         }
       }
             
-      let letties = Object.keys(q[2])
-          .filter((x) => matches[x] == x ? true : !matches[x]);
-      const results = this.select(["?", letties, body], path);
+      const results = this.select(["?", body], path);
+      //const free = q[1]
+      //      .filter(([name, type]) => type == "free")
+      //      .map(([name]) => name);
+      //const mapping = Object.fromEntries(
+      //  Object.entries(matches)
+      //    .filter(([key, value]) => free.includes(key)));
+      const mapping = matches;
+      //console.log(q);
+      //console.log(free);
+      //console.log(matches);
       for (let result of results) {
-        const mapping = Object.fromEntries(
-          Object.entries(matches)
-            .filter(([key, value]) => q[2][key]));
-        yield pos ? Object.assign(Object.assign(q[2], mapping), result) : false;
+        // console.log(result);
+        //console.log(matches);
+        if (pos) {
+          //console.log(result);
+          //console.log(mapping);
+          yield Object.fromEntries(
+            Object.entries(mapping)
+              .filter(([key, [name]]) => result[name])
+              .map(([key, [name]]) => [key, result[name]])
+          );
+          // yield mapping;
+        } else {
+          yield false;
+        }
+        // yield pos ? Object.assign(Object.assign(q[2], mapping), result) : false;
       }
     }
   }
   *select(line, path = []) {
-    const [op, letty, body = []] = line;
+    const [op, body = []] = line;
     
     if (path.find((el) => JSON.stringify(el)==JSON.stringify(line))) {
       return;
@@ -184,20 +222,11 @@ class KB {
 
     path.push(line);
 
-    const vars = Object.fromEntries(
-      letty.map((arg) => [arg, "some"]));
-    
-    // console.log(line);
+    const vars = {};
     
     const [head, ...tail] = body;
-    
-    const query = clone(head);
-    apply([query], vars);
-    query[2] = Object.assign(vars, head[2]);
 
-    // console.log(query);
-    //console.log(vars);
-    //console.log(head);
+    const query = clone(head);
 
     for (let q of this.query(query, clone(path))) {
       const partial = clone(vars);
@@ -212,7 +241,7 @@ class KB {
       }
       Object.assign(partial, q);
       apply(rest, partial);      
-      for (let r of this.select(["?", letty.filter((x) => !q[x]), rest], clone(path))) {
+      for (let r of this.select(["?", rest], clone(path))) {
         yield Object.assign(clone(partial), r);
       }
     }
