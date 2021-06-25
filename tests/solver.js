@@ -357,9 +357,24 @@ describe("REPL", function() {
     }
     return result;
   }
+
+  function matches(a, b) {
+    if (a[0] != b[0]) {
+      return false;
+    }
+    if (a[1].length != b[1].length) {
+      return false;
+    }
+    for (let i = 0; i < a[1].length; i++) {
+      if (a[1][i] != b[1][i]) {
+        return false;
+      }
+    }
+    return true;
+  }
   
   function stepback(rule, q) {
-    if (equals(q, rule)) {
+    if (matches(q, rule)) {
       const [name, args, vars, deps = [], value = true] = rule;
       const [, , , , ask = true] = q;
       return [value == ask, deps];
@@ -441,6 +456,14 @@ describe("REPL", function() {
     `), q(`
       P()?
     `))).equalsTo([false, []]);
+  });
+
+  it.skip("P(a). let x: P(x)?", () => {
+    assertThat(stepback(first(`
+      P(a).
+    `), q(`
+      let x: P(x)?
+    `))).equalsTo([true, []]);
   });
 
   it("P(). P()?", () => {
