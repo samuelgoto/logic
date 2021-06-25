@@ -416,12 +416,20 @@ describe("REPL", function() {
   }
   
   function stepback(rule, q) {
-    if (equals(q, rule)) {
-      const [name, args, value = true, deps = []] = rule;
-      const [ , , ask = true] = q;
-      return [value == ask, deps];
+    const matches = equals(q, rule);
+
+    if (!matches) {
+      return undefined;
     }
-    return undefined;
+
+    const [name, args, value = true, deps = []] = rule;
+    const [ , , ask = true] = q;
+
+    if (value != ask) {
+      return [false, deps];
+    }
+    
+    return [matches, deps];
   }
 
   it("P(). P()?", () => {
@@ -429,7 +437,7 @@ describe("REPL", function() {
       P().
     `), q(`
       P()?
-    `))).equalsTo([true, []]);
+    `))).equalsTo([{}, []]);
   });
 
   it("P(a). P(a)?", () => {
@@ -437,7 +445,7 @@ describe("REPL", function() {
       P(a).
     `), q(`
       P(a)?
-    `))).equalsTo([true, []]);
+    `))).equalsTo([{}, []]);
   });
 
   it("P(a, b). P(a, b)?", () => {
@@ -445,7 +453,7 @@ describe("REPL", function() {
       P(a, b).
     `), q(`
       P(a, b)?
-    `))).equalsTo([true, []]);
+    `))).equalsTo([{}, []]);
   });
 
   it("P(). Q()?", () => {
@@ -513,7 +521,7 @@ describe("REPL", function() {
       if (Q(a)) P(a).
     `), q(`
       P(a)?
-    `))).equalsTo([true, [Q(a())]]);
+    `))).equalsTo([{}, [Q(a())]]);
   });
 
   it("if (P(a) Q(a)) R(a). R(a)?", () => {
@@ -521,7 +529,7 @@ describe("REPL", function() {
       if (P(a) Q(a)) R(a).
     `), q(`
       R(a)?
-    `))).equalsTo([true, [P(a()), Q(a())]]);
+    `))).equalsTo([{}, [P(a()), Q(a())]]);
   });
 
   it("not P(). P()?", () => {
@@ -537,7 +545,7 @@ describe("REPL", function() {
       P(a).
     `), q(`
       let x: P(x)?
-    `))).equalsTo([true, []]);
+    `))).equalsTo([{"x": a()}, []]);
   });
 
   it("P(). P()?", () => {
