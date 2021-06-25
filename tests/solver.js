@@ -1355,16 +1355,16 @@ describe("REPL", function() {
     `))).equalsTo([{x: literal("c")}]);
   });
 
-  it.skip("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
+  it("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
     assertThat(unroll(new KB().read(`
       if (P(a) Q(b)) 
         R(c).
       P(a). Q(b).
       let x: R(x)?
-    `))).equalsTo([{x: "c"}]);
+    `))).equalsTo([{x: literal("c")}]);
   });
 
-  it.skip("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
+  it("if (P(a) Q(b)) R(c). P(a). Q(b). let x: R(x)?", function() {
     assertThat(unroll(new KB().read(`
       Jones(u).
       Mary(v).
@@ -1378,7 +1378,7 @@ describe("REPL", function() {
 
       // Who does Jones marry?
       let x, y: Jones(x) marry(x, y)?
-    `))).equalsTo([{x: "u", y: "v"}]);
+    `))).equalsTo([{x: literal("u"), y: literal("v")}]);
   });
 
   it("let x: Socrates(x) mortal(x)?", function() {
