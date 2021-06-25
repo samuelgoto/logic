@@ -143,11 +143,8 @@ class KB {
     return this;
   }
   *query(q, path) {
-    //console.log(q);
     for (let rule of this.rules) {
       const matches = equals(q, rule);
-      //console.log(rule);
-      //console.log(matches);
       if (!matches) {
         continue;
       }
@@ -155,18 +152,14 @@ class KB {
 
       if (body.length == 0) {
         if (pos == (q[2] == undefined ? true : q[2])) {
-          // console.log(matches);
           yield matches;
         } else {
-          // console.log(q[2]);
           yield false;
         }
         continue;
       }
 
       apply(body, matches);
-      //console.log(JSON.stringify(body));
-      //console.log(matches);
 
       const sillogism = Object.entries(matches).find(([key, value]) => {
         return rule[2][key] == "every" && q[2][value] == "every"
@@ -176,8 +169,6 @@ class KB {
         const grounded = body.filter(([name, args]) => args.find((arg) => {
           return matches[arg];
         }));
-        // console.log(body);
-        // console.log(q);
         if (grounded.length == 0) {
           yield Object.fromEntries(
             Object.entries(matches)
@@ -193,33 +184,12 @@ class KB {
       const mapping = Object.fromEntries(
         Object.entries(matches)
           .filter(([key, value]) => free.includes(key)));
-      //const mapping = matches;
-      //console.log(q);
-      //console.log(free);
-      //console.log(matches);
       for (let result of results) {
-        //console.log("hello");
-        //console.log(free);
-        //console.log(matches);
-        //console.log(result);
-        //console.log(mapping);
-        //console.log("world");
-        //console.log(matches);
         if (pos) {
           yield Object.assign(mapping, result);
-          //console.log(result);
-          //console.log(matches);
-          //console.log(mapping);
-          //yield Object.fromEntries(
-          //  Object.entries(mapping)
-              // .filter(([key, [name]]) => result[name])
-          //    .map(([key, [name]]) => result[name] ? [key, result[name]] : [key, mapping[key]])
-          //);
-          // yield mapping;
         } else {
           yield false;
         }
-        // yield pos ? Object.assign(Object.assign(q[2], mapping), result) : false;
       }
     }
   }
