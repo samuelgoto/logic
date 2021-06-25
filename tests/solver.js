@@ -119,6 +119,16 @@ describe("REPL", function() {
     ]);
   });
 
+  it("for (let every a: P(a)) {Q(a).} ? => let every a: Q(a) if (P(a)).", () => {
+    assertThat(preprocess(new Parser().parse(`
+      for (let every a: P(a)) {
+        Q(a). 
+      } ?
+    `))).equalsTo([
+      ["?", [], [["Q", ["a"], {"a": "every"}, [["P", ["a"]]]]]]
+    ]);
+  });
+
   function print(statements) {
     const result = [];
     for (let [name, args, letty, iffy] of statements) {
@@ -1369,9 +1379,13 @@ describe("REPL", function() {
 
   it.skip("for (let every x: P(x)) Q(x). (for (let every x: P(x)) Q(x).) ?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) Q(x).
+      for (let every x: P(x)) {
+        Q(x).
+      }
     `)).select(first(`
-      (for (let every x: P(x)) Q(x).)?
+      for (let every x: P(x)) {
+        Q(x).
+      } ?
     `)))).equalsTo([{}]);
   });
 

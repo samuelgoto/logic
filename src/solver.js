@@ -137,27 +137,28 @@ class KB {
   *query(q, path) {
     for (let rule of this.rules) {
       const matches = equals(q, rule);
-      if (matches) {
-        const [head, args, letty = {}, body = [], pos = true] = clone(rule);
-        if (body.length == 0) {
-          if (pos == (q[4] == undefined ? true : q[4])) {
-            yield matches;
-          } else {
-            yield false;
-          }
-          continue;
+      if (!matches) {
+        continue;
+      }
+      const [head, args, letty = {}, body = [], pos = true] = clone(rule);
+      if (body.length == 0) {
+        if (pos == (q[4] == undefined ? true : q[4])) {
+          yield matches;
+        } else {
+          yield false;
         }
+        continue;
+      }
 
-        apply(body, matches);
-        let letties = Object.keys(q[2])
-            .filter((x) => matches[x] == x ? true : !matches[x]);
-        const results = this.select(["?", letties, body], path);
-        for (let result of results) {
-          const mapping = Object.fromEntries(
-            Object.entries(matches)
-              .filter(([key, value]) => q[2][key]));
-          yield pos ? Object.assign(Object.assign(q[2], mapping), result) : false;
-        }
+      apply(body, matches);
+      let letties = Object.keys(q[2])
+          .filter((x) => matches[x] == x ? true : !matches[x]);
+      const results = this.select(["?", letties, body], path);
+      for (let result of results) {
+        const mapping = Object.fromEntries(
+          Object.entries(matches)
+            .filter(([key, value]) => q[2][key]));
+        yield pos ? Object.assign(Object.assign(q[2], mapping), result) : false;
       }
     }
   }
@@ -170,6 +171,8 @@ class KB {
 
     path.push(line);
 
+    // console.log(line);
+    
     const vars = Object.fromEntries(
       letty.map((arg) => [arg, "some"]));
     

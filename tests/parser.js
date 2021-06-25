@@ -697,6 +697,17 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("for (let every x: p(x)) {q(x).} ?", function() {
+    const results = new Parser().parse(`
+      for (let every x: p(x)) {
+        q(x).
+      } ?
+    `);
+    assertThat(results).equalsTo([[
+      ["?", [], [["every", "x", [[["p", ["x"]]]], [[["q", ["x"]]]]]]]
+    ]]);
+  });
+
   it("hello()!", function() {
     const results = new Parser().parse(`
       hello()!
