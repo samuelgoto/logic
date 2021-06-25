@@ -133,7 +133,8 @@ function stepback(rule, q) {
   if (value != ask) {
     return [false, deps];
   }
-  
+  // console.log(ask);
+  // console.log(matches);
   return [matches, deps];
 }
 
@@ -163,36 +164,66 @@ class KB {
   }
   *query(q, path) {
     for (let rule of this.rules) {
-      const matches = equals(q, rule);
-      if (!matches) {
-        continue;
-      }
-      const [head, args, pos = true, body = []] = clone(rule);
 
-      if (body.length == 0) {
-        if (pos == (q[2] == undefined ? true : q[2])) {
-          yield matches;
-        } else {
-          yield false;
-        }
+      const result = stepback(rule, q);
+
+      if (result == undefined) {
         continue;
       }
 
-      apply(body, matches);
+      const [value, deps] = result;
+      
+      //const matches = equals(q, rule);
+      //if (!matches) {
+      //  continue;
+      //}
+      // const [head, args, pos = true, body = []] = clone(rule);
+      if (deps.length == 0) {
+        //console.log(q);
+        //console.log(rule);
+        //console.log(value);
+        yield value;
+        continue;
+      }
+      //if (body.length == 0) {
+      //  if (pos == (q[2] == undefined ? true : q[2])) {
+      //    yield matches;
+      //  } else {
+      //    yield false;
+      //  }
+      //  continue;
+      //}
 
-      const results = this.select(["?", body], path);
+      //apply(body, matches);
+
+      const results = this.select(["?", deps], path);
+
       const free = q[1]
             .filter(([name, type]) => type == "free")
             .map(([name]) => name);
       const mapping = Object.fromEntries(
-        Object.entries(matches)
+        Object.entries(value)
           .filter(([key, value]) => free.includes(key)));
+
       for (let result of results) {
-        if (pos) {
+
+        ///console.log(q);
+        //console.log(rule);
+        //console.log(value);
+        //console.log(result);
+        
+        if (value) {
+          //console.log("hi");
+          //console.log(Object.assign(mapping, result));
           yield Object.assign(mapping, result);
         } else {
+          // console.log(value);
+          // console.log(result);
+          // yield result;
           yield false;
         }
+
+        // break;
       }
     }
   }
@@ -205,14 +236,12 @@ class KB {
 
     path.push(line);
 
-    const vars = {};
-    
     const [head, ...tail] = body;
 
     const query = clone(head);
 
     for (let q of this.query(query, clone(path))) {
-      const partial = clone(vars);
+      const partial = {};
       const rest = clone(tail);
       if (q == false) {
         yield false;
