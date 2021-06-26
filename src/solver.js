@@ -111,6 +111,7 @@ function apply(body, subs) {
     const [name, args] = part;
     for (let i = 0; i < args.length; i++) {
       const [name, type] = args[i];
+      // console.log(name);
       if (subs[name]) {
         args[i] = subs[name];
       }
@@ -120,22 +121,29 @@ function apply(body, subs) {
 
 function stepback(rule, q) {
   const matches = equals(q, rule);
-  
+
   if (!matches) {
     return undefined;
   }
   
   const [name, args, value = true, deps = []] = rule;
   const [ , , ask = true] = q;
-  
-  apply(deps, matches);
-  
-  if (value != ask) {
-    return [false, deps];
+
+  const result = clone(deps);
+  apply(result, matches);
+
+  if (ask != value) {
+    // If the query's polarity disagrees with the
+    // rule's polarity, then return false conditionally
+    // if there aren't any free variables and return
+    // undefined if there are.
+    const free = Object.entries(matches)
+          .filter(([key, [name, type]]) => type == "free")
+          .length > 0;
+    return free ? undefined : [false, result];
   }
-  // console.log(ask);
-  // console.log(matches);
-  return [matches, deps];
+
+  return [matches, result];
 }
 
 class KB {
@@ -167,35 +175,25 @@ class KB {
 
       const result = stepback(rule, q);
 
+      //console.log(`Query? ${JSON.stringify(q)} and ${JSON.stringify(rule)}?`);
+      //console.log(`Query: ${JSON.stringify(result)}`);
+
       if (result == undefined) {
+        //console.log("Next rule ...");
         continue;
       }
 
       const [value, deps] = result;
-      
-      //const matches = equals(q, rule);
-      //if (!matches) {
-      //  continue;
-      //}
-      // const [head, args, pos = true, body = []] = clone(rule);
+
       if (deps.length == 0) {
-        //console.log(q);
-        //console.log(rule);
-        //console.log(value);
         yield value;
         continue;
       }
-      //if (body.length == 0) {
-      //  if (pos == (q[2] == undefined ? true : q[2])) {
-      //    yield matches;
-      //  } else {
-      //    yield false;
-      //  }
-      //  continue;
-      //}
 
-      //apply(body, matches);
+      // console.log(JSON.stringify(deps));
 
+      // apply();
+      
       const results = this.select(["?", deps], path);
 
       const free = q[1]
@@ -206,22 +204,27 @@ class KB {
           .filter(([key, value]) => free.includes(key)));
 
       for (let result of results) {
-
-        ///console.log(q);
-        //console.log(rule);
-        //console.log(value);
-        //console.log(result);
-        
-        if (value) {
-          //console.log("hi");
-          //console.log(Object.assign(mapping, result));
-          yield Object.assign(mapping, result);
-        } else {
-          // console.log(value);
-          // console.log(result);
-          // yield result;
+        //console.log("Got a result for:");
+        //console.log(JSON.stringify(q));
+        //console.log(JSON.stringify(rule));
+        //console.log(JSON.stringify(deps));
+        //console.log(JSON.stringify(value));
+        //console.log(JSON.stringify(result));
+        if (!value) {
           yield false;
+          continue;
         }
+        
+        //if (value) {
+        //console.log("hi");
+        //console.log(Object.assign(mapping, result));
+        yield Object.assign(mapping, result);
+        //} else {
+        // console.log(value);
+        // console.log(result);
+        // yield result;
+        //  yield false;
+        //}
 
         // break;
       }
@@ -236,24 +239,38 @@ class KB {
 
     path.push(line);
 
+    //console.log("Q: " + JSON.stringify(line));
+    
     const [head, ...tail] = body;
 
     const query = clone(head);
 
+    //console.log("> Q: " + JSON.stringify(query));
     for (let q of this.query(query, clone(path))) {
+
+      //console.log("< Q: " + JSON.stringify(query));
+      //console.log("< A: " + JSON.stringify(q));
+      
       const partial = {};
-      const rest = clone(tail);
       if (q == false) {
         yield false;
         return;
       }
-      if (rest.length == 0) {
-        yield Object.assign(clone(partial), q);
+      if (tail.length == 0) {
+        // console.log("hello");
+        yield Object.assign(partial, q);
         continue;
       }
+      const rest = clone(tail);
       Object.assign(partial, q);
-      apply(rest, partial);      
+      apply(rest, partial);
+      //console.log("<< Q:" + JSON.stringify(rest));
       for (let r of this.select(["?", rest], clone(path))) {
+        //console.log(JSON.stringify(line));
+        //console.log(JSON.stringify(q));
+        //console.log(JSON.stringify(partial));
+        //console.log("Yes! " + JSON.stringify(r));
+        //console.log(Object.assign(clone(partial), r));
         yield Object.assign(clone(partial), r);
       }
     }

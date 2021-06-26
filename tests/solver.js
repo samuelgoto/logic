@@ -483,6 +483,10 @@ describe("REPL", function() {
     return ["R", args, true];
   }
   
+  function U(...args) {
+    return ["U", args, true];
+  }
+
   function S(...args) {
     return ["S", args, true];
   }
@@ -531,12 +535,20 @@ describe("REPL", function() {
     `))).equalsTo([{"x": a()}, []]);
   });
 
-  it("P(). P()?", () => {
+  it("P(). not P()?", () => {
     assertThat(stepback(first(`
       P().
     `), q(`
       not P()?
     `))).equalsTo([false, []]);
+  });
+
+  it("either P() or Q(). not P()?", () => {
+    assertThat(stepback(first(`
+      either P() or Q().
+    `), q(`
+      not P()?
+    `))).equalsTo([false, [NOT(Q())]]);
   });
 
   it("for (let every x: P(x)) Q(x).  let x: P(x)?", () => {
@@ -1027,18 +1039,31 @@ describe("REPL", function() {
       .equalsTo([{"x": a()}, {"x": b()}]);
   });
 
-  it.skip("for (let every x: P(x)) Q(x). for (let every x: R(x)) S(x). P(a). R(a). let x: Q(x) S(x)?", () => {
+  it("let x: Q(x) S(x)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      for (let every x: P(x)) Q(x). 
+      for (let every x: R(x)) S(x).
+      P(a).
+      R(a).
+      Q(d) S(d).
+    `)).select(first(`
+      let x: Q(x) S(x)?
+    `))))
+      .equalsTo([{"x": literal("a")}, {"x": literal("d")}]);
+  });
+  
+  it("for (let every x: P(x)) Q(x). for (let every x: R(x)) S(x). P(a). R(a). let x: Q(x) S(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x)) Q(x). 
       for (let every x: R(x)) S(x). 
       P(a).
       R(a).
-      //P(b).
-      //R(c).
+      P(b).
+      R(c).
       Q(d) S(d).
-      //Q(e).
-      //S(f).
-      //S(g) Q(g).
+      Q(e).
+      S(f).
+      S(g) Q(g).
     `)).select(first(`
       let x: Q(x) S(x)?
     `))))
@@ -1471,6 +1496,14 @@ describe("REPL", function() {
   });
 
   it("not P(). P()?", () => {
+    assertThat(stepback(first(`
+      not P().
+    `), q(`
+      P()?
+    `))).equalsTo([false, []]);
+  });
+  
+  it("not P(). P()?", () => {
     assertThat(unroll(new KB().insert(parse(`
       not P().
     `)).select(first(`
@@ -1584,19 +1617,74 @@ describe("REPL", function() {
     `)))).equalsTo([{"x": literal("a")}]);
   });
 
-  it("for (let every x: U(x)) either (P(x)) or Q(x). not Q(a). U(a). let x: P(x)?", () => {
+  it("for (let every x: U(x)) either P(x) or Q(x).", () => {
+    assertThat(stepback(first(`
+      for (let every x: U(x))
+        either P(x) or Q(x).
+    `), q(`
+      let x: P(x)?
+    `))).equalsTo([{x: x()}, [NOT(Q(x())), U(x())]]);
+  });
+  
+  it("either P(a) or Q(a). let x: not Q(x)?", () => {
+    assertThat(equals(q(`
+      let y: not Q(y)?
+    `), first(`
+      for (let every x: U(x)) {
+        either Q(x) or P(x).
+      }
+    `)))
+      .equalsTo({x: ["y", "free"]});
+  });
+
+  it("either P(a) or Q(a). let x: not Q(x)?", () => {
+    assertThat(stepback(first(`
+      for (let every x: U(x)) {
+        either Q(x) or P(x).
+      }
+    `), q(`
+      let y: not Q(y)?
+    `)))
+      .equalsTo(undefined);
+  });
+
+  it("for (let every x: U(x)) either P(x) or Q(x). let x: not P(x)?", () => {
+    assertThat(stepback(first(`
+      for (let every x: U(x)) {
+        either P(x) or Q(x).
+      }
+      not Q(a).
+      U(a).
+    `), q(`
+      let y: not P(y)?
+    `)))
+      .equalsTo(undefined);
+  });
+
+  it("let y: not P(y)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      for (let every x: U(x)) {
+        either P(x) or Q(x).
+      }
+      not Q(a).
+      U(a).
+    `)).query(NOT(P(["y", "free"])))))
+      .equalsTo([]);
+  });
+
+  it.skip("for (let every x: U(x)) either (P(x)) or Q(x). not Q(a). U(a). let x: P(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
       for (let every x: U(x)) {
         either (P(x)) or Q(x).
       }
       not Q(a).
       U(a).
-      not Q(b).
-      U(b).
-      not Q(c).
-      U(d).
-      not Q(e).
-      U(e).
+      //not Q(b).
+      //U(b).
+      //not Q(c).
+      //U(d).
+      //not Q(e).
+      //U(e).
     `)).select(first(`
       let x: P(x)?
     `)))).equalsTo([{"x": literal("a")}, {"x": literal("b")}, {"x": literal("e")}]);
