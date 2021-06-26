@@ -1,6 +1,6 @@
 const {Parser} = require("./parser.js");
 
-function preprocess(statements, scope = {}) {
+function normalize(statements, scope = {}) {
   const result = [];
   for (const statement of statements) {
     const [op] = statement;
@@ -16,18 +16,18 @@ function preprocess(statements, scope = {}) {
           vars[letty] = "free";
         }
       }
-      result.push([q, preprocess(body, Object.assign(scope, vars))]);
+      result.push([q, normalize(body, Object.assign(scope, vars))]);
     } else if (op == "not") {
       const [not, head] = statement;
-      for (const part of preprocess([[head]], scope)) {
+      for (const part of normalize([[head]], scope)) {
         const [name, args, value = true] = part;
         part[2] = !value;
         result.push(part);
       }
     } else if (op == "either") {
       const [either, letty, head, body] = statement;
-      const left = preprocess([[head]], scope);
-      const right = preprocess([[body]], scope);
+      const left = normalize([[head]], scope);
+      const right = normalize([[body]], scope);
       for (const part of left) {
         const rule = clone(part);
         rule[3] = clone(right);
@@ -50,8 +50,8 @@ function preprocess(statements, scope = {}) {
       if (letty) {
         vars[letty] = "every";
       }
-      const heady = preprocess(head, Object.assign(scope, vars));
-      for (const part of preprocess([body], scope)) {
+      const heady = normalize(head, Object.assign(scope, vars));
+      for (const part of normalize([body], scope)) {
         if (part[3]) {
           part[3].push(...heady);
         } else {
@@ -60,7 +60,7 @@ function preprocess(statements, scope = {}) {
         result.push(part);
       }
     } else if (Array.isArray(statement[0])) {
-      const conjunction = preprocess(statement, scope);
+      const conjunction = normalize(statement, scope);
       result.push(...conjunction);
     } else {
       const [name, args] = statement;
@@ -192,7 +192,7 @@ class KB {
     this.rules = [];
   }
   *read(code) {
-    const lines = preprocess(new Parser().parse(code));
+    const lines = normalize(new Parser().parse(code));
     const q = [];
     for (let line of lines) {
       const [op] = line;
@@ -317,7 +317,7 @@ class KB {
 
 module.exports = {
   stepback: stepback,
-  preprocess: preprocess,
+  normalize: normalize,
   equals: equals,
   KB: KB,
   clone: clone,

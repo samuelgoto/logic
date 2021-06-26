@@ -1,6 +1,6 @@
 const Assert = require("assert");
 const {Parser} = require("../src/parser.js");
-const {KB, stepback, preprocess, equals, apply, clone} = require("../src/solver.js");
+const {KB, stepback, normalize, equals, apply, clone} = require("../src/solver.js");
 
 describe("REPL", function() {
   function literal(a) {
@@ -12,7 +12,7 @@ describe("REPL", function() {
   }
 
   it("P(a). => P(a).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       P(a).
     `))).equalsTo([
       P(a()),
@@ -20,7 +20,7 @@ describe("REPL", function() {
   });
 
   it("P(a) Q(b). => P(a). Q(b).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       P(a) Q(b).
     `))).equalsTo([
       P(a()),
@@ -29,7 +29,7 @@ describe("REPL", function() {
   });
   
   it("P(a). Q(b). => P(a). Q(b).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       P(a).
       Q(b).
     `))).equalsTo([
@@ -39,7 +39,7 @@ describe("REPL", function() {
   });
 
   it("if (P(a)) Q(b). => if (P(a)) Q(b).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       if (P(a)) {
         Q(b).
       }
@@ -49,7 +49,7 @@ describe("REPL", function() {
   });
 
   it("if (P(a) Q(a)) R(a). => if (P(a) Q(a)) R(a).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       if (P(a) Q(a)) {
         R(a).
       }
@@ -59,7 +59,7 @@ describe("REPL", function() {
   });
 
   it("if (P(a)) Q(a) R(a). => Q(a) if (P(a)). R(a) if (P(a))", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       if (P(a)) {
         Q(a) R(a).
       }
@@ -70,7 +70,7 @@ describe("REPL", function() {
   });
 
   it("if (P() Q()) {R(). S().} => if (P() Q()) R(). if (P() Q()) S(). ", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       if (P() Q()) {
         R().
         S().
@@ -82,7 +82,7 @@ describe("REPL", function() {
   });
 
   it("if (P()) { if (Q()) R(). } => if (Q() P()) R().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       if (P()) {
         if (Q()) {
           R().
@@ -94,7 +94,7 @@ describe("REPL", function() {
   });
 
   it("if (P()) { if (Q()) if (R()) {S()}. } => if (R() Q() P()) S().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       if (P()) {
         if (Q()) {
           if (R()) {
@@ -108,7 +108,7 @@ describe("REPL", function() {
   });
 
   it("for (let every x: P(x)) Q(x). => let every x: Q(x) if (P(x)).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       for (let every x: P(x))
         Q(x). 
     `))).equalsTo([
@@ -117,7 +117,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) { for (let every b: Q(b)) R(a, b).} => let every a, b: R(a, b) if (P(a) Q(b)).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       for (let every a: P(a)) {
         for (let every b: Q(b))
           R(a, b). 
@@ -128,7 +128,7 @@ describe("REPL", function() {
   });
 
   it("for (let every a: P(a)) {Q(a).} ? => let every a: Q(a) if (P(a)).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       for (let every a: P(a)) {
         Q(a). 
       } ?
@@ -165,7 +165,7 @@ describe("REPL", function() {
   }
   
   it("unrollling", () => {
-    assertThat(trim(print(preprocess(new Parser().parse(`
+    assertThat(trim(print(normalize(new Parser().parse(`
       P(a).
       P(b) Q(b).
 
@@ -216,7 +216,7 @@ describe("REPL", function() {
   });
   
   it("P(a)? => P(a)?", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       P(a)?
     `))).equalsTo([
       QUERY(P(a()))
@@ -224,7 +224,7 @@ describe("REPL", function() {
   });
 
   it("Q(a) P(b)? => Q(a) P(b)?", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       Q(a) P(b)?
     `))).equalsTo([
       QUERY(Q(a()), P(b()))
@@ -232,7 +232,7 @@ describe("REPL", function() {
   });
 
   it("{ Q(a). P(b). }? => Q(a) P(b)?", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       {
         Q(a). 
         P(b).
@@ -243,7 +243,7 @@ describe("REPL", function() {
   });
 
   it("let x: P(x)? => let x: P(x)?", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       let x: P(x)?
     `))).equalsTo([
       QUERY(P(x()))
@@ -251,7 +251,7 @@ describe("REPL", function() {
   });
 
   it("not P(). => not P().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       not P().
     `))).equalsTo([
       NOT(P())
@@ -259,7 +259,7 @@ describe("REPL", function() {
   });
 
   it("not P(a). => not P(a).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       not P(a).
     `))).equalsTo([
       NOT(P(literal("a")))
@@ -267,7 +267,7 @@ describe("REPL", function() {
   });
 
   it("not P() Q(). => not P(). Q().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       not P() Q().
     `))).equalsTo([
       NOT(P()),
@@ -276,7 +276,7 @@ describe("REPL", function() {
   });
 
   it("not (P() Q()). => not P(). not Q().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       not (P() Q()).
     `))).equalsTo([
       NOT(P()),
@@ -285,7 +285,7 @@ describe("REPL", function() {
   });
 
   it("not (P(a) Q(b)). => not P(a). not Q(b).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       not (P(a) Q(b)).
     `))).equalsTo([
       NOT(P(a())),
@@ -294,7 +294,7 @@ describe("REPL", function() {
   });
 
   it("not not P(). => P().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       not not P().
     `))).equalsTo([
       P()
@@ -302,7 +302,7 @@ describe("REPL", function() {
   });
 
   it("not not not P(). => not P().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       not not not P().
     `))).equalsTo([
       NOT(P())
@@ -310,7 +310,7 @@ describe("REPL", function() {
   });
 
   it("not not (P() Q()). => P(). Q().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       not not (P() Q()).
     `))).equalsTo([
       P(),
@@ -319,7 +319,7 @@ describe("REPL", function() {
   });
 
   it("if (P()) not Q(). => not Q() if (P()).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       if (P()) not Q().
     `))).equalsTo([
       IF([P()], NOT(Q()))
@@ -327,7 +327,7 @@ describe("REPL", function() {
   });
 
   it("either (P()) or Q(). => P() if not Q(). Q() if not P().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       either (P()) or Q().
     `))).equalsTo([
       IF([NOT(Q())], P()),
@@ -336,7 +336,7 @@ describe("REPL", function() {
   });
 
   it("either (P(a)) or Q(b). => P(a) if not Q(b). Q(b) if not P(a).", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       either (P(a)) or Q(b).
     `))).equalsTo([
       IF([NOT(Q(literal("b")))], P(literal("a"))),
@@ -345,7 +345,7 @@ describe("REPL", function() {
   });
 
   it("either P() Q() or R(). => P() if not R(). Q() if not R(). R() if not P() Q().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       either P() Q() or R().
     `))).equalsTo([
       IF([NOT(R())], P()),
@@ -355,7 +355,7 @@ describe("REPL", function() {
   });
   
   it("either R() or P() Q(). => R() if not P() Q(). P() if not R(). Q() if not R().", () => {
-    assertThat(preprocess(new Parser().parse(`
+    assertThat(normalize(new Parser().parse(`
       either R() or P() Q().
     `))).equalsTo([
       IF([NOT(P()), NOT(Q())], R()),
@@ -365,7 +365,7 @@ describe("REPL", function() {
   });
   
   function parse(code) {
-    return preprocess(new Parser().parse(code));
+    return normalize(new Parser().parse(code));
   }
 
   function first(code) {
