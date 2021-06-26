@@ -136,6 +136,9 @@ function stepback(rule, q) {
     const all = result.filter((p) => !conds.find((q) => {
       return JSON.stringify(p) == JSON.stringify(q);
     }));
+    //console.log(JSON.stringify(result));
+    //console.log(JSON.stringify(conds));
+    //console.log(JSON.stringify(all));
     if (all.length > 0) {
       return undefined;
     }
@@ -192,11 +195,7 @@ class KB {
 
       const result = stepback(rule, q);
 
-      //console.log(`Query? ${JSON.stringify(q)} and ${JSON.stringify(rule)}?`);
-      //console.log(`Query: ${JSON.stringify(result)}`);
-
       if (result == undefined) {
-        //console.log("Next rule ...");
         continue;
       }
 
