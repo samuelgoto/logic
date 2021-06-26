@@ -622,8 +622,8 @@ describe("REPL", function() {
     assertThat(stepback(first(`
       if (P()) Q().
     `), q(`
-      {
-         if (P()) Q().
+      if (P()) {
+        Q().
       } ?
     `))).equalsTo([{}, []]);
   });
@@ -632,8 +632,8 @@ describe("REPL", function() {
     assertThat(stepback(first(`
       if (P()) Q().
     `), q(`
-      {
-         if (R()) Q().
+      if (R()) {
+        Q().
       } ?
     `))).equalsTo(undefined);
   });
@@ -642,8 +642,8 @@ describe("REPL", function() {
     assertThat(stepback(first(`
       if (P()) Q() R().
     `), q(`
-      {
-         if (P()) Q().
+      if (P()) {
+        Q().
       } ?
     `))).equalsTo([{}, []]);
   });
@@ -652,8 +652,8 @@ describe("REPL", function() {
     assertThat(stepback(first(`
       if (P() Q()) R().
     `), q(`
-      {
-         if (P() Q()) R().
+      if (P() Q()) {
+        R().
       } ?
     `))).equalsTo([{}, []]);
   });
@@ -662,8 +662,8 @@ describe("REPL", function() {
     assertThat(stepback(first(`
       if (P()) R().
     `), q(`
-      {
-         if (P() Q()) R().
+      if (P() Q()) {
+        R().
       } ?
     `))).equalsTo([{}, [IF([Q()], R())]]);
   });
