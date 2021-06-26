@@ -1963,7 +1963,7 @@ describe("REPL", function() {
     `)))).equalsTo([{"x": ["y", "every"]}]);
   });
 
-  it.skip("for (let every x: P(x)) { Q(x). } for (let every x: Q(x)) { R(x). } for (let every x: P(x)) { R(x). } ?", () => {
+  it("for (let every x: P(x)) { Q(x). } for (let every x: Q(x)) { R(x). } for (let every x: P(x)) { R(x). } ?", () => {
     assertThat(unroll(new KB().insert(parse(`
       for (let every x: P(x)) {
         Q(x).
@@ -1975,7 +1975,7 @@ describe("REPL", function() {
       for (let every y: P(y)) {
         R(y).
       } ?
-    `)))).equalsTo([{"y": "x"}]);
+    `)))).equalsTo([{"x": ["y", "every"]}]);
   });
 
   function assertThat(x) {
