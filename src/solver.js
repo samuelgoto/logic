@@ -122,6 +122,7 @@ function apply(body, subs) {
 function stepback(rule, q) {
   const matches = equals(q, rule);
 
+  // console.log(matches);
   if (!matches) {
     return undefined;
   }
@@ -139,8 +140,15 @@ function stepback(rule, q) {
     //console.log(JSON.stringify(result));
     //console.log(JSON.stringify(conds));
     //console.log(JSON.stringify(all));
+    const [name, args, ask = true] = q;
     if (all.length > 0) {
-      return undefined;
+      //console.log(all);
+      for (let part of all) {
+        part[3] = q[3];
+      }
+      // console.log("returning");
+      return [matches, all];
+      // return undefined;
     }
     const left = conds.filter((p) => !result.find((q) => {
       return JSON.stringify(p) == JSON.stringify(q);
@@ -148,7 +156,6 @@ function stepback(rule, q) {
     if (left.length == 0) {
       return [matches, []];
     }
-    const [name, args, ask = true] = q;
     return [matches, [[name, args, ask, left]]];
   }
   
