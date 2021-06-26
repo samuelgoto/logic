@@ -1672,19 +1672,19 @@ describe("REPL", function() {
       .equalsTo([]);
   });
 
-  it.skip("for (let every x: U(x)) either (P(x)) or Q(x). not Q(a). U(a). let x: P(x)?", () => {
+  it("for (let every x: U(x)) either P(x) or Q(x). not Q(a). U(a). let x: P(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
       for (let every x: U(x)) {
-        either (P(x)) or Q(x).
+        either P(x) or Q(x).
       }
       not Q(a).
       U(a).
-      //not Q(b).
-      //U(b).
-      //not Q(c).
-      //U(d).
-      //not Q(e).
-      //U(e).
+      not Q(b).
+      U(b).
+      not Q(c).
+      U(d).
+      not Q(e).
+      U(e).
     `)).select(first(`
       let x: P(x)?
     `)))).equalsTo([{"x": literal("a")}, {"x": literal("b")}, {"x": literal("e")}]);
