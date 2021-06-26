@@ -127,11 +127,28 @@ function stepback(rule, q) {
   }
   
   const [name, args, value = true, deps = []] = rule;
-  const [ , , ask = true] = q;
+  const [ , , ask = true, conds = []] = q;
 
   const result = clone(deps);
   apply(result, matches);
 
+  if (conds.length > 0) {
+    const all = result.filter((p) => !conds.find((q) => {
+      return JSON.stringify(p) == JSON.stringify(q);
+    }));
+    if (all.length > 0) {
+      return undefined;
+    }
+    const left = conds.filter((p) => !result.find((q) => {
+      return JSON.stringify(p) == JSON.stringify(q);
+    }));
+    if (left.length == 0) {
+      return [matches, []];
+    }
+    const [name, args, ask = true] = q;
+    return [matches, [[name, args, ask, left]]];
+  }
+  
   if (ask != value) {
     // If the query's polarity disagrees with the
     // rule's polarity, then return false conditionally
