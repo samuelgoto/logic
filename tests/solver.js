@@ -683,7 +683,7 @@ describe("REPL", function() {
     `))).equalsTo([{}, [IF([P()], Q())]]);
   });
   
-  it("for (let every x: P(x)) Q(x). for (let every x: P(x)) Q(x)?", () => {
+  it("for (let every x: P(x)) Q(x). for (let every y: P(y)) Q(y)?", () => {
     assertThat(stepback(first(`
       for (let every x: P(x)) {
         Q(x).
@@ -734,14 +734,21 @@ describe("REPL", function() {
     `))).equalsTo([{x: ["y", "every"]}, [FORALL([Q(["y", "every"])], R(["y", "every"]))]]);
   });
 
-  it.skip("if (P(x)) Q(x). for (let every x: P(x)) Q(x)?", () => {
+  it("let every x: Q(x) if P(x) matches Q(a) if P(a).", () => {
+    assertThat(equals(
+      IF([P(x("const"))], Q(x("const"))),
+      FORALL([P(x("every"))], Q(x("every")))
+    )).equalsTo({x: x("const")});
+  });
+  
+  it("if (P(x)) Q(x). for (let every x: P(x)) Q(x)?", () => {
     assertThat(stepback(first(`
       if (P(x)) {
         Q(x).
       }
     `), q(`
-      for (let every x: P(x)) {
-        Q(x).
+      for (let every y: P(y)) {
+        Q(y).
       } ?
     `))).equalsTo(undefined);
   });

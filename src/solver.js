@@ -82,12 +82,19 @@ function equals(a, b) {
   }
   const subs = {};
   for (let i = 0; i < a[1].length; i++) {
+    //if (b[1][i][1] != "const") {
     if (b[1][i][1] != "const") {
+      //console.log("hi");
+      //console.log(a[1][i]);
+      //console.log(b[1][i]);
+      //console.log(a[3]);
+      //console.log(b[3]);
       subs[b[1][i][0]] = a[1][i];
       continue;
     }
 
     if (a[1][i][1] != "const") {
+      // console.log("hi");
       subs[a[1][i][0]] = b[1][i];
       continue;
     }
@@ -95,6 +102,7 @@ function equals(a, b) {
     if (a[1][i][1] != b[1][i][1]) {
       return false;
     }
+
     if (a[1][i][0] != b[1][i][0]) {
       return false;
     }
@@ -122,7 +130,6 @@ function apply(body, subs) {
 function stepback(rule, q) {
   const matches = equals(q, rule);
 
-  // console.log(matches);
   if (!matches) {
     return undefined;
   }
@@ -132,32 +139,6 @@ function stepback(rule, q) {
 
   const result = clone(deps);
   apply(result, matches);
-
-  if (conds.length > 0) {
-    const all = result.filter((p) => !conds.find((q) => {
-      return JSON.stringify(p) == JSON.stringify(q);
-    }));
-    //console.log(JSON.stringify(result));
-    //console.log(JSON.stringify(conds));
-    //console.log(JSON.stringify(all));
-    const [name, args, ask = true] = q;
-    if (all.length > 0) {
-      //console.log(all);
-      for (let part of all) {
-        part[3] = q[3];
-      }
-      // console.log("returning");
-      return [matches, all];
-      // return undefined;
-    }
-    const left = conds.filter((p) => !result.find((q) => {
-      return JSON.stringify(p) == JSON.stringify(q);
-    }));
-    if (left.length == 0) {
-      return [matches, []];
-    }
-    return [matches, [[name, args, ask, left]]];
-  }
   
   if (ask != value) {
     // If the query's polarity disagrees with the
@@ -170,7 +151,40 @@ function stepback(rule, q) {
     return free ? undefined : [false, result];
   }
 
-  return [matches, result];
+  if (conds.length == 0) {
+    return [matches, result];
+  }
+
+  {
+    // If both the query and the rule are conditionals,
+    // check if every binding matches in type
+    if (conds.length > 0 && deps.length > 0) {
+      for (let [name, type] of rule[1]) {
+        const [, expected] = matches[name] || [];
+        if (expected != type) {
+          return undefined;
+        }
+      }
+    }
+    
+    const all = result.filter((p) => !conds.find((q) => {
+      return JSON.stringify(p) == JSON.stringify(q);
+    }));
+    const [name, args, ask = true] = q;
+    if (all.length > 0) {
+      for (let part of all) {
+        part[3] = q[3];
+      }
+      return [matches, all];
+    }
+    const left = conds.filter((p) => !result.find((q) => {
+      return JSON.stringify(p) == JSON.stringify(q);
+    }));
+    if (left.length == 0) {
+      return [matches, []];
+    }
+    return [matches, [[name, args, ask, left]]];
+  }
 }
 
 class KB {
