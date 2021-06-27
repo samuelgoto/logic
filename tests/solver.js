@@ -595,7 +595,7 @@ describe("Stepback", () => {
       for (let every x: P(x)) {
         Q(x).
       }
-    `))).equalsTo([{x: ["y", "every"]}, []]);
+    `))).equalsTo([{}, []]);
   });
   
   it("for (let every x: P(x)) Q(x) R(x). for (let every x: P(x)) Q(x)?", () => {
@@ -607,7 +607,7 @@ describe("Stepback", () => {
       for (let every x: P(x)) {
         Q(x) R(x).
       }
-    `))).equalsTo([{x: ["y", "every"]}, []]);
+    `))).equalsTo([{}, []]);
   });
   
   it("for (let every x: P(x) Q(x)) R(x). for (let every x: P(x) Q(x)) R(x)?", () => {
@@ -619,7 +619,8 @@ describe("Stepback", () => {
       for (let every x: P(x) Q(x)) {
         R(x).
       }
-    `))).equalsTo([{x: ["y", "every"]}, []]);
+    `)))
+      .equalsTo([{}, []]);
   });
   
   it("for (let every x: P(x)) R(x). for (let every x: Q(x)) R(x). for (let every x: P(x) Q(x)) R(x)?", () => {
@@ -649,6 +650,14 @@ describe("Stepback", () => {
     `))).equalsTo(undefined);
   });
 
+  it("for (let every x: U(x)) either P(x) or Q(x).", () => {
+    assertThat(stepback(q(`
+      let x: P(x)?
+    `), first(`
+      for (let every x: U(x))
+        either P(x) or Q(x).
+    `))).equalsTo([{x: x()}, [NOT(Q(x())), U(x())]]);
+  });
 });
 
 describe("Normalize", () => {
@@ -852,6 +861,15 @@ describe("Query", () => {
       U(a).
     `)).query(NOT(P(["y", "free"])))))
       .equalsTo([]);
+  });
+
+  it("for (let every x: P(x)) Q(x). P(a). let y: Q(y)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      for (let every x: P(x)) 
+        Q(x). 
+      P(a). 
+    `)).query(Q(free("y")))))
+      .equalsTo([{"y": a()}]);
   });
 
 });
@@ -1491,7 +1509,7 @@ describe("Select", function() {
       for (let every x: P(x)) Q(x).
     `)).query(
       FORALL([P(["y", "every"])], Q(["y", "every"])))))
-      .equalsTo([{"x": ["y", "every"]}]);
+      .equalsTo([{}]);
   });
 
   it("for (let every x: P(x)) { Q(x). } for (let every x: P(x)) { Q(x). } ?", () => {
@@ -1503,7 +1521,7 @@ describe("Select", function() {
       for (let every y: P(y)) {
         Q(y).
       } ?
-    `)))).equalsTo([{"x": ["y", "every"]}]);
+    `)))).equalsTo([{}]);
   });
 
   it("for (let every x: P(x)) { Q(x) R(x). } for (let every x: P(x)) { R(x). } ?", () => {
@@ -1515,7 +1533,7 @@ describe("Select", function() {
       for (let every y: P(y)) {
         R(y).
       } ?
-    `)))).equalsTo([{"x": ["y", "every"]}]);
+    `)))).equalsTo([{}]);
   });
 
   it("for (let every x: P(x) Q(x)) { R(x). } for (let every x: P(x) Q(x)) { R(x). } ?", () => {
@@ -1527,7 +1545,7 @@ describe("Select", function() {
       for (let every y: P(y) Q(y)) {
         R(y).
       } ?
-    `)))).equalsTo([{"x": ["y", "every"]}]);
+    `)))).equalsTo([{}]);
   });
 
   it("for (let every x: P(x)) { Q(x). } for (let every x: Q(x)) { R(x). } for (let every x: P(x)) { R(x). } ?", () => {
@@ -1542,16 +1560,7 @@ describe("Select", function() {
       for (let every y: P(y)) {
         R(y).
       } ?
-    `)))).equalsTo([{"x": ["y", "every"]}]);
-  });
-
-  it("for (let every x: U(x)) either P(x) or Q(x).", () => {
-    assertThat(stepback(q(`
-      let x: P(x)?
-    `), first(`
-      for (let every x: U(x))
-        either P(x) or Q(x).
-    `))).equalsTo([{x: x()}, [NOT(Q(x())), U(x())]]);
+    `)))).equalsTo([{}]);
   });
   
 });

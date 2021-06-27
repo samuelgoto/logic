@@ -174,8 +174,9 @@ function stepback(q, rule) {
       return JSON.stringify(p) == JSON.stringify(q);
     }));
     if (left.length == 0) {
-      return [matches, []];
+      return [{}, []];
     }
+    //console.log("hi");
     return [matches, [[name, args, ask, left]]];
   }
 }
