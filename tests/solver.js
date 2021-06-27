@@ -1464,7 +1464,9 @@ describe("Select", function() {
     assertThat(unroll(new KB().insert(parse(`
       if (P()) Q(). 
     `)).select(first(`
-      { if (P()) Q(). }?
+      if (P()) { 
+        Q(). 
+      } ?
     `)))).equalsTo([{}]);
   });
 
@@ -1472,7 +1474,9 @@ describe("Select", function() {
     assertThat(unroll(new KB().insert(parse(`
       if (P(a)) Q(b). 
     `)).select(first(`
-      { if (P(b)) Q(a). }?
+      if (P(b)) {
+        Q(a). 
+      } ?
     `)))).equalsTo([]);
   });
 
@@ -1480,7 +1484,9 @@ describe("Select", function() {
     assertThat(unroll(new KB().insert(parse(`
       if (P()) Q() R(). 
     `)).select(first(`
-      { if (P()) Q(). }?
+      if (P()) {
+        Q(). 
+      } ?
     `)))).equalsTo([{}]);
   });
 
@@ -1991,6 +1997,96 @@ describe("REPL", () => {
     `))).equalsTo([{"x": literal("u"), "y": literal("v")}]);
   });
 
+
+  it.skip("if (not P()) Q(). not P(). Q()?", function() {
+    assertThat(unroll(new KB().read(`
+      if (not P()) {
+        Q().
+      }
+      not P().
+      Q()?
+    `))).equalsTo([{}]);
+  });
+
+  it.skip("if (not not P()) Q(). P(). Q()?", function() {
+    assertThat(unroll(new KB().read(`
+      if (not not P()) {
+        Q().
+      }
+      P().
+      Q()?
+    `))).equalsTo([{}]);
+  });
+
+  it("if ({ P(). }) Q(). P(). Q()?", function() {
+    assertThat(unroll(new KB().read(`
+      if ({ P(). }) {
+        Q().
+      }
+      P().
+      Q()?
+    `))).equalsTo([{}]);
+  });
+
+  it.skip("if ({ P(). }) Q(). P(). Q()?", function() {
+    assertThat(unroll(new KB().read(`
+      // If u likes every girl then Q.
+      if ({ 
+        for (let every x: girl(x)) {
+          likes(u, x).
+        }
+      }) {
+        Q().
+      }
+      // u does like every girl.
+      for (let every x: girl(x)) {
+        likes(u, x).
+      }
+      Q()?
+    `))).equalsTo([{}]);
+  });
+
+  
+  it.skip("if (either P() or Q()) R(). P(). R()?", function() {
+    assertThat(unroll(new KB().read(`
+      if (either P() or Q()) {
+        R().
+      }
+      P().
+      R()?
+    `))).equalsTo([{}]);
+  });
+
+  it("not not P(). P()?", function() {
+    assertThat(unroll(new KB().read(`
+      not not P().
+      P()?
+    `))).equalsTo([{}]);
+  });
+
+  it("not not not P(). not P()?", function() {
+    assertThat(unroll(new KB().read(`
+      not not not P().
+      not P()?
+    `))).equalsTo([{}]);
+  });
+
+  it.skip("either P() or Q(). Q(). P()?", function() {
+    assertThat(unroll(new KB().read(`
+      either P() or Q().
+      Q().
+      P()?
+    `))).equalsTo([false]);
+  });
+
+  it.skip("either P() or Q(). Q(). not P()?", function() {
+    assertThat(unroll(new KB().read(`
+      either P() or Q().
+      Q().
+      not P()?
+    `))).equalsTo([{}]);
+  });
+  
 });
 
 
