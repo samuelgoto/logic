@@ -843,6 +843,17 @@ describe("Query", () => {
       .equalsTo([{"x": a()}]);
   });
 
+  it("let y: not P(y)?", () => {
+    assertThat(unroll(new KB().insert(parse(`
+      for (let every x: U(x)) {
+        either P(x) or Q(x).
+      }
+      not Q(a).
+      U(a).
+    `)).query(NOT(P(["y", "free"])))))
+      .equalsTo([]);
+  });
+
 });
 
 describe("Select", function() {
@@ -1367,17 +1378,6 @@ describe("Select", function() {
     `)).select(first(`
       let x: P(x)?
     `)))).equalsTo([{"x": literal("a")}]);
-  });
-
-  it("let y: not P(y)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
-      for (let every x: U(x)) {
-        either P(x) or Q(x).
-      }
-      not Q(a).
-      U(a).
-    `)).query(NOT(P(["y", "free"])))))
-      .equalsTo([]);
   });
 
   it("for (let every x: U(x)) either P(x) or Q(x). not Q(a). U(a). let x: P(x)?", () => {
