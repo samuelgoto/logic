@@ -82,19 +82,12 @@ function match(a, b) {
   }
   const subs = {};
   for (let i = 0; i < a[1].length; i++) {
-    //if (b[1][i][1] != "const") {
     if (b[1][i][1] != "const") {
-      //console.log("hi");
-      //console.log(a[1][i]);
-      //console.log(b[1][i]);
-      //console.log(a[3]);
-      //console.log(b[3]);
       subs[b[1][i][0]] = a[1][i];
       continue;
     }
 
     if (a[1][i][1] != "const") {
-      // console.log("hi");
       subs[a[1][i][0]] = b[1][i];
       continue;
     }
@@ -127,7 +120,7 @@ function apply(body, subs) {
   }
 }
 
-function stepback(rule, q) {
+function stepback(q, rule) {
   const matches = match(q, rule);
 
   if (!matches) {
@@ -214,7 +207,7 @@ class KB {
   *query(q, path) {
     for (let rule of this.rules) {
 
-      const result = stepback(rule, q);
+      const result = stepback(q, rule);
 
       if (result == undefined) {
         continue;
@@ -226,44 +219,23 @@ class KB {
         yield value;
         continue;
       }
-
-      // console.log(JSON.stringify(deps));
-
-      // apply();
       
       const results = this.select(["?", deps], path);
 
       const free = q[1]
             .filter(([name, type]) => type == "free")
             .map(([name]) => name);
+
       const mapping = Object.fromEntries(
         Object.entries(value)
           .filter(([key, value]) => free.includes(key)));
 
       for (let result of results) {
-        //console.log("Got a result for:");
-        //console.log(JSON.stringify(q));
-        //console.log(JSON.stringify(rule));
-        //console.log(JSON.stringify(deps));
-        //console.log(JSON.stringify(value));
-        //console.log(JSON.stringify(result));
         if (!value) {
           yield false;
           continue;
         }
-        
-        //if (value) {
-        //console.log("hi");
-        //console.log(Object.assign(mapping, result));
         yield Object.assign(mapping, result);
-        //} else {
-        // console.log(value);
-        // console.log(result);
-        // yield result;
-        //  yield false;
-        //}
-
-        // break;
       }
     }
   }

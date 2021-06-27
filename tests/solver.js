@@ -366,75 +366,75 @@ describe("Normalize", () => {
 
 describe("Stepback", () => {
   it("P(). P()?", () => {
-    assertThat(stepback(first(`
-      P().
-    `), q(`
+    assertThat(stepback(q(`
       P()?
+    `), first(`
+      P().
     `))).equalsTo([{}, []]);
   });
 
   it("P(a). P(a)?", () => {
-    assertThat(stepback(first(`
-      P(a).
-    `), q(`
+    assertThat(stepback(q(`
       P(a)?
+    `), first(`
+      P(a).
     `))).equalsTo([{}, []]);
   });
 
   it("P(a, b). P(a, b)?", () => {
-    assertThat(stepback(first(`
-      P(a, b).
-    `), q(`
+    assertThat(stepback(q(`
       P(a, b)?
+    `), first(`
+      P(a, b).
     `))).equalsTo([{}, []]);
   });
 
   it("P(). Q()?", () => {
-    assertThat(stepback(first(`
-      P().
-    `), q(`
+    assertThat(stepback(q(`
       Q()?
+    `), first(`
+      P().
     `))).equalsTo(undefined);
   });
 
   it("P(a). P(b)?", () => {
-    assertThat(stepback(first(`
-      P(a).
-    `), q(`
+    assertThat(stepback(q(`
       P(b)?
+    `), first(`
+      P(a).
     `))).equalsTo(undefined);
   });
 
   
   it("if (Q(a)) P(a). P(a)?", () => {
-    assertThat(stepback(first(`
-      if (Q(a)) P(a).
-    `), q(`
+    assertThat(stepback(q(`
       P(a)?
+    `), first(`
+      if (Q(a)) P(a).
     `))).equalsTo([{}, [Q(a())]]);
   });
 
   it("if (P(a) Q(a)) R(a). R(a)?", () => {
-    assertThat(stepback(first(`
-      if (P(a) Q(a)) R(a).
-    `), q(`
+    assertThat(stepback(q(`
       R(a)?
+    `), first(`
+      if (P(a) Q(a)) R(a).
     `))).equalsTo([{}, [P(a()), Q(a())]]);
   });
 
   it("not P(). P()?", () => {
-    assertThat(stepback(first(`
-      not P().
-    `), q(`
+    assertThat(stepback(q(`
       P()?
+    `), first(`
+      not P().
     `))).equalsTo([false, []]);
   });
 
   it("P(a). let x: P(x)?", () => {
-    assertThat(stepback(first(`
-      P(a).
-    `), q(`
+    assertThat(stepback(q(`
       let x: P(x)?
+    `), first(`
+      P(a).
     `))).equalsTo([{"x": a()}, []]);
   });
 
@@ -447,205 +447,205 @@ describe("Stepback", () => {
   });
 
   it("either P() or Q(). not P()?", () => {
-    assertThat(stepback(first(`
-      either P() or Q().
-    `), q(`
+    assertThat(stepback(q(`
       not P()?
+    `), first(`
+      either P() or Q().
     `))).equalsTo([false, [NOT(Q())]]);
   });
 
   it("for (let every x: P(x)) Q(x).  let x: P(x)?", () => {
-    assertThat(stepback(first(`
+    assertThat(stepback(q(`
+      let x: Q(x)?
+    `), first(`
       for (let every x: P(x))
         Q(x).
-    `), q(`
-      let x: Q(x)?
     `))).equalsTo([{"x": x()}, [P(free("x"))]]);
   });
 
   it("for (let every x: P(x) Q(x)) R(x).  let x: R(x)?", () => {
-    assertThat(stepback(first(`
+    assertThat(stepback(q(`
+      let x: R(x)?
+    `), first(`
       for (let every x: P(x) Q(x))
         R(x).
-    `), q(`
-      let x: R(x)?
     `))).equalsTo([{"x": x()}, [P(free("x")), Q(free("x"))]]);
   });
 
   it("either P(a) or Q(a). not Q(a). let x: P(x)?", () => {
-    assertThat(stepback(first(`
+    assertThat(stepback(q(`
+      let x: P(x)?
+    `), first(`
       either P(a) or Q(a).
       not Q(a).
-    `), q(`
-      let x: P(x)?
     `))).equalsTo([{"x": a()}, [NOT(Q(a()))]]);
   });
 
   it("either not P() or Q(). not P()?", () => {
-    assertThat(stepback(first(`
-      either not P() or Q().
-    `), q(`
+    assertThat(stepback(q(`
       not P()?
+    `), first(`
+      either not P() or Q().
     `))).equalsTo([{}, [NOT(Q())]]);
   });
 
   it("either P(a) or Q(a). let x: not Q(x)?", () => {
-    assertThat(stepback(first(`
+    assertThat(stepback(q(`
+      let y: not Q(y)?
+    `), first(`
       for (let every x: U(x)) {
         either Q(x) or P(x).
       }
-    `), q(`
-      let y: not Q(y)?
     `)))
       .equalsTo(undefined);
   });
 
   it("for (let every x: U(x)) either P(x) or Q(x). let x: not P(x)?", () => {
-    assertThat(stepback(first(`
+    assertThat(stepback(q(`
+      let y: not P(y)?
+    `), first(`
       for (let every x: U(x)) {
         either P(x) or Q(x).
       }
       not Q(a).
       U(a).
-    `), q(`
-      let y: not P(y)?
     `)))
       .equalsTo(undefined);
   });
 
   it("not P(). P()?", () => {
-    assertThat(stepback(first(`
-      not P().
-    `), q(`
+    assertThat(stepback(q(`
       P()?
+    `), first(`
+      not P().
     `))).equalsTo([false, []]);
   });
   
   it("if (P()) Q(). if (P()) Q()?", () => {
-    assertThat(stepback(first(`
-      if (P()) Q().
-    `), q(`
+    assertThat(stepback(q(`
       if (P()) {
         Q().
       } ?
+    `), first(`
+      if (P()) Q().
     `))).equalsTo([{}, []]);
   });
   
   it("if (P()) Q(). if (P()) Q()?", () => {
-    assertThat(stepback(first(`
-      if (P()) Q().
-    `), q(`
+    assertThat(stepback(q(`
       if (R()) {
         Q().
       } ?
+    `), first(`
+      if (P()) Q().
     `))).equalsTo([{}, [IF([R()], P())]]);
   });
   
   it("if (P()) Q() R(). if (P()) Q()?", () => {
-    assertThat(stepback(first(`
-      if (P()) Q() R().
-    `), q(`
+    assertThat(stepback(q(`
       if (P()) {
         Q().
       } ?
+    `), first(`
+      if (P()) Q() R().
     `))).equalsTo([{}, []]);
   });
   
   it("if (P() Q()) R(). if (P() Q()) R()?", () => {
-    assertThat(stepback(first(`
-      if (P() Q()) R().
-    `), q(`
+    assertThat(stepback(q(`
       if (P() Q()) {
         R().
       } ?
+    `), first(`
+      if (P() Q()) R().
     `))).equalsTo([{}, []]);
   });
   
   it("if (P()) R(). if (P() Q()) R()?", () => {
-    assertThat(stepback(first(`
-      if (P()) R().
-    `), q(`
+    assertThat(stepback(q(`
       if (P() Q()) {
         R().
       } ?
+    `), first(`
+      if (P()) R().
     `))).equalsTo([{}, [IF([Q()], R())]]);
   });
   
   it("if (P()) Q(). if (Q()) R(). if (P()) R()?", () => {
-    assertThat(stepback(first(`
+    assertThat(stepback(q(`
+      if (P()) {
+        R().
+      } ?
+    `), first(`
       if (Q()) {
         R().
       }
       if (P()) {
         Q().
       }
-    `), q(`
-      if (P()) {
-        R().
-      } ?
     `))).equalsTo([{}, [IF([P()], Q())]]);
   });
   
   it("for (let every x: P(x)) Q(x). for (let every y: P(y)) Q(y)?", () => {
-    assertThat(stepback(first(`
-      for (let every x: P(x)) {
-        Q(x).
-      }
-    `), q(`
+    assertThat(stepback(q(`
       for (let every y: P(y)) {
         Q(y).
       } ?
+    `), first(`
+      for (let every x: P(x)) {
+        Q(x).
+      }
     `))).equalsTo([{x: ["y", "every"]}, []]);
   });
   
   it("for (let every x: P(x)) Q(x) R(x). for (let every x: P(x)) Q(x)?", () => {
-    assertThat(stepback(first(`
-      for (let every x: P(x)) {
-        Q(x) R(x).
-      }
-    `), q(`
+    assertThat(stepback(q(`
       for (let every y: P(y)) {
         Q(y).
       } ?
+    `), first(`
+      for (let every x: P(x)) {
+        Q(x) R(x).
+      }
     `))).equalsTo([{x: ["y", "every"]}, []]);
   });
   
   it("for (let every x: P(x) Q(x)) R(x). for (let every x: P(x) Q(x)) R(x)?", () => {
-    assertThat(stepback(first(`
-      for (let every x: P(x) Q(x)) {
-        R(x).
-      }
-    `), q(`
+    assertThat(stepback(q(`
       for (let every y: P(y) Q(y)) {
         R(y).
       } ?
+    `), first(`
+      for (let every x: P(x) Q(x)) {
+        R(x).
+      }
     `))).equalsTo([{x: ["y", "every"]}, []]);
   });
   
   it("for (let every x: P(x)) R(x). for (let every x: Q(x)) R(x). for (let every x: P(x) Q(x)) R(x)?", () => {
-    assertThat(stepback(first(`
+    assertThat(stepback(q(`
+      for (let every y: P(y) Q(y)) {
+        R(y).
+      } ?
+    `), first(`
       for (let every x: P(x)) {
         R(x).
       }
       for (let every x: Q(x)) {
         R(x).
       }
-    `), q(`
-      for (let every y: P(y) Q(y)) {
-        R(y).
-      } ?
     `))).equalsTo([{x: ["y", "every"]}, [FORALL([Q(["y", "every"])], R(["y", "every"]))]]);
   });
 
   it("if (P(x)) Q(x). for (let every x: P(x)) Q(x)?", () => {
-    assertThat(stepback(first(`
-      if (P(x)) {
-        Q(x).
-      }
-    `), q(`
+    assertThat(stepback(q(`
       for (let every y: P(y)) {
         Q(y).
       } ?
+    `), first(`
+      if (P(x)) {
+        Q(x).
+      }
     `))).equalsTo(undefined);
   });
 
@@ -1369,15 +1369,6 @@ describe("Select", function() {
     `)))).equalsTo([{"x": literal("a")}]);
   });
 
-  it("for (let every x: U(x)) either P(x) or Q(x).", () => {
-    assertThat(stepback(first(`
-      for (let every x: U(x))
-        either P(x) or Q(x).
-    `), q(`
-      let x: P(x)?
-    `))).equalsTo([{x: x()}, [NOT(Q(x())), U(x())]]);
-  });
-  
   it("let y: not P(y)?", () => {
     assertThat(unroll(new KB().insert(parse(`
       for (let every x: U(x)) {
@@ -1553,6 +1544,16 @@ describe("Select", function() {
       } ?
     `)))).equalsTo([{"x": ["y", "every"]}]);
   });
+
+  it("for (let every x: U(x)) either P(x) or Q(x).", () => {
+    assertThat(stepback(q(`
+      let x: P(x)?
+    `), first(`
+      for (let every x: U(x))
+        either P(x) or Q(x).
+    `))).equalsTo([{x: x()}, [NOT(Q(x())), U(x())]]);
+  });
+  
 });
 
 describe("REPL", () => {
