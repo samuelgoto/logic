@@ -637,13 +637,6 @@ describe("Stepback", () => {
     `))).equalsTo([{x: ["y", "every"]}, [FORALL([Q(["y", "every"])], R(["y", "every"]))]]);
   });
 
-  it("let every x: Q(x) if P(x) matches Q(a) if P(a).", () => {
-    assertThat(match(
-      IF([P(x("const"))], Q(x("const"))),
-      FORALL([P(x("every"))], Q(x("every")))
-    )).equalsTo({x: x("const")});
-  });
-  
   it("if (P(x)) Q(x). for (let every x: P(x)) Q(x)?", () => {
     assertThat(stepback(first(`
       if (P(x)) {
@@ -773,6 +766,24 @@ describe("Match", () => {
       Q(a()),
       FORALL([P(x("every"))], Q(x("every")))
     )).equalsTo({"x": a()});
+  });
+  
+  it("either P(a) or Q(a). let x: not Q(x)?", () => {
+    assertThat(match(q(`
+      let y: not Q(y)?
+    `), first(`
+      for (let every x: U(x)) {
+        either Q(x) or P(x).
+      }
+    `)))
+      .equalsTo({x: ["y", "free"]});
+  });
+
+  it("let every x: Q(x) if P(x) matches Q(a) if P(a).", () => {
+    assertThat(match(
+      IF([P(x("const"))], Q(x("const"))),
+      FORALL([P(x("every"))], Q(x("every")))
+    )).equalsTo({x: x("const")});
   });
   
 });
@@ -1367,17 +1378,6 @@ describe("Select", function() {
     `))).equalsTo([{x: x()}, [NOT(Q(x())), U(x())]]);
   });
   
-  it("either P(a) or Q(a). let x: not Q(x)?", () => {
-    assertThat(match(q(`
-      let y: not Q(y)?
-    `), first(`
-      for (let every x: U(x)) {
-        either Q(x) or P(x).
-      }
-    `)))
-      .equalsTo({x: ["y", "free"]});
-  });
-
   it("let y: not P(y)?", () => {
     assertThat(unroll(new KB().insert(parse(`
       for (let every x: U(x)) {
