@@ -1,6 +1,6 @@
 const Assert = require("assert");
 const {Parser} = require("../src/parser.js");
-const {KB, stepback, normalize, equals, apply, clone} = require("../src/solver.js");
+const {KB, stepback, normalize, match, apply, clone} = require("../src/solver.js");
 
 describe("REPL", function() {
   function literal(a) {
@@ -735,7 +735,7 @@ describe("REPL", function() {
   });
 
   it("let every x: Q(x) if P(x) matches Q(a) if P(a).", () => {
-    assertThat(equals(
+    assertThat(match(
       IF([P(x("const"))], Q(x("const"))),
       FORALL([P(x("every"))], Q(x("every")))
     )).equalsTo({x: x("const")});
@@ -1142,9 +1142,9 @@ describe("REPL", function() {
       .equalsTo([{"x": literal("a"), "y": literal("b")}]);
   });
 
-  it("equals(let x: Q(x), for (let every y: P(y)) Q(y))", () => {
+  it("match(let x: Q(x), for (let every y: P(y)) Q(y))", () => {
     const body = [["P", ["y"]]];
-    const matches = equals(
+    const matches = match(
       ["Q", [free("x")], []],
       ["Q", [["y", "every"]], body]
     );
@@ -1176,11 +1176,11 @@ describe("REPL", function() {
       .equalsTo([{"x": a()}]);
   });
 
-  it("", () => {
-    const match = equals(Q(free("y")), FORALL([P(x())], Q(x())));
-    assertThat(match).equalsTo({"x": ["y", "free"]});
+  it("let y: Q(y) == for (let every x: P(x)) Q(x)", () => {
+    const matches = match(Q(free("y")), FORALL([P(x())], Q(x())));
+    assertThat(matches).equalsTo({"x": ["y", "free"]});
     const deps = [P(x())];
-    apply(deps, match);
+    apply(deps, matches);
     assertThat(deps).equalsTo([P(free("y"))]);
   });
   
@@ -1787,7 +1787,7 @@ describe("REPL", function() {
   });
   
   it("either P(a) or Q(a). let x: not Q(x)?", () => {
-    assertThat(equals(q(`
+    assertThat(match(q(`
       let y: not Q(y)?
     `), first(`
       for (let every x: U(x)) {
@@ -1915,14 +1915,14 @@ describe("REPL", function() {
   });
 
   it("for (let every x: P(x)) Q(x). == for (let every y: P(y)) Q(y)?", () => {
-    assertThat(equals(
+    assertThat(match(
       FORALL([P(["y", "every"])], Q(["y", "every"])),
       FORALL([P(x("every"))], Q(x("every")))
     )).equalsTo({"x": ["y", "every"]});
   });
   
   it("Q(a). == for (let every y: P(y)) Q(y)?", () => {
-    assertThat(equals(
+    assertThat(match(
       Q(a()),
       FORALL([P(x("every"))], Q(x("every")))
     )).equalsTo({"x": a()});

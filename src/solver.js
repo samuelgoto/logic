@@ -73,7 +73,7 @@ function normalize(statements, scope = {}) {
   return result;
 }
 
-function equals(a, b) {
+function match(a, b) {
   if (a[0] != b[0]) {
     return false;
   }
@@ -128,7 +128,7 @@ function apply(body, subs) {
 }
 
 function stepback(rule, q) {
-  const matches = equals(q, rule);
+  const matches = match(q, rule);
 
   if (!matches) {
     return undefined;
@@ -318,7 +318,7 @@ class KB {
 module.exports = {
   stepback: stepback,
   normalize: normalize,
-  equals: equals,
+  match: match,
   KB: KB,
   clone: clone,
   apply: apply,
