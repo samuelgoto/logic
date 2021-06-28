@@ -184,19 +184,19 @@ describe("Normalize", () => {
     ]);
   });
 
-  it("for (let every x: P(x)) Q(x). => let every x: Q(x) if (P(x)).", () => {
+  it("for (let x: P(x)) Q(x). => let x: Q(x) if (P(x)).", () => {
     assertThat(normalize(new Parser().parse(`
-      for (let every x: P(x))
+      for (let x: P(x))
         Q(x). 
     `))).equalsTo([
       FORALL([P(x("every"))], Q(x("every")))
     ]);
   });
 
-  it("for (let every a: P(a)) { for (let every b: Q(b)) R(a, b).} => let every a, b: R(a, b) if (P(a) Q(b)).", () => {
+  it("for (let a: P(a)) { for (let b: Q(b)) R(a, b).} => let a, b: R(a, b) if (P(a) Q(b)).", () => {
     assertThat(normalize(new Parser().parse(`
-      for (let every a: P(a)) {
-        for (let every b: Q(b))
+      for (let a: P(a)) {
+        for (let b: Q(b))
           R(a, b). 
       }
     `))).equalsTo([
@@ -204,9 +204,9 @@ describe("Normalize", () => {
     ]);
   });
 
-  it("for (let every a: P(a)) {Q(a).} ? => let every a: Q(a) if (P(a)).", () => {
+  it("for (let a: P(a)) {Q(a).} ? => let a: Q(a) if (P(a)).", () => {
     assertThat(normalize(new Parser().parse(`
-      for (let every a: P(a)) {
+      for (let a: P(a)) {
         Q(a). 
       } ?
     `))).equalsTo([
@@ -454,20 +454,20 @@ describe("Stepback", () => {
     `))).equalsTo([false, [NOT(Q())]]);
   });
 
-  it("for (let every x: P(x)) Q(x).  let x: P(x)?", () => {
+  it("for (let x: P(x)) Q(x).  let x: P(x)?", () => {
     assertThat(stepback(q(`
       let x: Q(x)?
     `), first(`
-      for (let every x: P(x))
+      for (let x: P(x))
         Q(x).
     `))).equalsTo([{"x": x()}, [P(free("x"))]]);
   });
 
-  it("for (let every x: P(x) Q(x)) R(x).  let x: R(x)?", () => {
+  it("for (let x: P(x) Q(x)) R(x).  let x: R(x)?", () => {
     assertThat(stepback(q(`
       let x: R(x)?
     `), first(`
-      for (let every x: P(x) Q(x))
+      for (let x: P(x) Q(x))
         R(x).
     `))).equalsTo([{"x": x()}, [P(free("x")), Q(free("x"))]]);
   });
@@ -493,18 +493,18 @@ describe("Stepback", () => {
     assertThat(stepback(q(`
       let y: not Q(y)?
     `), first(`
-      for (let every x: U(x)) {
+      for (let x: U(x)) {
         either Q(x) or P(x).
       }
     `)))
       .equalsTo(undefined);
   });
 
-  it("for (let every x: U(x)) either P(x) or Q(x). let x: not P(x)?", () => {
+  it("for (let x: U(x)) either P(x) or Q(x). let x: not P(x)?", () => {
     assertThat(stepback(q(`
       let y: not P(y)?
     `), first(`
-      for (let every x: U(x)) {
+      for (let x: U(x)) {
         either P(x) or Q(x).
       }
       not Q(a).
@@ -586,61 +586,61 @@ describe("Stepback", () => {
     `))).equalsTo([{}, [IF([P()], Q())]]);
   });
   
-  it("for (let every x: P(x)) Q(x). for (let every y: P(y)) Q(y)?", () => {
+  it("for (let x: P(x)) Q(x). for (let y: P(y)) Q(y)?", () => {
     assertThat(stepback(q(`
-      for (let every y: P(y)) {
+      for (let y: P(y)) {
         Q(y).
       } ?
     `), first(`
-      for (let every x: P(x)) {
+      for (let x: P(x)) {
         Q(x).
       }
     `))).equalsTo([{}, []]);
   });
   
-  it("for (let every x: P(x)) Q(x) R(x). for (let every x: P(x)) Q(x)?", () => {
+  it("for (let x: P(x)) Q(x) R(x). for (let x: P(x)) Q(x)?", () => {
     assertThat(stepback(q(`
-      for (let every y: P(y)) {
+      for (let y: P(y)) {
         Q(y).
       } ?
     `), first(`
-      for (let every x: P(x)) {
+      for (let x: P(x)) {
         Q(x) R(x).
       }
     `))).equalsTo([{}, []]);
   });
   
-  it("for (let every x: P(x) Q(x)) R(x). for (let every x: P(x) Q(x)) R(x)?", () => {
+  it("for (let x: P(x) Q(x)) R(x). for (let x: P(x) Q(x)) R(x)?", () => {
     assertThat(stepback(q(`
-      for (let every y: P(y) Q(y)) {
+      for (let y: P(y) Q(y)) {
         R(y).
       } ?
     `), first(`
-      for (let every x: P(x) Q(x)) {
+      for (let x: P(x) Q(x)) {
         R(x).
       }
     `)))
       .equalsTo([{}, []]);
   });
   
-  it("for (let every x: P(x)) R(x). for (let every x: Q(x)) R(x). for (let every x: P(x) Q(x)) R(x)?", () => {
+  it("for (let x: P(x)) R(x). for (let x: Q(x)) R(x). for (let x: P(x) Q(x)) R(x)?", () => {
     assertThat(stepback(q(`
-      for (let every y: P(y) Q(y)) {
+      for (let y: P(y) Q(y)) {
         R(y).
       } ?
     `), first(`
-      for (let every x: P(x)) {
+      for (let x: P(x)) {
         R(x).
       }
-      for (let every x: Q(x)) {
+      for (let x: Q(x)) {
         R(x).
       }
     `))).equalsTo([{x: ["y", "every"]}, [FORALL([Q(["y", "every"])], R(["y", "every"]))]]);
   });
 
-  it("if (P(x)) Q(x). for (let every y: P(y)) Q(y)?", () => {
+  it("if (P(x)) Q(x). for (let y: P(y)) Q(y)?", () => {
     assertThat(stepback(q(`
-      for (let every y: P(y)) {
+      for (let y: P(y)) {
         Q(y).
       } ?
     `), first(`
@@ -650,11 +650,11 @@ describe("Stepback", () => {
     `))).equalsTo(undefined);
   });
 
-  it("for (let every x: U(x)) either P(x) or Q(x).", () => {
+  it("for (let x: U(x)) either P(x) or Q(x).", () => {
     assertThat(stepback(q(`
       let x: P(x)?
     `), first(`
-      for (let every x: U(x))
+      for (let x: U(x))
         either P(x) or Q(x).
     `))).equalsTo([{x: x()}, [NOT(Q(x())), U(x())]]);
   });
@@ -703,18 +703,18 @@ describe("Normalize", () => {
         }
       }
 
-      for (let every a: P(a)) Q(a).
-      for (let every a: P(a) Q(a)) R(a).
-      for (let every a: P(a)) {
+      for (let a: P(a)) Q(a).
+      for (let a: P(a) Q(a)) R(a).
+      for (let a: P(a)) {
         S(a) T(a).
       }
-      for (let every a: P(a)) {
+      for (let a: P(a)) {
         U(a).
         V(a).
       }
       if (T(d)) {
-        for (let every a: P(a)) {
-          for (let every b: Q(b)) {
+        for (let a: P(a)) {
+          for (let b: Q(b)) {
             if (R(c))
               S(a, b).
           }
@@ -742,7 +742,7 @@ describe("Normalize", () => {
 });
 
 describe("Match", () => {
-  it("match(let x: Q(x), for (let every y: P(y)) Q(y))", () => {
+  it("match(let x: Q(x), for (let y: P(y)) Q(y))", () => {
     const body = [["P", ["y"]]];
     const matches = match(
       ["Q", [free("x")], []],
@@ -755,7 +755,7 @@ describe("Match", () => {
       .equalsTo([["P", [["x", "free"]]]]);
   });
 
-  it("let y: Q(y) == for (let every x: P(x)) Q(x)", () => {
+  it("let y: Q(y) == for (let x: P(x)) Q(x)", () => {
     const matches = match(Q(free("y")), FORALL([P(x())], Q(x())));
     assertThat(matches).equalsTo({"x": ["y", "free"]});
     const deps = [P(x())];
@@ -763,14 +763,14 @@ describe("Match", () => {
     assertThat(deps).equalsTo([P(free("y"))]);
   });
 
-  it("for (let every x: P(x)) Q(x). == for (let every y: P(y)) Q(y)?", () => {
+  it("for (let x: P(x)) Q(x). == for (let y: P(y)) Q(y)?", () => {
     assertThat(match(
       FORALL([P(["y", "every"])], Q(["y", "every"])),
       FORALL([P(x("every"))], Q(x("every")))
     )).equalsTo({"x": ["y", "every"]});
   });
   
-  it("Q(a). == for (let every y: P(y)) Q(y)?", () => {
+  it("Q(a). == for (let y: P(y)) Q(y)?", () => {
     assertThat(match(
       Q(a()),
       FORALL([P(x("every"))], Q(x("every")))
@@ -781,14 +781,14 @@ describe("Match", () => {
     assertThat(match(q(`
       let y: not Q(y)?
     `), first(`
-      for (let every x: U(x)) {
+      for (let x: U(x)) {
         either Q(x) or P(x).
       }
     `)))
       .equalsTo({x: ["y", "free"]});
   });
 
-  it("let every x: Q(x) if P(x) matches Q(a) if P(a).", () => {
+  it("let x: Q(x) if P(x) matches Q(a) if P(a).", () => {
     assertThat(match(
       IF([P(x("const"))], Q(x("const"))),
       FORALL([P(x("every"))], Q(x("every")))
@@ -854,7 +854,7 @@ describe("Query", () => {
 
   it("let y: not P(y)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: U(x)) {
+      for (let x: U(x)) {
         either P(x) or Q(x).
       }
       not Q(a).
@@ -863,9 +863,9 @@ describe("Query", () => {
       .equalsTo([]);
   });
 
-  it("for (let every x: P(x)) Q(x). P(a). let y: Q(y)?", () => {
+  it("for (let x: P(x)) Q(x). P(a). let y: Q(y)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) 
+      for (let x: P(x)) 
         Q(x). 
       P(a). 
     `)).query(Q(free("y")))))
@@ -1035,9 +1035,9 @@ describe("Select", function() {
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every a: P(a)) Q(a). P(u). Q(u)?", () => {
+  it("for (let a: P(a)) Q(a). P(u). Q(u)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every a: P(a)) {
+      for (let a: P(a)) {
         Q(a).
       }
       P(u).
@@ -1046,9 +1046,9 @@ describe("Select", function() {
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every a: P(a)) Q(a). P(u). Q(v)?", () => {
+  it("for (let a: P(a)) Q(a). P(u). Q(v)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every a: P(a)) {
+      for (let a: P(a)) {
         Q(a).
       }
       P(u).
@@ -1057,9 +1057,9 @@ describe("Select", function() {
     `)))).equalsTo([]);
   });
 
-  it("for (let every a: P(a)) Q(a) R(a). P(u). R(u)?", () => {
+  it("for (let a: P(a)) Q(a) R(a). P(u). R(u)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every a: P(a)) {
+      for (let a: P(a)) {
         Q(a) R(a).
       }
       P(u).
@@ -1068,12 +1068,12 @@ describe("Select", function() {
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every a: P(a)) Q(a). for (let every a: Q(a)) R(a). P(u). R(u)?", () => {
+  it("for (let a: P(a)) Q(a). for (let a: Q(a)) R(a). P(u). R(u)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every a: P(a)) {
+      for (let a: P(a)) {
         Q(a).
       }
-      for (let every a: Q(a)) {
+      for (let a: Q(a)) {
         R(a).
       }
       P(u).
@@ -1082,10 +1082,10 @@ describe("Select", function() {
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every a: P(a)) { for (let every b: Q(b)) R(a, b) }. P(u). Q(v). R(u, v)?", () => {
+  it("for (let a: P(a)) { for (let b: Q(b)) R(a, b) }. P(u). Q(v). R(u, v)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every a: P(a)) {
-        for (let every b: Q(b)) {
+      for (let a: P(a)) {
+        for (let b: Q(b)) {
           R(a, b).
         }
       }
@@ -1210,18 +1210,18 @@ describe("Select", function() {
       .equalsTo([{"x": literal("a"), "y": literal("b")}]);
   });
 
-  it("for (let every x: P(x)) Q(x). P(a). let x: Q(x)?", () => {
+  it("for (let x: P(x)) Q(x). P(a). let x: Q(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) Q(x). 
+      for (let x: P(x)) Q(x). 
       P(a).
     `)).select(first(`
       let y: Q(y)?
     `)))).equalsTo([{"y": a()}]);
   });
 
-  it("for (let every x: P(x) Q(x)) R(x). P(a). Q(a). let x: R(x)?", () => {
+  it("for (let x: P(x) Q(x)) R(x). P(a). Q(a). let x: R(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x) Q(x)) R(x). 
+      for (let x: P(x) Q(x)) R(x). 
       P(a).
       Q(a).
     `)).select(first(`
@@ -1230,10 +1230,10 @@ describe("Select", function() {
       .equalsTo([{"x": a()}]);
   });
 
-  it("for (let every x: P(x)) Q(x). for (let every x: Q(x)) R(x). P(a). let x: R(x)?", () => {
+  it("for (let x: P(x)) Q(x). for (let x: Q(x)) R(x). P(a). let x: R(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) Q(x). 
-      for (let every x: Q(x)) R(x). 
+      for (let x: P(x)) Q(x). 
+      for (let x: Q(x)) R(x). 
       P(a).
     `)).select(first(`
       let x: R(x)?
@@ -1241,10 +1241,10 @@ describe("Select", function() {
       .equalsTo([{"x": a()}]);
   });
 
-  it("for (let every x: P(x)) Q(x). for (let every x: Q(x)) R(x). P(a). let x: R(x)?", () => {
+  it("for (let x: P(x)) Q(x). for (let x: Q(x)) R(x). P(a). let x: R(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) Q(x). 
-      for (let every x: Q(x)) R(x). 
+      for (let x: P(x)) Q(x). 
+      for (let x: Q(x)) R(x). 
       P(a).
       P(b).
     `)).select(first(`
@@ -1255,8 +1255,8 @@ describe("Select", function() {
 
   it("let x: Q(x) S(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) Q(x). 
-      for (let every x: R(x)) S(x).
+      for (let x: P(x)) Q(x). 
+      for (let x: R(x)) S(x).
       P(a).
       R(a).
       Q(d) S(d).
@@ -1266,10 +1266,10 @@ describe("Select", function() {
       .equalsTo([{"x": literal("a")}, {"x": literal("d")}]);
   });
   
-  it("for (let every x: P(x)) Q(x). for (let every x: R(x)) S(x). P(a). R(a). let x: Q(x) S(x)?", () => {
+  it("for (let x: P(x)) Q(x). for (let x: R(x)) S(x). P(a). R(a). let x: Q(x) S(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) Q(x). 
-      for (let every x: R(x)) S(x). 
+      for (let x: P(x)) Q(x). 
+      for (let x: R(x)) S(x). 
       P(a).
       R(a).
       P(b).
@@ -1345,7 +1345,7 @@ describe("Select", function() {
 
   it("for (let x: even(x)) not odd(x). even(u). odd(u)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: even(x))
+      for (let x: even(x))
         not odd(x).
       even(u).
     `)).select(first(`
@@ -1398,9 +1398,9 @@ describe("Select", function() {
     `)))).equalsTo([{"x": literal("a")}]);
   });
 
-  it("for (let every x: U(x)) either P(x) or Q(x). not Q(a). U(a). let x: P(x)?", () => {
+  it("for (let x: U(x)) either P(x) or Q(x). not Q(a). U(a). let x: P(x)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: U(x)) {
+      for (let x: U(x)) {
         either P(x) or Q(x).
       }
       not Q(a).
@@ -1425,9 +1425,9 @@ describe("Select", function() {
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every x: R(x)) P(x) Q(x). P(c) Q(c)?", () => {
+  it("for (let x: R(x)) P(x) Q(x). P(c) Q(c)?", () => {
     assertThat(unroll(new KB().insert(parse(`
-    for (let every x: R(x)) {
+    for (let x: R(x)) {
       P(x) Q(x).
     }
     R(c).
@@ -1510,60 +1510,60 @@ describe("Select", function() {
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every x: P(x)) { Q(x). } for (let every y: P(y)) { Q(y). } ?", () => {
+  it("for (let x: P(x)) { Q(x). } for (let y: P(y)) { Q(y). } ?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) Q(x).
+      for (let x: P(x)) Q(x).
     `)).query(
       FORALL([P(["y", "every"])], Q(["y", "every"])))))
       .equalsTo([{}]);
   });
 
-  it("for (let every x: P(x)) { Q(x). } for (let every x: P(x)) { Q(x). } ?", () => {
+  it("for (let x: P(x)) { Q(x). } for (let x: P(x)) { Q(x). } ?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) {
+      for (let x: P(x)) {
         Q(x).
       }
     `)).select(first(`
-      for (let every y: P(y)) {
+      for (let y: P(y)) {
         Q(y).
       } ?
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every x: P(x)) { Q(x) R(x). } for (let every x: P(x)) { R(x). } ?", () => {
+  it("for (let x: P(x)) { Q(x) R(x). } for (let x: P(x)) { R(x). } ?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) {
+      for (let x: P(x)) {
         Q(x) R(x).
       }
     `)).select(first(`
-      for (let every y: P(y)) {
+      for (let y: P(y)) {
         R(y).
       } ?
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every x: P(x) Q(x)) { R(x). } for (let every x: P(x) Q(x)) { R(x). } ?", () => {
+  it("for (let x: P(x) Q(x)) { R(x). } for (let x: P(x) Q(x)) { R(x). } ?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x) Q(x)) {
+      for (let x: P(x) Q(x)) {
         R(x).
       }
     `)).select(first(`
-      for (let every y: P(y) Q(y)) {
+      for (let y: P(y) Q(y)) {
         R(y).
       } ?
     `)))).equalsTo([{}]);
   });
 
-  it("for (let every x: P(x)) { Q(x). } for (let every x: Q(x)) { R(x). } for (let every x: P(x)) { R(x). } ?", () => {
+  it("for (let x: P(x)) { Q(x). } for (let x: Q(x)) { R(x). } for (let x: P(x)) { R(x). } ?", () => {
     assertThat(unroll(new KB().insert(parse(`
-      for (let every x: P(x)) {
+      for (let x: P(x)) {
         Q(x).
       }
-      for (let every x: Q(x)) {
+      for (let x: Q(x)) {
         R(x).
       }
     `)).select(first(`
-      for (let every y: P(y)) {
+      for (let y: P(y)) {
         R(y).
       } ?
     `)))).equalsTo([{}]);
@@ -1771,18 +1771,18 @@ describe("REPL", () => {
     `))).equalsTo([{"a": literal("u"), "b": literal("v")}]);
   });
 
-  it("P(u). for (let every a: P(a)) Q(a). let x: Q(x)?", function() {
+  it("P(u). for (let a: P(a)) Q(a). let x: Q(x)?", function() {
     assertThat(unroll(new KB().read(`
-      for (let every a: P(a)) 
+      for (let a: P(a)) 
         Q(a).
       P(u).
       let x: Q(x)?
     `))).equalsTo([{"x": literal("u")}]);
   });
 
-  it("for (let every a: P(a)) Q(a). P(u). U(u). U(x) Q(x)?", function() {
+  it("for (let a: P(a)) Q(a). P(u). U(u). U(x) Q(x)?", function() {
     assertThat(unroll(new KB().read(`
-      for (let every a: P(a)) 
+      for (let a: P(a)) 
         Q(a).
 
       P(u). 
@@ -1792,10 +1792,10 @@ describe("REPL", () => {
     `))).equalsTo([{"x": literal("u")}]);
   });
 
-  it("for (let every a: man(a)) mortal(a). Socrates(u). man(u). Socrates(v) mortal(v)?", function() {
+  it("for (let a: man(a)) mortal(a). Socrates(u). man(u). Socrates(v) mortal(v)?", function() {
     assertThat(unroll(new KB().read(`
       // Every man is mortal.
-      for (let every a: man(a)) 
+      for (let a: man(a)) 
         mortal(a).
 
       // There is a man u, whose name is Socrates.
@@ -1807,20 +1807,20 @@ describe("REPL", () => {
     `))).equalsTo([{"x": literal("u")}]);
   });
 
-  it("for (let every a: P(a)) Q(a). for (every a: Q(a)) R(a). P(u). R(v)?", function() {
+  it("for (let a: P(a)) Q(a). for (every a: Q(a)) R(a). P(u). R(v)?", function() {
     assertThat(unroll(new KB().read(`
-      for (let every a: P(a)) 
+      for (let a: P(a)) 
         Q(a).
-      for (let every a: Q(a)) 
+      for (let a: Q(a)) 
         R(a).
       P(u).
       let x: R(x)?
     `))).equalsTo([{"x": literal("u")}]);
   });
 
-  it("for (let every a: P(a)) { Q(a). R(a).} P(u). R(v)?", function() {
+  it("for (let a: P(a)) { Q(a). R(a).} P(u). R(v)?", function() {
     assertThat(unroll(new KB().read(`
-      for (let every a: P(a)) { 
+      for (let a: P(a)) { 
         Q(a). 
         R(a). 
       }
@@ -1831,9 +1831,9 @@ describe("REPL", () => {
     `))).equalsTo([{"x": literal("u")}]);
   });
 
-  it("for (let every a: P(a) Q(a)) R(a). P(u). Q(u). R(v)?", function() {
+  it("for (let a: P(a) Q(a)) R(a). P(u). Q(u). R(v)?", function() {
     assertThat(unroll(new KB().read(`
-      for (let every a: P(a) Q(a)) 
+      for (let a: P(a) Q(a)) 
         R(a).
 
       P(u). R(u).
@@ -1844,7 +1844,7 @@ describe("REPL", () => {
 
   it("for (every a: {P(a). Q(a).}) R(a). P(u). Q(u). R(v)?", function() {
     assertThat(unroll(new KB().read(`
-      for (let every a: {
+      for (let a: {
         P(a). 
         Q(a).
       }) {
@@ -1860,10 +1860,10 @@ describe("REPL", () => {
 
   it("let x: Socrates(x) animal(x)?", function() {
     assertThat(unroll(new KB().read(`
-      for (let every a: man(a)) 
+      for (let a: man(a)) 
         human(a).
 
-      for (let every a: human(a)) 
+      for (let a: human(a)) 
         animal(a).
 
       man(u).
@@ -1937,7 +1937,7 @@ describe("REPL", () => {
   it("let x: Socrates(x) mortal(x)?", function() {
     assertThat(unroll(new KB().read(`
       // Every greek man is mortal
-      for (let every a: greek(a) man(a))
+      for (let a: greek(a) man(a))
         mortal(a).
 
       // Socrate is a greek man
@@ -1953,7 +1953,7 @@ describe("REPL", () => {
   it("let x: Socrates(x) good-influence(x)?", function() {
     assertThat(unroll(new KB().read(`
       // Every greek philosopher is a good-influence.
-      for (let every a: greek(a) philosopher(a)) {
+      for (let a: greek(a) philosopher(a)) {
         influence(a).
         good-influence(a).
       }
@@ -1983,8 +1983,8 @@ describe("REPL", () => {
   it("let x, y: R(x, y)?", function() {
     assertThat(unroll(new KB().read(`
       // Nested quantifiers
-      for (let every a: P(a)) {
-        for (let every b: Q(b)) {
+      for (let a: P(a)) {
+        for (let b: Q(b)) {
           R(a, b).
         }
       }
@@ -2028,39 +2028,39 @@ describe("REPL", () => {
     `))).equalsTo([{}]);
   });
 
-  it("if ({ for (let every x: man(x)) mortal(x). }) Q(). for (let every x: man(x)) mortal(x). Q()?", function() {
+  it("if ({ for (let x: man(x)) mortal(x). }) Q(). for (let x: man(x)) mortal(x). Q()?", function() {
     assertThat(unroll(new KB().read(`
       if ({ 
-        for (let every x: man(x)) {
+        for (let x: man(x)) {
           mortal(x).
         }
       }) {
         Q().
       }
-      for (let every x: man(x)) {
+      for (let x: man(x)) {
         mortal(x).
       }
       Q()?
     `))).equalsTo([{}]);
   });
 
-  it("for (let every x: P(x)) Q(x). for (let every y: P(y)) Q(y)?", function() {
+  it("for (let x: P(x)) Q(x). for (let y: P(y)) Q(y)?", function() {
     assertThat(unroll(new KB().read(`
-      for (let every x: P(x)) {
+      for (let x: P(x)) {
         Q(x).
       }
-      for (let every y: P(y)) {
+      for (let y: P(y)) {
         Q(y).
       } ?
     `))).equalsTo([{}]);
   });
 
-  it("for (let every x: P(x)) Q(u, x). for (let every y: P(y)) Q(u, y)?", function() {
+  it("for (let x: P(x)) Q(u, x). for (let y: P(y)) Q(u, y)?", function() {
     assertThat(unroll(new KB().read(`
-      for (let every x: P(x)) {
+      for (let x: P(x)) {
         Q(u, x).
       }
-      for (let every y: P(y)) {
+      for (let y: P(y)) {
         Q(u, y).
       } ?
     `))).equalsTo([{}]);
