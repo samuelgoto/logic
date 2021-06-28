@@ -511,7 +511,7 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("if (let a: foo(a)) { bar(a). }", () => {
+  it.skip("if (let a: foo(a)) { bar(a). }", () => {
     assertThat(new Parser().parse(`
       if (let a: foo(a)) {
         bar(a).
@@ -525,7 +525,7 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("if (let a, b: foo(a, b)) { bar(b). }", () => {
+  it.skip("if (let a, b: foo(a, b)) { bar(b). }", () => {
     assertThat(new Parser().parse(`
       if (let a, b: foo(a, b)) {
         bar(b).
@@ -846,7 +846,7 @@ describe("Parser", function() {
     const results = new Parser().parse(`
       Smith(a).
       Mary(b).
-      if (let s0, c, b: man(c) love(s0, c, b)) {
+      if (man(c) love(s0, c, b)) {
         woman(d).
         like(s1, a, d).
       }
@@ -854,7 +854,7 @@ describe("Parser", function() {
     assertThat(results).equalsTo([[
       [["Smith", ["a"]]],
       [["Mary", ["b"]]],
-      ["if", ["s0", "c", "b"], [
+      ["if", [], [
         [["man", ["c"]], ["love", ["s0", "c", "b"]]]
       ], [
         [["woman", ["d"]]],

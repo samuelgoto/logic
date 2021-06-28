@@ -47,6 +47,8 @@ const grammar = () => build(`
 
       statement ->  expression _ "." {% ([expression, ws, dot]) =>  expression %}
 
+      head -> "(" _ condition _ ")" {% ([p1, ws1, condition]) => [[], condition] %}
+
       statement -> "if" _ head _ block {% 
         ([iffy, ws1, head, ws2, body]) =>  ["if", head[0], head[1], body] 
       %}
@@ -62,8 +64,6 @@ const grammar = () => build(`
       declaration -> (letty _ ":" _):? condition {% ([letty, condition]) => [letty ? letty[0] : [], condition]%}
       condition -> expression {% ([expression]) => [expression] %}
            | block {% id %}
-
-      head -> "(" _ declaration _ ")" {% ([p1, ws1, declaration]) => declaration %}
 
       block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
       block -> statement {% ([statement]) => [statement] %}
