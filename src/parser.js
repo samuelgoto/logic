@@ -32,7 +32,6 @@ const grammar = () => build(`
 
       main -> (_ line):* _ {% ([lines]) => lines.map(([ws, s]) => s ).filter((line) => typeof line != "string") %}
 
-      line -> "//" [^\\n]:* [\\n] {% ([start, comment]) => "//" + comment.join("") %}
       line -> statement {% id %}
       line -> question {% id %}
       line -> command {% id %}
@@ -48,6 +47,8 @@ const grammar = () => build(`
       declaration -> (letty _ ":" _):? expression {% ([letty, condition]) => [letty ? letty[0] : [], [condition]]%}
       declaration -> iffy {% ([iffy]) => [[], [iffy]] %}
       declaration -> loop {% ([loop]) => [[], [loop]] %}
+
+      statement -> "//" [^\\n]:* [\\n] {% ([start, comment]) => "//" + comment.join("") %}
 
       statement ->  expression _ "." {% ([expression, ws, dot]) =>  expression %}
 
@@ -71,8 +72,12 @@ const grammar = () => build(`
       condition -> expression {% ([expression]) => [expression] %}
            | block {% id %}
 
-      block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
+      block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => 
+        statements.map(([ws, s]) => s ).filter((statement) => typeof statement != "string") 
+      %}
       block -> statement {% ([statement]) => [statement] %}
+
+      # ([lines]) => lines.map(([ws, s]) => s ).filter((line) => typeof line != "string")
 
       loop -> "for" _ "(" _ "let" _ (quantifier _):? variable _ ":" _ condition _ ")" _ block {% 
         ([forall, ws1, p1, ws2, letty, ws3, quantifier, arg, ws5, col, ws6, head, ws7, p2, ws8, tail]) =>  [quantifier ? quantifier[0] : "every", arg, head, tail] 

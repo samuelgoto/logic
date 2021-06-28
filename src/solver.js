@@ -2,9 +2,14 @@ const {Parser} = require("./parser.js");
 
 function normalize(statements, scope = {}) {
   const result = [];
+  // console.log(statements);
   for (const statement of statements) {
     const [op] = statement;
-    if (op == "?") {
+    // console.log(op);
+    if (typeof op == "string" && op.startsWith("//")) {
+      // console.log("hi");
+      continue;
+    } else if (op == "?") {
       const [q, letty, body] = statement;
       const vars = {};
       if (letty) {
@@ -50,8 +55,9 @@ function normalize(statements, scope = {}) {
       if (letty) {
         vars[letty] = "every";
       }
-      // console.log(head);
       const heady = normalize([head], Object.assign(scope, vars));
+      //console.log(body);
+      //console.log(normalize([body], scope));
       for (const part of normalize([body], scope)) {
         if (part[3]) {
           part[3].push(...heady);
@@ -61,9 +67,11 @@ function normalize(statements, scope = {}) {
         result.push(part);
       }
     } else if (Array.isArray(statement[0])) {
+      // console.log(statement);
       const conjunction = normalize(statement, scope);
       result.push(...conjunction);
     } else {
+      // console.log(statement);
       // console.log(statement);
       const [name, args] = statement;
       const vars = args.map((x) =>

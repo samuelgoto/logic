@@ -607,11 +607,17 @@ describe("Parser", function() {
   it("if (a()) {b().} ?", function() {
     const results = new Parser().parse(`
       if (a()) {
+        // hello
         b().
       } ?
     `);
     assertThat(results).equalsTo([[
-      ["?", [], [["if", [], [[["a", []]]], [[["b", []]]]]]],
+      ["?", [], [
+        ["if", [], [[["a", []]]], [
+          // "// hello",
+          [["b", []]]]
+        ]]
+      ],
     ]]);
   });
 

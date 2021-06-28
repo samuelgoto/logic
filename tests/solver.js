@@ -125,6 +125,17 @@ describe("Normalize", () => {
     ]);
   });
 
+  it("if (P(a)) Q(b). => if (P(a)) Q(b).", () => {
+    assertThat(normalize(new Parser().parse(`
+      if (P(a)) {
+        // hello
+        Q(b).
+      }
+    `))).equalsTo([
+      IF([P(a())], Q(b()))
+    ]);
+  });
+
   it("if (P(a) Q(a)) R(a). => if (P(a) Q(a)) R(a).", () => {
     assertThat(normalize(new Parser().parse(`
       if (P(a) Q(a)) {
@@ -1868,8 +1879,9 @@ describe("REPL", () => {
 
   it("if (P()) Q(). P(). Q()?", function() {
     assertThat(unroll(new KB().read(`
-      if (P()) 
+      if (P()) {
         Q().
+      }
       P().
       Q()?
     `))).equalsTo([{}]);
@@ -1877,8 +1889,9 @@ describe("REPL", () => {
 
   it("if (P()) Q(). Q()?", function() {
     assertThat(unroll(new KB().read(`
-      if (P()) 
+      if (P()) {
         Q().
+      }
       Q()?
     `))).equalsTo([]);
   });
@@ -2170,24 +2183,49 @@ describe("REPL", () => {
 
       for (let x: person(x)) {
         for (let y: person(y)) {
+
+          // Every father is a male parent
           if (father(x, y)) {
             male(x).
             parent(x, y).
           }
+
+          // Every mother is a female parent
           if (mother(x, y)) {
             female(x).
             parent(x, y).
           }
-          if (parent(x, y)) {
-            child(y, x).
-          }
+
+          // Every male parent is a father
           if (parent(x, y) male(x)) {
             father(x, y).
           }
+          // Every female parent is a mother
           if (parent(x, y) female(x)) {
             mother(x, y).
           }
 
+          // If A is a parent of B then B is a child of A
+          if (parent(x, y)) {
+            child(y, x).
+          }
+
+          // If A is an ancestor of B then B is a descendent of A
+          if (ancestor(x, y)) {
+            descedent(y, x).
+          }
+
+          if (parent(x, y)) {
+            // Every parent is an ancestor
+            ancestor(x, y).
+
+            // Every parent is an ancestor of its descendents
+            for (let z: person(z)) {
+              if (ancestor(y, z)) {
+                ancestor(x, z).
+              }
+            }
+          }
         }
       }
 
@@ -2197,11 +2235,12 @@ describe("REPL", () => {
       father(u, v).
 
       // let x: child(v, x)?
-      male(u)?
+      // male(u)?
+      let x: descedent(v, x)?
 
     `))).equalsTo([
-      {"y": literal("v")}
-      // {"x": literal("u")}
+      // {"y": literal("v")}
+      {"x": literal("u")}
     ]);
   });
 
