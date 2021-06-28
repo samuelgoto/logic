@@ -2117,7 +2117,94 @@ describe("REPL", () => {
       not P()?
     `))).equalsTo([{}]);
   });
-  
+
+  it("coloring", function() {
+    // Based on the following puzzle
+    // https://www.cpp.edu/~jrfisher/www/prolog_tutorial/2_1.html
+    assertThat(unroll(new KB().read(`
+      node(a1).
+      node(a2).
+      node(a3).
+      node(a4).
+      node(a5).
+
+      edge(a1, a2).
+      edge(a1, a3).
+      edge(a1, a4).
+      edge(a1, a5).
+      edge(a2, a3).
+      edge(a2, a4).
+      edge(a3, a4).
+      edge(a4, a5).
+
+      for (let x: node(x)) {
+        for (let y: node(y)) {
+          if (edge(x, y)) {
+            edge(y, x).
+          }
+        }
+      }
+
+      color(a1, red, a).
+      color(a2, blue, a).
+      color(a3, green, a).
+      color(a4, yellow, a).
+      color(a5, blue, a).
+
+      coloring(a).
+
+      let n: edge(a3, n)?
+    `))).equalsTo([{
+      n: literal("a4")
+    }, {
+      n: literal("a1")
+    }, {
+      n: literal("a2")
+    }, {
+      n: literal("a4")
+    }]);
+  });
+
+  it("kinship", function() {
+    assertThat(unroll(new KB().read(`
+
+      for (let x: person(x)) {
+        for (let y: person(y)) {
+          if (father(x, y)) {
+            male(x).
+            parent(x, y).
+          }
+          if (mother(x, y)) {
+            female(x).
+            parent(x, y).
+          }
+          if (parent(x, y)) {
+            child(y, x).
+          }
+          if (parent(x, y) male(x)) {
+            father(x, y).
+          }
+          if (parent(x, y) female(x)) {
+            mother(x, y).
+          }
+
+        }
+      }
+
+      person(u).
+      person(v).
+
+      father(u, v).
+
+      // let x: child(v, x)?
+      male(u)?
+
+    `))).equalsTo([
+      {"y": literal("v")}
+      // {"x": literal("u")}
+    ]);
+  });
+
 });
 
 
