@@ -1998,7 +1998,7 @@ describe("REPL", () => {
   });
 
 
-  it.skip("if (not P()) Q(). not P(). Q()?", function() {
+  it("if (not P()) Q(). not P(). Q()?", function() {
     assertThat(unroll(new KB().read(`
       if (not P()) {
         Q().
@@ -2008,7 +2008,7 @@ describe("REPL", () => {
     `))).equalsTo([{}]);
   });
 
-  it.skip("if (not not P()) Q(). P(). Q()?", function() {
+  it("if (not not P()) Q(). P(). Q()?", function() {
     assertThat(unroll(new KB().read(`
       if (not not P()) {
         Q().
@@ -2028,7 +2028,7 @@ describe("REPL", () => {
     `))).equalsTo([{}]);
   });
 
-  it.skip("if ({ P(). }) Q(). P(). Q()?", function() {
+  it.skip("if ({ for (let every x: girl(x)) likes(u, x). }) Q(). P(). Q()?", function() {
     assertThat(unroll(new KB().read(`
       // If u likes every girl then Q.
       if ({ 
@@ -2053,6 +2053,7 @@ describe("REPL", () => {
         R().
       }
       P().
+      not Q().
       R()?
     `))).equalsTo([{}]);
   });

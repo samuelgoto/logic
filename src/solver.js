@@ -50,7 +50,8 @@ function normalize(statements, scope = {}) {
       if (letty) {
         vars[letty] = "every";
       }
-      const heady = normalize(head, Object.assign(scope, vars));
+      // console.log(head);
+      const heady = normalize([head], Object.assign(scope, vars));
       for (const part of normalize([body], scope)) {
         if (part[3]) {
           part[3].push(...heady);
@@ -63,6 +64,7 @@ function normalize(statements, scope = {}) {
       const conjunction = normalize(statement, scope);
       result.push(...conjunction);
     } else {
+      // console.log(statement);
       const [name, args] = statement;
       const vars = args.map((x) =>
         scope[x] ? [x, scope[x]] : [x, "const"]
