@@ -45,15 +45,22 @@ const grammar = () => build(`
         ([[vars, expression]]) => ["?", vars, expression]
       %}
 
+      declaration -> (letty _ ":" _):? expression {% ([letty, condition]) => [letty ? letty[0] : [], [condition]]%}
+      declaration -> iffy {% ([iffy]) => [[], [iffy]] %}
+      declaration -> loop {% ([loop]) => [[], [loop]] %}
+
       statement ->  expression _ "." {% ([expression, ws, dot]) =>  expression %}
 
       head -> "(" _ condition _ ")" {% ([p1, ws1, condition]) => [[], condition] %}
 
-      statement -> "if" _ head _ block {% 
+      statement -> iffy {% id %}
+      statement -> loop {% id %}
+
+      iffy -> "if" _ head _ block {% 
         ([iffy, ws1, head, ws2, body]) =>  ["if", head[0], head[1], body] 
       %}
 
-      statement -> "if" _ head _ block _ "else" _ block {% 
+      iffy -> "if" _ head _ block _ "else" _ block {% 
         ([iffy, ws1, head, ws2, body, ws3, elsy, ws4, tail]) =>  ["if", head[0], head[1], body, tail] 
       %}
 
@@ -61,14 +68,13 @@ const grammar = () => build(`
         ([letty, ws1, arg, args = []]) => [arg, ...args.map(([ws2, comma, ws3, b]) => b)] 
       %}
 
-      declaration -> (letty _ ":" _):? condition {% ([letty, condition]) => [letty ? letty[0] : [], condition]%}
       condition -> expression {% ([expression]) => [expression] %}
            | block {% id %}
 
       block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
       block -> statement {% ([statement]) => [statement] %}
 
-      statement -> "for" _ "(" _ "let" _ (quantifier _):? variable _ ":" _ condition _ ")" _ block {% 
+      loop -> "for" _ "(" _ "let" _ (quantifier _):? variable _ ":" _ condition _ ")" _ block {% 
         ([forall, ws1, p1, ws2, letty, ws3, quantifier, arg, ws5, col, ws6, head, ws7, p2, ws8, tail]) =>  [quantifier ? quantifier[0] : "every", arg, head, tail] 
       %}
 

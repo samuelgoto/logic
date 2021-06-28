@@ -595,6 +595,26 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("a()?", function() {
+    const results = new Parser().parse(`
+      a()?
+    `);
+    assertThat(results).equalsTo([[
+      ["?", [], [[["a", []]]]],
+    ]]);
+  });
+
+  it("if (a()) {b().} ?", function() {
+    const results = new Parser().parse(`
+      if (a()) {
+        b().
+      } ?
+    `);
+    assertThat(results).equalsTo([[
+      ["?", [], [["if", [], [[["a", []]]], [[["b", []]]]]]],
+    ]]);
+  });
+
   it("not a().", function() {
     const results = new Parser().parse(`
       not a().

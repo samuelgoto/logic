@@ -230,12 +230,9 @@ describe("Normalize", () => {
     ]);
   });
 
-  it("{ Q(a). P(b). }? => Q(a) P(b)?", () => {
+  it("Q(a) P(b)? => Q(a) P(b)?", () => {
     assertThat(normalize(new Parser().parse(`
-      {
-        Q(a). 
-        P(b).
-      } ?
+      Q(a) P(b)?
     `))).equalsTo([
       QUERY(Q(a()), P(b()))
     ]);
@@ -936,10 +933,7 @@ describe("Select", function() {
     assertThat(unroll(new KB().insert(parse(`
       P() Q() R().
     `)).select(first(`
-      {
-        P().
-        R().
-      } ?
+      P() R()?
     `)))).equalsTo([{}]);
   });
   
@@ -1495,7 +1489,9 @@ describe("Select", function() {
       if (P()) R(). 
       if (Q()) R(). 
     `)).select(first(`
-      { if (P() Q()) R(). }?
+      if (P() Q()) {
+        R(). 
+      } ?
     `)))).equalsTo([{}, {}]);
   });
 
@@ -1692,13 +1688,10 @@ describe("REPL", () => {
     `))).equalsTo([{"a": literal("A")}]);
   });
 
-  it("P(A). Q(A). let a: {P(a). Q(a).} ?", function() {
+  it("P(A). Q(A). let a: P(a) Q(a) ?", function() {
     assertThat(unroll(new KB().read(`
       P(A). Q(A).
-      let a: {
-        P(a). 
-        Q(a).
-      } ?
+      let a: P(a) Q(a)?
     `))).equalsTo([{"a": literal("A")}]);
   });
 
