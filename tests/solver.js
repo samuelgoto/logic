@@ -638,7 +638,7 @@ describe("Stepback", () => {
     `))).equalsTo([{x: ["y", "every"]}, [FORALL([Q(["y", "every"])], R(["y", "every"]))]]);
   });
 
-  it("if (P(x)) Q(x). for (let every x: P(x)) Q(x)?", () => {
+  it("if (P(x)) Q(x). for (let every y: P(y)) Q(y)?", () => {
     assertThat(stepback(q(`
       for (let every y: P(y)) {
         Q(y).
@@ -2055,7 +2055,7 @@ describe("REPL", () => {
     `))).equalsTo([{}]);
   });
 
-  it.skip("for (let every x: P(x)) Q(u, x). for (let every y: P(y)) Q(u, y)?", function() {
+  it("for (let every x: P(x)) Q(u, x). for (let every y: P(y)) Q(u, y)?", function() {
     assertThat(unroll(new KB().read(`
       for (let every x: P(x)) {
         Q(u, x).

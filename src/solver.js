@@ -154,10 +154,13 @@ function stepback(q, rule) {
     // If both the query and the rule are conditionals,
     // check if every binding matches in type
     if (conds.length > 0 && deps.length > 0) {
-      for (let [name, type] of rule[1]) {
-        const [, expected] = matches[name] || [];
-        if (expected != type) {
-          return undefined;
+      for (let [a, [, expected]] of Object.entries(matches)) {
+        for (let [b, type] of q[1]) {
+          if (a == b && expected != type) {
+            // Make sure that the quantifiers of the variables are
+            // the same.
+            return undefined;
+          }
         }
       }
     }
