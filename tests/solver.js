@@ -2178,22 +2178,21 @@ describe("REPL", () => {
     }]);
   });
 
-  it("kinship", function() {
-    assertThat(unroll(new KB().read(`
+  it.only("kinship", function() {
+    const kb = new KB();
+    assertThat(unroll(kb.read(`
 
       for (let x: person(x)) {
         for (let y: person(y)) {
 
           // Every father is a male parent
           if (father(x, y)) {
-            male(x).
-            parent(x, y).
+            male(x) parent(x, y).
           }
 
           // Every mother is a female parent
           if (mother(x, y)) {
-            female(x).
-            parent(x, y).
+            female(x) parent(x, y).
           }
 
           // Every male parent is a father
@@ -2226,22 +2225,107 @@ describe("REPL", () => {
               }
             }
           }
+
+          // If there is a person z who is a parent of x and y
+          // then x and y are siblings
+          for (let z: person(z)) {
+            if (parent(z, x) parent(z, y)) {
+              sibling(x, y).
+            }
+          }
+ 
+          if (sibling(x, y)) {
+            sibling(y, x).
+
+            if (male(x)) {
+              brother(x, y).
+            }
+
+            if (female(x)) {
+              sister(x, y).
+            }
+          }
+
+          if (brother(x, y)) {
+            male(x) sibling(x, y).
+          }
+
+          if (sister(x, y)) {
+            female(x) sibling(x, y).
+          }
         }
       }
+    `))).equalsTo([
+    ]);
+
+    assertThat(unroll(kb.read(`
+      Sam(u).
+      Dani(v).
+
+      Leo(p).
+      Anna(q).
+      Arthur(r).
 
       person(u).
       person(v).
 
-      father(u, v).
+      person(p).
+      person(q).
+      person(r).
 
-      // let x: child(v, x)?
-      // male(u)?
-      let x: descedent(v, x)?
+      father(u, p).
+      father(u, q).
+      father(u, r).
 
-    `))).equalsTo([
-      // {"y": literal("v")}
-      {"x": literal("u")}
-    ]);
+      mother(v, p).
+      mother(v, q).
+      mother(v, r).
+    `))).equalsTo([]);
+
+    // Who is a child of u?
+    assertThat(unroll(kb.read(`
+      let x: child(x, u)?
+    `))).equalsTo([{
+      "x": literal("p")
+    }, {
+      "x": literal("q")
+    }, {
+      "x": literal("r")
+    }]);
+
+    // is u a male?
+    assertThat(unroll(kb.read(`
+      male(u)?
+    `))).equalsTo([{
+      "y": literal("p")
+    }, {
+      "y": literal("q")
+    }, {
+      "y": literal("r")
+    }]);
+
+    // who does p descend from?
+    assertThat(unroll(kb.read(`
+      let x: descedent(p, x)?
+    `))).equalsTo([{
+      "x": literal("u")
+    }, {
+      "x": literal("v")
+    }]);
+
+    // are p and q siblings?
+    assertThat(unroll(kb.read(`
+      sibling(p, q)?
+    `))).equalsTo([{
+      "z": literal("u")
+    }, {
+      "z": literal("v")
+    }, {
+      "z": literal("u")
+    }, {
+      "z": literal("v")
+    }]);
+    
   });
 
 });
