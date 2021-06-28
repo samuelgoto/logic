@@ -2028,21 +2028,41 @@ describe("REPL", () => {
     `))).equalsTo([{}]);
   });
 
-  it.skip("if ({ for (let every x: girl(x)) likes(u, x). }) Q(). P(). Q()?", function() {
+  it("if ({ for (let every x: man(x)) mortal(x). }) Q(). for (let every x: man(x)) mortal(x). Q()?", function() {
     assertThat(unroll(new KB().read(`
-      // If u likes every girl then Q.
       if ({ 
-        for (let every x: girl(x)) {
-          likes(u, x).
+        for (let every x: man(x)) {
+          mortal(x).
         }
       }) {
         Q().
       }
-      // u does like every girl.
-      for (let every x: girl(x)) {
-        likes(u, x).
+      for (let every x: man(x)) {
+        mortal(x).
       }
       Q()?
+    `))).equalsTo([{}]);
+  });
+
+  it("for (let every x: P(x)) Q(x). for (let every y: P(y)) Q(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let every x: P(x)) {
+        Q(x).
+      }
+      for (let every y: P(y)) {
+        Q(y).
+      } ?
+    `))).equalsTo([{}]);
+  });
+
+  it.skip("for (let every x: P(x)) Q(u, x). for (let every y: P(y)) Q(u, y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let every x: P(x)) {
+        Q(u, x).
+      }
+      for (let every y: P(y)) {
+        Q(u, y).
+      } ?
     `))).equalsTo([{}]);
   });
 
