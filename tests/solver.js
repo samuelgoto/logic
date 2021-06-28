@@ -2046,14 +2046,23 @@ describe("REPL", () => {
     `))).equalsTo([{}]);
   });
 
-  
-  it.skip("if (either P() or Q()) R(). P(). R()?", function() {
+  it("if (either P() or Q()) R(). P(). not Q(). R()?", function() {
     assertThat(unroll(new KB().read(`
       if (either P() or Q()) {
         R().
       }
       P().
       not Q().
+      R()?
+    `))).equalsTo([]);
+  });
+
+  it("if (either P() or Q()) R(). either P() or Q(). R()?", function() {
+    assertThat(unroll(new KB().read(`
+      if (either P() or Q()) {
+        R().
+      }
+      either P() or Q().
       R()?
     `))).equalsTo([{}]);
   });
@@ -2070,6 +2079,14 @@ describe("REPL", () => {
       not not not P().
       not P()?
     `))).equalsTo([{}]);
+  });
+
+  it.skip("P(). not Q(). either P() or Q()?", function() {
+    assertThat(unroll(new KB().read(`
+      P().
+      not Q().
+      either P() or Q()?
+    `))).equalsTo([]);
   });
 
   it.skip("either P() or Q(). Q(). P()?", function() {
