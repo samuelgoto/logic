@@ -68,8 +68,8 @@ const grammar = () => build(`
       block -> "{" (_ statement):* _ "}" {% ([c1, statements]) => statements.map(([ws, s]) => s ) %}
       block -> statement {% ([statement]) => [statement] %}
 
-      statement -> "for" _ "(" _ "let" _ quantifier _ variable _ ":" _ condition _ ")" _ block {% 
-        ([forall, ws1, p1, ws2, letty, ws3, quantifier, ws4, arg, ws5, col, ws6, head, ws7, p2, ws8, tail]) =>  [quantifier, arg, head, tail] 
+      statement -> "for" _ "(" _ "let" _ (quantifier _):? variable _ ":" _ condition _ ")" _ block {% 
+        ([forall, ws1, p1, ws2, letty, ws3, quantifier, arg, ws5, col, ws6, head, ws7, p2, ws8, tail]) =>  [quantifier ? quantifier[0] : "every", arg, head, tail] 
       %}
 
       quantifier -> "every" {% id %}
