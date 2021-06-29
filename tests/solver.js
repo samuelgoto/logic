@@ -364,11 +364,13 @@ describe("Normalize", () => {
 });
 
 describe("Push", () => {
-  it("", () => {
+  it("Partitioned", () => {
     const kb = new KB();
     kb.push([P()]);
     assertThat(kb.rules)
-      .equalsTo([P()]);
+      .equalsTo({"P": [P()]});
+    assertThat(unroll(kb.query(P())))
+      .equalsTo([{}]);
   });
 });
 

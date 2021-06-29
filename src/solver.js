@@ -185,7 +185,7 @@ function stepback(q, rule) {
 
 class KB {
   constructor() {
-    this.rules = [];
+    this.rules = {};
   }
   *read(code) {
     const lines = normalize(new Parser().parse(code));
@@ -204,11 +204,17 @@ class KB {
     }
   }
   push(lines) {
-    this.rules.push(...lines);
+    for (let line of lines) {
+      const [name] = line;
+      this.rules[name] = this.rules[name] || []
+      this.rules[name].push(line);
+    }
     return this;
   }
   *query(q, path) {
-    for (let rule of this.rules) {
+    const rules = this.rules[q[0]] || [];
+    
+    for (let rule of rules) {
 
       const result = stepback(q, rule);
 
