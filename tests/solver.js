@@ -2178,7 +2178,7 @@ describe("REPL", () => {
     }]);
   });
 
-  it.only("kinship", function() {
+  it("kinship", function() {
     const kb = new KB();
     assertThat(unroll(kb.read(`
 
