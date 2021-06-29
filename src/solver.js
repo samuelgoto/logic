@@ -2,14 +2,9 @@ const {Parser} = require("./parser.js");
 
 function normalize(statements, scope = {}) {
   const result = [];
-  // console.log(statements);
   for (const statement of statements) {
     const [op] = statement;
-    // console.log(op);
-    if (typeof op == "string" && op.startsWith("//")) {
-      // console.log("hi");
-      continue;
-    } else if (op == "?") {
+    if (op == "?") {
       const [q, letty, body] = statement;
       const vars = {};
       if (letty) {
@@ -56,8 +51,6 @@ function normalize(statements, scope = {}) {
         vars[letty] = "every";
       }
       const heady = normalize([head], Object.assign(scope, vars));
-      //console.log(body);
-      //console.log(normalize([body], scope));
       for (const part of normalize([body], scope)) {
         if (part[3]) {
           part[3].push(...heady);
@@ -67,12 +60,9 @@ function normalize(statements, scope = {}) {
         result.push(part);
       }
     } else if (Array.isArray(statement[0])) {
-      // console.log(statement);
       const conjunction = normalize(statement, scope);
       result.push(...conjunction);
     } else {
-      // console.log(statement);
-      // console.log(statement);
       const [name, args] = statement;
       const vars = args.map((x) =>
         scope[x] ? [x, scope[x]] : [x, "const"]
@@ -189,7 +179,6 @@ function stepback(q, rule) {
     if (left.length == 0) {
       return [{}, []];
     }
-    //console.log("hi");
     return [matches, [[name, args, ask, left]]];
   }
 }
@@ -262,38 +251,25 @@ class KB {
 
     path.push(line);
 
-    //console.log("Q: " + JSON.stringify(line));
-    
     const [head, ...tail] = body;
 
     const query = clone(head);
 
-    //console.log("> Q: " + JSON.stringify(query));
     for (let q of this.query(query, clone(path))) {
 
-      //console.log("< Q: " + JSON.stringify(query));
-      //console.log("< A: " + JSON.stringify(q));
-      
       const partial = {};
       if (q == false) {
         yield false;
         return;
       }
       if (tail.length == 0) {
-        // console.log("hello");
         yield Object.assign(partial, q);
         continue;
       }
       const rest = clone(tail);
       Object.assign(partial, q);
       apply(rest, partial);
-      //console.log("<< Q:" + JSON.stringify(rest));
       for (let r of this.select(["?", rest], clone(path))) {
-        //console.log(JSON.stringify(line));
-        //console.log(JSON.stringify(q));
-        //console.log(JSON.stringify(partial));
-        //console.log("Yes! " + JSON.stringify(r));
-        //console.log(Object.assign(clone(partial), r));
         yield Object.assign(clone(partial), r);
       }
     }
