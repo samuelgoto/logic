@@ -195,7 +195,7 @@ class KB {
       if (op == "?") {
         q.push(line);
       } else {
-        this.insert([line]);
+        this.push([line]);
       }
     }
 
@@ -203,7 +203,7 @@ class KB {
       yield * this.select(q[q.length - 1]);
     }
   }
-  insert(lines) {
+  push(lines) {
     this.rules.push(...lines);
     return this;
   }

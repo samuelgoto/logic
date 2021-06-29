@@ -67,16 +67,7 @@ function first(code) {
 }
 
 function q(code) {
-  //console.log(first(code));
   return first(code)[1][0];
-  //const statements = first(code);
-  // console.log(statements);
-  // const result = statements[2][0];
-  //result[2] = Object.fromEntries(statements[1].map((arg) => [arg, "some"]));
-  // const result = ;
-  // console.log(result);
-  
-  //return result;
 }
 
 function unroll(gen) {
@@ -369,6 +360,15 @@ describe("Normalize", () => {
       IF([NOT(R())], P()),
       IF([NOT(R())], Q()),
     ]);
+  });
+});
+
+describe("Push", () => {
+  it("", () => {
+    const kb = new KB();
+    kb.push([P()]);
+    assertThat(kb.rules)
+      .equalsTo([P()]);
   });
 });
 
@@ -807,26 +807,26 @@ describe("Match", () => {
 
 describe("Query", () => {
   it("P(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P().
     `)).query(P()))).equalsTo([{}]);
   });
 
   it("P(). Q()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P().
     `)).query(Q()))).equalsTo([]);
   });
 
   it("P(a). let x: P(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
     `)).query(["P", [free("x")]])))
       .equalsTo([{x: literal("a")}]);
   });
 
   it("P(a). P(b). let x: P(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
       P(b).
     `)).query(["P", [free("x")]])))
@@ -834,7 +834,7 @@ describe("Query", () => {
   });
 
   it("P(a, b). P(c, d). let x, y: P(x, y)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a, b).
       P(c, d).
     `)).query(["P", [free("x"), free("y")]])))
@@ -842,26 +842,26 @@ describe("Query", () => {
   });
 
   it("not P(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       not P().
     `)).query(["P", []]))).equalsTo([false]);
   });
 
   it("not P(). not P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       not P().
     `)).query(["P", [], false, []]))).equalsTo([{}]);
   });
 
   it("P(a). let x: P(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
     `)).query(["P", [free("x")]])))
       .equalsTo([{"x": a()}]);
   });
 
   it("let y: not P(y)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: U(x)) {
         either P(x) or Q(x).
       }
@@ -872,7 +872,7 @@ describe("Query", () => {
   });
 
   it("for (let x: P(x)) Q(x). P(a). let y: Q(y)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) 
         Q(x). 
       P(a). 
@@ -885,7 +885,7 @@ describe("Query", () => {
 describe("Select", function() {
 
   it("P(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P().
     `)).select(first(`
       P()?
@@ -893,7 +893,7 @@ describe("Select", function() {
   });
 
   it("not P(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       not P().
     `)).select(first(`
       P()?
@@ -901,7 +901,7 @@ describe("Select", function() {
   });
 
   it("P(). Q()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P().
     `)).select(first(`
       Q()?
@@ -909,7 +909,7 @@ describe("Select", function() {
   });
   
   it("P() Q(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P() Q().
     `)).select(first(`
       P()?
@@ -917,7 +917,7 @@ describe("Select", function() {
   });
 
   it("P() Q(). Q()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P() Q().
     `)).select(first(`
       Q()?
@@ -925,7 +925,7 @@ describe("Select", function() {
   });
 
   it("P() Q() R(). R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P() Q() R().
     `)).select(first(`
       R()?
@@ -933,7 +933,7 @@ describe("Select", function() {
   });
 
   it("P() Q() R(). R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P() Q() R().
     `)).select(first(`
       P() R()?
@@ -941,7 +941,7 @@ describe("Select", function() {
   });
 
   it("P() Q() R(). R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P() Q() R().
     `)).select(first(`
       P() R()?
@@ -949,7 +949,7 @@ describe("Select", function() {
   });
   
   it("if (P()) Q(). Q()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       if (P()) 
         Q().
     `)).select(first(`
@@ -958,7 +958,7 @@ describe("Select", function() {
   });
 
   it("P(). if (P()) Q(). Q()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P().
       if (P()) 
         Q().
@@ -968,7 +968,7 @@ describe("Select", function() {
   });
 
   it("P(). if (P() Q()) R(). R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P().
       if (P() Q()) 
         R().
@@ -978,7 +978,7 @@ describe("Select", function() {
   });
 
   it("P(). Q(). if (P() Q()) R(). R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P().
       Q().
       if (P() Q()) 
@@ -989,7 +989,7 @@ describe("Select", function() {
   });
 
   it("P(). if (P()) Q() R(). R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P().
       if (P()) 
         Q() R().
@@ -999,7 +999,7 @@ describe("Select", function() {
   });
 
   it("P(). if (P()) {Q(). R().} R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P().
       if (P()) {
         Q(). 
@@ -1011,7 +1011,7 @@ describe("Select", function() {
   });
 
   it("not P(a). P(a)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       not P(a).
     `)).select(first(`
       P(a)?
@@ -1019,7 +1019,7 @@ describe("Select", function() {
   });
 
   it("P(a). if (P(a)) Q(b). Q(b)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
       if (P(a))
         Q(b). 
@@ -1029,7 +1029,7 @@ describe("Select", function() {
   });
 
   it("if (P()) Q(). if (Q()) R(). P(). R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       if (P()) 
         Q().
       if (Q()) 
@@ -1041,7 +1041,7 @@ describe("Select", function() {
   });
 
   it("for (let a: P(a)) Q(a). P(u). Q(u)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let a: P(a)) {
         Q(a).
       }
@@ -1052,7 +1052,7 @@ describe("Select", function() {
   });
 
   it("for (let a: P(a)) Q(a). P(u). Q(v)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let a: P(a)) {
         Q(a).
       }
@@ -1063,7 +1063,7 @@ describe("Select", function() {
   });
 
   it("for (let a: P(a)) Q(a) R(a). P(u). R(u)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let a: P(a)) {
         Q(a) R(a).
       }
@@ -1074,7 +1074,7 @@ describe("Select", function() {
   });
 
   it("for (let a: P(a)) Q(a). for (let a: Q(a)) R(a). P(u). R(u)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let a: P(a)) {
         Q(a).
       }
@@ -1088,7 +1088,7 @@ describe("Select", function() {
   });
 
   it("for (let a: P(a)) { for (let b: Q(b)) R(a, b) }. P(u). Q(v). R(u, v)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let a: P(a)) {
         for (let b: Q(b)) {
           R(a, b).
@@ -1101,7 +1101,7 @@ describe("Select", function() {
   });
 
   it("P(a). let x: P(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
     `)).select(first(`
       let x: P(x)?
@@ -1110,7 +1110,7 @@ describe("Select", function() {
   });
 
   it("P(a). let x: Q(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
     `)).select(first(`
       let x: Q(x)?
@@ -1119,7 +1119,7 @@ describe("Select", function() {
   });
 
   it("P(a, b). let x: P(x, b)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a, b).
     `)).select(first(`
       let x: P(x, b)?
@@ -1128,7 +1128,7 @@ describe("Select", function() {
   });
 
   it("P(a, b). let x: P(a, x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a, b).
     `)).select(first(`
       let x: P(a, x)?
@@ -1137,7 +1137,7 @@ describe("Select", function() {
   });
 
   it("P(a). P(b). let x: P(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
       P(b).
     `)).select(first(`
@@ -1146,7 +1146,7 @@ describe("Select", function() {
   });
 
   it("P(a). Q(a). let x: P(x) Q(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
       Q(a).
     `)).select(first(`
@@ -1156,7 +1156,7 @@ describe("Select", function() {
   });
   
   it("P(a). Q(a). R(b). let x: P(x) Q(x) R(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
       Q(a).
       R(b).
@@ -1167,7 +1167,7 @@ describe("Select", function() {
   });
   
   it("P(a). Q(a). R(a). let x: P(x) Q(x) R(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
       Q(a).
       R(a).
@@ -1178,7 +1178,7 @@ describe("Select", function() {
   });
   
   it("P(a). Q(b). let x: P(x) Q(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
       Q(b).
     `)).select(first(`
@@ -1188,7 +1188,7 @@ describe("Select", function() {
   });
   
   it("P(a) Q(b). let x: P(x) Q(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a) Q(b).
     `)).select(first(`
       let x: P(x) Q(x)?
@@ -1197,7 +1197,7 @@ describe("Select", function() {
   });
 
   it("P(a, b). let x, y: P(x, y)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a, b).
     `)).select(first(`
       let x, y: P(x, y)?
@@ -1206,7 +1206,7 @@ describe("Select", function() {
   });
 
   it("P(a). Q(b). let x, y: P(x) Q(y)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P(a).
       Q(b).
     `)).select(first(`
@@ -1216,7 +1216,7 @@ describe("Select", function() {
   });
 
   it("for (let x: P(x)) Q(x). P(a). let x: Q(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) Q(x). 
       P(a).
     `)).select(first(`
@@ -1225,7 +1225,7 @@ describe("Select", function() {
   });
 
   it("for (let x: P(x) Q(x)) R(x). P(a). Q(a). let x: R(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x) Q(x)) R(x). 
       P(a).
       Q(a).
@@ -1236,7 +1236,7 @@ describe("Select", function() {
   });
 
   it("for (let x: P(x)) Q(x). for (let x: Q(x)) R(x). P(a). let x: R(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) Q(x). 
       for (let x: Q(x)) R(x). 
       P(a).
@@ -1247,7 +1247,7 @@ describe("Select", function() {
   });
 
   it("for (let x: P(x)) Q(x). for (let x: Q(x)) R(x). P(a). let x: R(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) Q(x). 
       for (let x: Q(x)) R(x). 
       P(a).
@@ -1259,7 +1259,7 @@ describe("Select", function() {
   });
 
   it("let x: Q(x) S(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) Q(x). 
       for (let x: R(x)) S(x).
       P(a).
@@ -1272,7 +1272,7 @@ describe("Select", function() {
   });
   
   it("for (let x: P(x)) Q(x). for (let x: R(x)) S(x). P(a). R(a). let x: Q(x) S(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) Q(x). 
       for (let x: R(x)) S(x). 
       P(a).
@@ -1290,7 +1290,7 @@ describe("Select", function() {
   });
 
   it("not P(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       not P().
     `)).select(first(`
       P()?
@@ -1298,7 +1298,7 @@ describe("Select", function() {
   });
 
   it("not P(). not P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       not P().
     `)).select(first(`
       not P()?
@@ -1306,7 +1306,7 @@ describe("Select", function() {
   });
 
   it("not P() Q(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       not P() Q().
     `)).select(first(`
       P()?
@@ -1314,7 +1314,7 @@ describe("Select", function() {
   });
 
   it("not P() Q(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       not P() Q().
     `)).select(first(`
       Q()?
@@ -1322,7 +1322,7 @@ describe("Select", function() {
   });
 
   it("not not P(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       not not P().
     `)).select(first(`
       P()?
@@ -1330,7 +1330,7 @@ describe("Select", function() {
   });
 
   it("if (P()) not Q(). P(). Q()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       if (P()) not Q().
       P().
     `)).select(first(`
@@ -1339,7 +1339,7 @@ describe("Select", function() {
   });
 
   it("if (P(a) Q(b)) not Q(c). P(a). Q(b). Q(c)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       if (P(a) Q(b)) not Q(c).
       P(a).
       Q(b).
@@ -1349,7 +1349,7 @@ describe("Select", function() {
   });
 
   it("for (let x: even(x)) not odd(x). even(u). odd(u)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: even(x))
         not odd(x).
       even(u).
@@ -1359,7 +1359,7 @@ describe("Select", function() {
   });
 
   it("either P() or Q(). not Q(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       either P() or Q().
       not Q().
     `)).select(first(`
@@ -1368,7 +1368,7 @@ describe("Select", function() {
   });
 
   it("either P() or Q(). not Q(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       either P() or Q().
       not Q().
     `)).select(first(`
@@ -1377,7 +1377,7 @@ describe("Select", function() {
   });
 
   it("either P() Q() or R(). not R(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       either P() Q() or R().
       not R().
     `)).select(first(`
@@ -1386,7 +1386,7 @@ describe("Select", function() {
   });
 
   it("either R() or P() Q(). not R(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       either R() or P() Q().
       not R().
     `)).select(first(`
@@ -1395,7 +1395,7 @@ describe("Select", function() {
   });
 
   it("either P(a) or Q(a). not Q(a). let x: P(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       either P(a) or Q(a).
       not Q(a).
     `)).select(first(`
@@ -1404,7 +1404,7 @@ describe("Select", function() {
   });
 
   it("for (let x: U(x)) either P(x) or Q(x). not Q(a). U(a). let x: P(x)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: U(x)) {
         either P(x) or Q(x).
       }
@@ -1422,7 +1422,7 @@ describe("Select", function() {
   });
 
   it("either not P() or Q(). not Q(). not P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       either not P() or Q().
       not Q().
     `)).select(first(`
@@ -1431,7 +1431,7 @@ describe("Select", function() {
   });
 
   it("for (let x: R(x)) P(x) Q(x). P(c) Q(c)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
     for (let x: R(x)) {
       P(x) Q(x).
     }
@@ -1442,7 +1442,7 @@ describe("Select", function() {
   });
   
   it("P() and Q(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P() and Q().
     `)).select(first(`
       P()?
@@ -1450,7 +1450,7 @@ describe("Select", function() {
   });
 
   it("P() and Q() and R(). P() and R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       P() and Q() and R().
     `)).select(first(`
       P() and R()?
@@ -1458,7 +1458,7 @@ describe("Select", function() {
   });
 
   it("P() and Q() and R(). P()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       (P(a). Q(a).) and (U(b). V(b).).
     `)).select(first(`
       let x: P(x)?
@@ -1466,7 +1466,7 @@ describe("Select", function() {
   });
 
   it("if (P()) Q(). if (P()) Q()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       if (P()) Q(). 
     `)).select(first(`
       if (P()) { 
@@ -1476,7 +1476,7 @@ describe("Select", function() {
   });
 
   it("if (P(a)) Q(b). if (P(b)) Q(a)?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       if (P(a)) Q(b). 
     `)).select(first(`
       if (P(b)) {
@@ -1486,7 +1486,7 @@ describe("Select", function() {
   });
 
   it("if (P()) Q() R(). if (P()) Q()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       if (P()) Q() R(). 
     `)).select(first(`
       if (P()) {
@@ -1496,7 +1496,7 @@ describe("Select", function() {
   });
 
   it("if (P()) R(). if (Q()) R(). if (P() Q()) R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       if (P()) R(). 
       if (Q()) R(). 
     `)).select(first(`
@@ -1507,7 +1507,7 @@ describe("Select", function() {
   });
 
   it("if (P()) Q(). if (Q()) R(). if (P()) R()?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       if (P()) Q(). 
       if (Q()) R(). 
     `)).select(first(`
@@ -1518,7 +1518,7 @@ describe("Select", function() {
   });
 
   it("for (let x: P(x)) { Q(x). } for (let y: P(y)) { Q(y). } ?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) Q(x).
     `)).query(
       FORALL([P(["y", "every"])], Q(["y", "every"])))))
@@ -1526,7 +1526,7 @@ describe("Select", function() {
   });
 
   it("for (let x: P(x)) { Q(x). } for (let x: P(x)) { Q(x). } ?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) {
         Q(x).
       }
@@ -1538,7 +1538,7 @@ describe("Select", function() {
   });
 
   it("for (let x: P(x)) { Q(x) R(x). } for (let x: P(x)) { R(x). } ?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) {
         Q(x) R(x).
       }
@@ -1550,7 +1550,7 @@ describe("Select", function() {
   });
 
   it("for (let x: P(x) Q(x)) { R(x). } for (let x: P(x) Q(x)) { R(x). } ?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x) Q(x)) {
         R(x).
       }
@@ -1562,7 +1562,7 @@ describe("Select", function() {
   });
 
   it("for (let x: P(x)) { Q(x). } for (let x: Q(x)) { R(x). } for (let x: P(x)) { R(x). } ?", () => {
-    assertThat(unroll(new KB().insert(parse(`
+    assertThat(unroll(new KB().push(parse(`
       for (let x: P(x)) {
         Q(x).
       }
