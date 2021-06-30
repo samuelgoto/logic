@@ -183,9 +183,23 @@ function stepback(q, rule) {
   }
 }
 
+function equals(a, b) {
+  return JSON.stringify(a) == JSON.stringify(b);
+}
+
 class KB {
   constructor() {
     this.rules = {};
+    this.cache = {};
+  }
+  trace() {
+    this.log = [];
+    return this;
+  }
+  done() {
+    const result = this.log;
+    delete this.log;
+    return result;
   }
   *read(code) {
     const lines = normalize(new Parser().parse(code));
@@ -198,7 +212,6 @@ class KB {
         this.push([line]);
       }
     }
-
     if (q.length > 0) {
       yield * this.select(q[q.length - 1]);
     }
@@ -248,13 +261,31 @@ class KB {
       }
     }
   }
+  resolve(line, result) {
+    const key = JSON.stringify(line);
+    this.cache[key] = this.cache[key] || [];
+    this.cache[key].push(result);
+    return result;
+  }
   *select(line, path = []) {
     const [op, body = []] = line;
-    
-    if (path.find((el) => JSON.stringify(el)==JSON.stringify(line))) {
-      return;
+
+    if (this.log) {
+      this.log.push(line);
     }
 
+    if (path.find((el) => equals(el, line))) {
+      return;
+    }
+    
+    const hit = this.cache[JSON.stringify(line)];
+    if (hit) {
+      for (const entry of hit) {
+        yield entry;
+      }
+      return;
+    }
+    
     path.push(line);
 
     const [head, ...tail] = body;
@@ -262,21 +293,20 @@ class KB {
     const query = clone(head);
 
     for (let q of this.query(query, clone(path))) {
-
       const partial = {};
       if (q == false) {
-        yield false;
+        yield this.resolve(line, false);
         return;
       }
       if (tail.length == 0) {
-        yield Object.assign(partial, q);
+        yield this.resolve(line, Object.assign(partial, q));
         continue;
       }
       const rest = clone(tail);
       Object.assign(partial, q);
       apply(rest, partial);
       for (let r of this.select(["?", rest], clone(path))) {
-        yield Object.assign(clone(partial), r);
+        yield this.resolve(line, Object.assign(clone(partial), r));
       }
     }
   }

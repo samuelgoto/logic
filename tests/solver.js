@@ -1580,6 +1580,37 @@ describe("Select", function() {
   
 });
 
+describe("Tracing", () => {
+  it("P(). P()?", () => {
+    const kb = new KB();
+    assertThat(unroll(kb.read(`
+      P().
+    `))).equalsTo([]);
+    kb.trace();
+    assertThat(unroll(kb.read(`
+      P()?
+    `))).equalsTo([{}]);
+    assertThat(kb.done()).equalsTo([
+      QUERY(P())
+    ]);
+  });
+
+  it("P(). P()?", () => {
+    const kb = new KB();
+    assertThat(unroll(kb.read(`
+      if (P()) Q().
+    `))).equalsTo([]);
+    kb.trace();
+    assertThat(unroll(kb.read(`
+      Q()?
+    `))).equalsTo([]);
+    assertThat(kb.done()).equalsTo([
+      QUERY(Q()),
+      QUERY(P())
+    ]);
+  });
+});
+
 describe("REPL", () => {
   it("P()?", function() {
     const kb = new KB();
@@ -2179,7 +2210,7 @@ describe("REPL", () => {
       n: literal("a4")
     }]);
   });
-
+  
   it("kinship", function() {
     const kb = new KB();
     assertThat(unroll(kb.read(`
@@ -2210,6 +2241,24 @@ describe("REPL", () => {
           if (parent(x, y)) {
             child(y, x).
           }
+
+          // Every son is a male child
+          if (son(x, y)) {
+            male(x) child(x, y).
+          }
+
+          if (male(x) child(x, y)) {
+            son(x, y).
+          }
+
+          // Every daughter is a female child
+          if (daughter(x, y)) {
+            female(x) child(x, y).
+          }
+
+          //if (female(x) child(x, y)) {
+          //  daughter(x, y).
+          //}
 
           // If A is an ancestor of B then B is a descendent of A
           if (ancestor(x, y)) {
