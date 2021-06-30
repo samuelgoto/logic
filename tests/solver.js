@@ -1598,7 +1598,7 @@ describe("Select", function() {
   
 });
 
-describe("Tracing", () => {
+describe.skip("Tracing", () => {
   it("P(). P()?", () => {
     const kb = new KB();
     assertThat(unroll(kb.read(`
@@ -2510,19 +2510,16 @@ describe("REPL", () => {
     const p = () => ["p", "const"];
 
     const log = kb.done();
-    assertThat(log[0][1]).equalsTo(QUERY(child(x(), u())));
-    assertThat(log[1][1]).equalsTo(QUERY(parent(u(), x()), person(x()), person(u())));
-    assertThat(log[2][1]).equalsTo(QUERY(father(u(), x()), person(x()), person(u())));
-    assertThat(log[3][1]).equalsTo(QUERY(parent(u(), x()), male(u()), person(x()), person(u())));
-    assertThat(log[4][0]).equalsTo("C");
-    assertThat(log[4][1]).equalsTo(QUERY(father(u(), x()), person(x()), person(u())));
-    assertThat(log[5][1]).equalsTo(QUERY(mother(u(), x()), person(x()), person(u())));
-    assertThat(log[6][1]).equalsTo(QUERY(parent(u(), x()), female(u()), person(x()), person(u())));
-    assertThat(log[7][0]).equalsTo("C");
-    assertThat(log[7][1]).equalsTo(QUERY(father(u(), x()), person(x()), person(u())));
-    assertThat(log[8][0]).equalsTo("C");
-    assertThat(log[8][1]).equalsTo(QUERY(mother(u(), x()), person(x()), person(u())));
-    assertThat(log[9][1]).equalsTo(QUERY(person(p()), person(u())));
+    assertThat(log[0]).equalsTo(["Q", QUERY(child(x(), u()))]);
+    assertThat(log[1]).equalsTo(["Q", QUERY(parent(u(), x()), person(x()), person(u()))]);
+    assertThat(log[2]).equalsTo(["Q", QUERY(father(u(), x()), person(x()), person(u()))]);
+    assertThat(log[3]).equalsTo(["Q", QUERY(parent(u(), x()), male(u()), person(x()), person(u()))]);
+    assertThat(log[4]).equalsTo(["C", QUERY(father(u(), x()), person(x()), person(u()))]);
+    assertThat(log[5]).equalsTo(["Q", QUERY(mother(u(), x()), person(x()), person(u()))]);
+    assertThat(log[6]).equalsTo(["Q", QUERY(parent(u(), x()), female(u()), person(x()), person(u()))]);
+    assertThat(log[7]).equalsTo(["C", QUERY(father(u(), x()), person(x()), person(u()))]);
+    assertThat(log[8]).equalsTo(["C", QUERY(mother(u(), x()), person(x()), person(u()))]);
+    assertThat(log[9]).equalsTo(["H", QUERY(person(p()), person(u()))]);
     // assertThat(log[10][1]).equalsTo(QUERY(person(p()), person(u())));
 
     return;

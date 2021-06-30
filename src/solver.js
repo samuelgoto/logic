@@ -252,15 +252,10 @@ class KB {
       if (deps.length == 0) {
         // If this was a binding that we had already found, skip
         if (bindings.find((binding) => equals(binding, value))) {
-          //console.log('Skipping');
-          //console.log(bindings);
-          //console.log(value);
           continue;
         }
         bindings.push(value);
 
-        //console.log('Yielding');
-        //console.log(value);
         yield value;
 
         if (empty(value)) {
@@ -288,13 +283,8 @@ class KB {
         const merged = clone(Object.assign(mapping, result));
         // If this was a binding that we had already found, skip
         if (bindings.find((binding) => equals(binding, merged))) {
-          //console.log('Skipping');
-          //console.log(bindings);
-          //console.log(merged);
           continue;
         }
-        //console.log('Yielding');
-        //console.log(merged);
         bindings.push(merged);
 
         yield merged;
@@ -315,20 +305,20 @@ class KB {
     const [op, body = []] = line;
 
     if (path.find((el) => equals(el, line))) {
-      this.log(["C", line, clone(path)]);
+      this.log(["C", line]);
       return;
     }
     
     const hit = this.cache[JSON.stringify(line)];
     if (hit) {
-      this.log(["H", line, clone(path)]);
+      this.log(["H", line]);
       for (const entry of hit) {
         yield entry;
       }
       return;
     }
     
-    this.log(["Q", line, clone(path)]);
+    this.log(["Q", line]);
 
     path.push(line);
 
@@ -337,20 +327,18 @@ class KB {
     const query = clone(head);
 
     for (let q of this.query(query, clone(path))) {
-      const partial = {};
       if (q == false) {
         yield this.resolve(line, false);
         return;
       }
       if (tail.length == 0) {
-        yield this.resolve(line, Object.assign(partial, q));
+        yield this.resolve(line, q);
         continue;
       }
       const rest = clone(tail);
-      Object.assign(partial, q);
-      apply(rest, partial);
+      apply(rest, q);
       for (let r of this.select(["?", rest], clone(path))) {
-        yield this.resolve(line, Object.assign(clone(partial), r));
+        yield this.resolve(line, Object.assign(q, r));
       }
     }
   }
