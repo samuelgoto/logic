@@ -1841,6 +1841,23 @@ describe("REPL", () => {
     `))).equalsTo([{"a": literal("A")}]);
   });
 
+  it("P(A). P(A). let a: P(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      P(A). P(A).
+      let a: P(a)?
+    `))).equalsTo([{"a": literal("A")}]);
+  });
+
+  it("if (Q(A)) P(A). if (Q(A)) P(A). let a: P(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      if (Q(A)) P(A). 
+      if (Q(B)) P(A).
+      Q(A).
+      Q(B).
+      let a: P(a)?
+    `))).equalsTo([{"a": literal("A")}]);
+  });
+
   it("P(a). Q(a). let b: P(b) Q(b)?", function() {
     assertThat(unroll(new KB().read(`
       P(a). Q(a).
@@ -1994,7 +2011,7 @@ describe("REPL", () => {
       R(u).
 
       let x: R(x)?
-    `))).equalsTo([{"x": literal("u")}, {"x": literal("u")}]);
+    `))).equalsTo([{"x": literal("u")}]);
   });
 
   it("let x: Socrates(x) animal(x)?", function() {
@@ -2333,8 +2350,6 @@ describe("REPL", () => {
       n: literal("a1")
     }, {
       n: literal("a2")
-    }, {
-      n: literal("a4")
     }]);
   });
   

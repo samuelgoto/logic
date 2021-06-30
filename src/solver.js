@@ -236,6 +236,8 @@ class KB {
   }
   *query(q, path) {
     const rules = this.rules[q[0]] || [];
+
+    const bindings = [];
     
     for (let rule of rules) {
 
@@ -248,7 +250,19 @@ class KB {
       const [value, deps] = result;
 
       if (deps.length == 0) {
+        // If this was a binding that we had already found, skip
+        if (bindings.find((binding) => equals(binding, value))) {
+          //console.log('Skipping');
+          //console.log(bindings);
+          //console.log(value);
+          continue;
+        }
+        bindings.push(value);
+
+        //console.log('Yielding');
+        //console.log(value);
         yield value;
+
         if (empty(value)) {
           return;
         }
@@ -270,9 +284,22 @@ class KB {
           yield false;
           return;
         }
-        yield Object.assign(mapping, result);
 
-        if (empty(mapping)) {
+        const merged = clone(Object.assign(mapping, result));
+        // If this was a binding that we had already found, skip
+        if (bindings.find((binding) => equals(binding, merged))) {
+          //console.log('Skipping');
+          //console.log(bindings);
+          //console.log(merged);
+          continue;
+        }
+        //console.log('Yielding');
+        //console.log(merged);
+        bindings.push(merged);
+
+        yield merged;
+
+        if (empty(merged)) {
           return;
         }
       }
