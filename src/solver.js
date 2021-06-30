@@ -52,12 +52,13 @@ function normalize(statements, scope = {}) {
       }
       const heady = normalize([head], Object.assign(scope, vars));
       for (const part of normalize([body], scope)) {
-        if (part[3]) {
-          part[3].push(...heady);
+        const p = clone(part);
+        if (p[3]) {
+          p[3].push(...heady);
         } else {
-          part[3] = heady;
+          p[3] = heady;
         }
-        result.push(part);
+        result.push(p);
       }
     } else if (Array.isArray(statement[0])) {
       const conjunction = normalize(statement, scope);
@@ -187,18 +188,27 @@ function equals(a, b) {
   return JSON.stringify(a) == JSON.stringify(b);
 }
 
+function empty(a) {
+  return Object.keys(a).length == 0;
+}
+
 class KB {
   constructor() {
     this.rules = {};
     this.cache = {};
   }
+  log(entry) {
+    if (this.tracing) {
+      this.tracing.push(entry);
+    }
+  }
   trace() {
-    this.log = [];
+    this.tracing = [];
     return this;
   }
   done() {
-    const result = this.log;
-    delete this.log;
+    const result = this.tracing;
+    delete this.tracing;
     return result;
   }
   *read(code) {
@@ -239,9 +249,12 @@ class KB {
 
       if (deps.length == 0) {
         yield value;
+        if (empty(value)) {
+          return;
+        }
         continue;
       }
-      
+
       const results = this.select(["?", deps], path);
 
       const free = q[1]
@@ -255,9 +268,13 @@ class KB {
       for (let result of results) {
         if (!value) {
           yield false;
-          continue;
+          return;
         }
         yield Object.assign(mapping, result);
+
+        if (empty(mapping)) {
+          return;
+        }
       }
     }
   }
@@ -270,22 +287,22 @@ class KB {
   *select(line, path = []) {
     const [op, body = []] = line;
 
-    if (this.log) {
-      this.log.push(line);
-    }
-
     if (path.find((el) => equals(el, line))) {
+      this.log(["C", line, clone(path)]);
       return;
     }
     
     const hit = this.cache[JSON.stringify(line)];
     if (hit) {
+      this.log(["H", line, clone(path)]);
       for (const entry of hit) {
         yield entry;
       }
       return;
     }
     
+    this.log(["Q", line, clone(path)]);
+
     path.push(line);
 
     const [head, ...tail] = body;

@@ -50,6 +50,10 @@ function x(type = "free") {
   return ["x", type];
 }
 
+function y(type = "free") {
+  return ["y", type];
+}
+
 function a(type = "const") {
   return ["a", type];
 }
@@ -359,6 +363,20 @@ describe("Normalize", () => {
       IF([NOT(P()), NOT(Q())], R()),
       IF([NOT(R())], P()),
       IF([NOT(R())], Q()),
+    ]);
+  });
+
+  it("for (let x: U(x)) for (let y: U(y)) { P(x, y). Q(y, x). }", () => {
+    assertThat(normalize(new Parser().parse(`
+      for (let x: U(x)) {
+        for (let y: U(y)) {
+          P(x, y).
+          Q(y, x).
+        }
+      }
+    `))).equalsTo([
+      FORALL([U(y("every")), U(x("every"))], P(x("every"), y("every"))),
+      FORALL([U(y("every")), U(x("every"))], Q(y("every"), x("every")))
     ]);
   });
 });
@@ -1505,7 +1523,7 @@ describe("Select", function() {
       if (P() Q()) {
         R(). 
       } ?
-    `)))).equalsTo([{}, {}]);
+    `)))).equalsTo([{}]);
   });
 
   it("if (P()) Q(). if (Q()) R(). if (P()) R()?", () => {
@@ -1591,11 +1609,11 @@ describe("Tracing", () => {
       P()?
     `))).equalsTo([{}]);
     assertThat(kb.done()).equalsTo([
-      QUERY(P())
+      ["Q", QUERY(P()), []]
     ]);
   });
 
-  it("P(). P()?", () => {
+  it("if (P()) Q(). Q()?", () => {
     const kb = new KB();
     assertThat(unroll(kb.read(`
       if (P()) Q().
@@ -1605,10 +1623,94 @@ describe("Tracing", () => {
       Q()?
     `))).equalsTo([]);
     assertThat(kb.done()).equalsTo([
-      QUERY(Q()),
-      QUERY(P())
+      ["Q", QUERY(Q()), []],
+      ["Q", QUERY(P()), [QUERY(Q())]]
     ]);
   });
+
+  it("if (P()) Q(). if (Q()) P(). Q()?", () => {
+    const kb = new KB();
+    assertThat(unroll(kb.read(`
+      if (P()) Q().
+      if (Q()) P().
+    `))).equalsTo([]);
+    kb.trace();
+    assertThat(unroll(kb.read(`
+      Q()?
+    `))).equalsTo([]);
+    assertThat(kb.done()).equalsTo([
+      ["Q", QUERY(Q()), []],
+      ["Q", QUERY(P()), [QUERY(Q())]],
+      ["C", QUERY(Q()), [QUERY(Q()), QUERY(P())]]
+    ]);
+  });
+
+  it("for (let x: P(x)) Q(x). let y: Q(y)?", () => {
+    const kb = new KB();
+    assertThat(unroll(kb.read(`
+      for (let x: P(x)) Q(x).
+      for (let x: Q(x)) P(x).
+    `))).equalsTo([]);
+    kb.trace();
+    assertThat(unroll(kb.read(`
+      let y: Q(y)?
+    `))).equalsTo([]);
+    assertThat(kb.done()).equalsTo([
+      ["Q", QUERY(Q(free("y"))), []],
+      ["Q", QUERY(P(free("y"))), [QUERY(Q(free("y")))]],
+      ["C", QUERY(Q(free("y"))), [QUERY(Q(free("y"))), QUERY(P(free("y")))]],
+    ]);
+  });
+
+  it("for (let x: P(x)) Q(x). let y: Q(y)?", () => {
+    const kb = new KB();
+    assertThat(unroll(kb.read(`
+      for (let x: U(x)) {
+        for (let y: U(y)) {
+          P(x, y).
+          Q(y, x).
+        }
+      }
+    `))).equalsTo([]);
+    kb.trace();
+    assertThat(unroll(kb.read(`
+      let x, y: Q(x, y)?
+    `))).equalsTo([]);
+    assertThat(kb.done()).equalsTo([
+      ["Q", QUERY(Q(x(), y())), []],
+      ["Q", QUERY(U(x()), U(y())), [QUERY(Q(x(), y()))]],
+    ]);
+  });
+
+  it("", () => {
+    const kb = new KB();
+    assertThat(unroll(kb.read(`
+      for (let x: U(x)) {
+        for (let y: U(y)) {
+          if (P(x, y)) {
+            Q(y, x).
+          }
+          if (Q(x, y)) {
+            P(y, x).
+          }
+        }
+      }
+    `))).equalsTo([]);
+    kb.trace();
+    assertThat(unroll(kb.read(`
+      let x, y: Q(x, y)?
+    `))).equalsTo([]);
+    assertThat(kb.done()).equalsTo([
+      ["Q", QUERY(Q(x(), y())), []],
+      ["Q", QUERY(P(y(), x()), U(x()), U(y())), [QUERY(Q(x(), y()))]],
+      ["Q", QUERY(Q(x(), y()), U(y()), U(x())), [QUERY(Q(x(), y())), QUERY(P(y(), x()), U(x()), U(y()))]],
+      ["C", QUERY(P(y(), x()), U(x()), U(y())), [QUERY(Q(x(), y())),
+                                                 QUERY(P(y(), x()), U(x()), U(y())),
+                                                 QUERY(Q(x(), y()), U(y()), U(x()))]],
+    ]);
+  });
+
+  
 });
 
 describe("REPL", () => {
@@ -2164,6 +2266,31 @@ describe("REPL", () => {
     `))).equalsTo([{}]);
   });
 
+  it("P(). P(). P()?", function() {
+    assertThat(unroll(new KB().read(`
+      P().
+      P().
+      P()?
+    `))).equalsTo([{}]);
+  });
+
+  it("not P(). not P(). P()?", function() {
+    assertThat(unroll(new KB().read(`
+      not P().
+      not P().
+      P()?
+    `))).equalsTo([false]);
+  });
+
+  it("if (P()) Q(). if (P()) Q(). Q()?", function() {
+    assertThat(unroll(new KB().read(`
+      if (P()) Q().
+      if (P()) Q().
+      P().
+      Q()?
+    `))).equalsTo([{}]);
+  });
+
   it("coloring", function() {
     // Based on the following puzzle
     // https://www.cpp.edu/~jrfisher/www/prolog_tutorial/2_1.html
@@ -2211,7 +2338,7 @@ describe("REPL", () => {
     }]);
   });
   
-  it("kinship", function() {
+  it.skip("kinship", function() {
     const kb = new KB();
     assertThat(unroll(kb.read(`
 
@@ -2314,8 +2441,8 @@ describe("REPL", () => {
       Dani(v).
 
       Leo(p).
-      Anna(q).
-      Arthur(r).
+      //Anna(q).
+      //Arthur(r).
 
       person(u).
       person(v).
@@ -2333,7 +2460,20 @@ describe("REPL", () => {
       mother(v, r).
     `))).equalsTo([]);
 
+    assertThat(unroll(kb.read(`
+      child(p, u)?
+    `))).equalsTo([{}]);
+
+    assertThat(unroll(kb.read(`
+      child(q, u)?
+    `))).equalsTo([{}]);
+
+    assertThat(unroll(kb.read(`
+      child(r, u)?
+    `))).equalsTo([{}]);
+
     // Who is a child of u?
+    kb.trace();
     assertThat(unroll(kb.read(`
       let x: child(x, u)?
     `))).equalsTo([{
@@ -2344,6 +2484,35 @@ describe("REPL", () => {
       "x": literal("r")
     }]);
 
+    const child = (...args) => ["child", args, true];
+    const parent = (...args) => ["parent", args, true];
+    const father = (...args) => ["father", args, true];
+    const mother = (...args) => ["mother", args, true];
+    const person = (...args) => ["person", args, true];
+    const male = (...args) => ["male", args, true];
+    const female = (...args) => ["female", args, true];
+    const u = () => ["u", "const"];
+    const p = () => ["p", "const"];
+
+    const log = kb.done();
+    assertThat(log[0][1]).equalsTo(QUERY(child(x(), u())));
+    assertThat(log[1][1]).equalsTo(QUERY(parent(u(), x()), person(x()), person(u())));
+    assertThat(log[2][1]).equalsTo(QUERY(father(u(), x()), person(x()), person(u())));
+    assertThat(log[3][1]).equalsTo(QUERY(parent(u(), x()), male(u()), person(x()), person(u())));
+    assertThat(log[4][0]).equalsTo("C");
+    assertThat(log[4][1]).equalsTo(QUERY(father(u(), x()), person(x()), person(u())));
+    assertThat(log[5][1]).equalsTo(QUERY(mother(u(), x()), person(x()), person(u())));
+    assertThat(log[6][1]).equalsTo(QUERY(parent(u(), x()), female(u()), person(x()), person(u())));
+    assertThat(log[7][0]).equalsTo("C");
+    assertThat(log[7][1]).equalsTo(QUERY(father(u(), x()), person(x()), person(u())));
+    assertThat(log[8][0]).equalsTo("C");
+    assertThat(log[8][1]).equalsTo(QUERY(mother(u(), x()), person(x()), person(u())));
+    assertThat(log[9][1]).equalsTo(QUERY(person(p()), person(u())));
+    // assertThat(log[10][1]).equalsTo(QUERY(person(p()), person(u())));
+
+    return;
+
+    
     // is u a male?
     assertThat(unroll(kb.read(`
       male(u)?
