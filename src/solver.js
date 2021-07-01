@@ -133,7 +133,6 @@ function stepback(q, rule) {
   const [name, args, value = true, deps = []] = rule;
   const [ , , ask = true, conds = []] = q;
 
-  // const result = clone(deps);
   const result = apply(deps, matches);
   
   if (ask != value) {
@@ -201,6 +200,7 @@ class KB {
   }
   log(entry) {
     if (this.tracing) {
+      // console.log(entry);
       this.tracing.push(entry);
     }
   }
@@ -236,7 +236,7 @@ class KB {
     }
     return this;
   }
-  *query(q, path) {
+  *query(q, path, level) {
     const rules = this.rules[q[0]] || [];
 
     const bindings = [];
@@ -266,7 +266,7 @@ class KB {
         continue;
       }
 
-      const results = this.select(["?", deps], path);
+      const results = this.select(["?", deps], path, level);
 
       const free = q[1]
             .filter(([name, type]) => type == "free")
@@ -303,24 +303,35 @@ class KB {
     this.cache[key].push(result);
     return result;
   }
-  *select(line, path = []) {
-    const [op, body = []] = clone(line);
+  *select(line, path = [], level = 0) {
+    const [op, body = []] = line;
 
-    if (path.find((el) => equals(el, line))) {
-      this.log(["C", line]);
+    // Tests if the current line of investigation is
+    // a subset of any past line of investigation.
+    if (path.find(([, previous]) => {
+      for (let part of previous) {
+        const [, current] = line;
+        if (!current.find((el) => equals(el, part))) {
+          return false;
+        }
+      }
+
+      return true;
+    })) {
+      this.log(["C", level, line]);
       return;
     }
     
     const hit = this.cache[JSON.stringify(line)];
     if (hit) {
-      this.log(["H", line]);
+      this.log(["H", level, line]);
       for (const entry of hit) {
         yield entry;
       }
       return;
     }
     
-    this.log(["Q", line]);
+    this.log(["Q", level, line]);
 
     path.push(clone(line));
 
@@ -328,7 +339,7 @@ class KB {
 
     const query = clone(head);
 
-    for (let q of this.query(query, clone(path))) {
+    for (let q of this.query(query, clone(path), level + 1)) {
       if (q == false) {
         yield this.resolve(line, false);
         return;
@@ -337,8 +348,8 @@ class KB {
         yield this.resolve(line, q);
         continue;
       }
-      const rest = apply(clone(tail), q);
-      for (let r of this.select(["?", rest], clone(path))) {
+      const rest = apply(tail, q);
+      for (let r of this.select(["?", rest], clone(path), level + 1)) {
         yield this.resolve(line, Object.assign(q, r));
       }
     }

@@ -1712,6 +1712,26 @@ describe.skip("Tracing", () => {
   
 });
 
+describe("forward", () => {
+  it.skip("if (P()) Q(). if (Q()) R(). => if (P()) R().", () => {
+    const rules = normalize(new Parser().parse(`
+      if (P()) Q().
+      if (Q()) R().
+    `));
+    assertThat(rules).equalsTo([
+      IF([P()], Q()),
+      IF([Q()], R()),
+    ]);
+    for (let [name1, args1, value1 = true, deps1 = []] of rules) {
+      for (let [name2, args2, value2 = true, deps2 = []] of rules) {
+        const [[name2, args2]] = deps2;
+        if (name1 == name2 && JSON.stringify(args1) == JSON.stringify(args2)) {
+        }
+      }
+    }
+  });
+});
+
 describe("REPL", () => {
   it("P()?", function() {
     const kb = new KB();
@@ -2351,8 +2371,9 @@ describe("REPL", () => {
       n: literal("a2")
     }]);
   });
+
   
-  it.skip("kinship", function() {
+  it("kinship", function() {
     const kb = new KB();
     assertThat(unroll(kb.read(`
 
@@ -2454,7 +2475,7 @@ describe("REPL", () => {
       Sam(u).
       Dani(v).
 
-      Leo(p).
+      //Leo(p).
       //Anna(q).
       //Arthur(r).
 
@@ -2474,17 +2495,16 @@ describe("REPL", () => {
       mother(v, r).
     `))).equalsTo([]);
 
-    assertThat(unroll(kb.read(`
-      child(p, u)?
-    `))).equalsTo([{}]);
-
-    assertThat(unroll(kb.read(`
-      child(q, u)?
-    `))).equalsTo([{}]);
-
-    assertThat(unroll(kb.read(`
-      child(r, u)?
-    `))).equalsTo([{}]);
+    const child = (...args) => ["child", args, true];
+    const parent = (...args) => ["parent", args, true];
+    const father = (...args) => ["father", args, true];
+    const mother = (...args) => ["mother", args, true];
+    const person = (...args) => ["person", args, true];
+    const male = (...args) => ["male", args, true];
+    const female = (...args) => ["female", args, true];
+    const u = () => ["u", "const"];
+    const p = () => ["p", "const"];
+    const q = () => ["q", "const"];
 
     // Who is a child of u?
     kb.trace();
@@ -2497,29 +2517,28 @@ describe("REPL", () => {
     }, {
       "x": literal("r")
     }]);
-
-    const child = (...args) => ["child", args, true];
-    const parent = (...args) => ["parent", args, true];
-    const father = (...args) => ["father", args, true];
-    const mother = (...args) => ["mother", args, true];
-    const person = (...args) => ["person", args, true];
-    const male = (...args) => ["male", args, true];
-    const female = (...args) => ["female", args, true];
-    const u = () => ["u", "const"];
-    const p = () => ["p", "const"];
-
-    const log = kb.done();
-    assertThat(log[0]).equalsTo(["Q", QUERY(child(x(), u()))]);
-    assertThat(log[1]).equalsTo(["Q", QUERY(parent(u(), x()), person(x()), person(u()))]);
-    assertThat(log[2]).equalsTo(["Q", QUERY(father(u(), x()), person(x()), person(u()))]);
-    assertThat(log[3]).equalsTo(["Q", QUERY(parent(u(), x()), male(u()), person(x()), person(u()))]);
-    assertThat(log[4]).equalsTo(["C", QUERY(father(u(), x()), person(x()), person(u()))]);
-    assertThat(log[5]).equalsTo(["Q", QUERY(mother(u(), x()), person(x()), person(u()))]);
-    assertThat(log[6]).equalsTo(["Q", QUERY(parent(u(), x()), female(u()), person(x()), person(u()))]);
-    assertThat(log[7]).equalsTo(["C", QUERY(father(u(), x()), person(x()), person(u()))]);
-    assertThat(log[8]).equalsTo(["C", QUERY(mother(u(), x()), person(x()), person(u()))]);
-    assertThat(log[9]).equalsTo(["H", QUERY(person(p()), person(u()))]);
     
+    const log = kb.done();
+    assertThat(log[0]).equalsTo(["Q", 0, QUERY(child(x(), u()))]);
+    assertThat(log[1]).equalsTo(["Q", 1, QUERY(parent(u(), x()), person(x()), person(u()))]);
+    assertThat(log[2]).equalsTo(["Q", 2, QUERY(father(u(), x()), person(x()), person(u()))]);
+    assertThat(log[3]).equalsTo(["C", 3, QUERY(parent(u(), x()), male(u()), person(x()), person(u()))]);
+    assertThat(log[9]).equalsTo(["H", 2, QUERY(person(q()), person(u()))]);
+
+    assertThat(log.length).equalsTo(18);
+    
+    assertThat(unroll(kb.read(`
+      child(p, u)?
+    `))).equalsTo([{}]);
+
+    assertThat(unroll(kb.read(`
+      child(q, u)?
+    `))).equalsTo([{}]);
+
+    assertThat(unroll(kb.read(`
+      child(r, u)?
+    `))).equalsTo([{}]);
+
     // is u a male?
     assertThat(unroll(kb.read(`
       male(u)?
