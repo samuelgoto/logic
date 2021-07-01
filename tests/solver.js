@@ -778,16 +778,15 @@ describe("Match", () => {
     );
     assertThat(matches)
       .equalsTo({"y": ["x", "free"]});
-    apply(body, matches);
-    assertThat(body)
+    const result = apply(body, matches);
+    assertThat(result)
       .equalsTo([["P", [["x", "free"]]]]);
   });
 
   it("let y: Q(y) == for (let x: P(x)) Q(x)", () => {
     const matches = match(Q(free("y")), FORALL([P(x())], Q(x())));
     assertThat(matches).equalsTo({"x": ["y", "free"]});
-    const deps = [P(x())];
-    apply(deps, matches);
+    const deps = apply([P(x())], matches);
     assertThat(deps).equalsTo([P(free("y"))]);
   });
 
@@ -2520,10 +2519,6 @@ describe("REPL", () => {
     assertThat(log[7]).equalsTo(["C", QUERY(father(u(), x()), person(x()), person(u()))]);
     assertThat(log[8]).equalsTo(["C", QUERY(mother(u(), x()), person(x()), person(u()))]);
     assertThat(log[9]).equalsTo(["H", QUERY(person(p()), person(u()))]);
-    // assertThat(log[10][1]).equalsTo(QUERY(person(p()), person(u())));
-
-    return;
-
     
     // is u a male?
     assertThat(unroll(kb.read(`
@@ -2549,10 +2544,6 @@ describe("REPL", () => {
     assertThat(unroll(kb.read(`
       sibling(p, q)?
     `))).equalsTo([{
-      "z": literal("u")
-    }, {
-      "z": literal("v")
-    }, {
       "z": literal("u")
     }, {
       "z": literal("v")

@@ -109,7 +109,8 @@ function clone(a) {
 }
 
 function apply(body, subs) {
-  for (let part of body) {
+  const result = clone(body);
+  for (let part of result) {
     const [name, args] = part;
     for (let i = 0; i < args.length; i++) {
       const [name, type] = args[i];
@@ -119,6 +120,7 @@ function apply(body, subs) {
       }
     }
   }
+  return result;
 }
 
 function stepback(q, rule) {
@@ -131,8 +133,8 @@ function stepback(q, rule) {
   const [name, args, value = true, deps = []] = rule;
   const [ , , ask = true, conds = []] = q;
 
-  const result = clone(deps);
-  apply(result, matches);
+  // const result = clone(deps);
+  const result = apply(deps, matches);
   
   if (ask != value) {
     // If the query's polarity disagrees with the
@@ -302,7 +304,7 @@ class KB {
     return result;
   }
   *select(line, path = []) {
-    const [op, body = []] = line;
+    const [op, body = []] = clone(line);
 
     if (path.find((el) => equals(el, line))) {
       this.log(["C", line]);
@@ -320,7 +322,7 @@ class KB {
     
     this.log(["Q", line]);
 
-    path.push(line);
+    path.push(clone(line));
 
     const [head, ...tail] = body;
 
@@ -335,8 +337,7 @@ class KB {
         yield this.resolve(line, q);
         continue;
       }
-      const rest = clone(tail);
-      apply(rest, q);
+      const rest = apply(clone(tail), q);
       for (let r of this.select(["?", rest], clone(path))) {
         yield this.resolve(line, Object.assign(q, r));
       }
