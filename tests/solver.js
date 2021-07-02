@@ -2694,9 +2694,69 @@ describe("Generalized Quantifiers", () => {
     `))).equalsTo([]);
   });
 
+  it("for (let many x: P(x)) Q(x). P(a). Q(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let many x: P(x)) {
+        Q(x).
+      }
+      P(a).
+      Q(a)?
+    `))).equalsTo([]);
+  });
+
   it("for (let few x: P(x)) Q(x). P(a). Q(a)?", function() {
     assertThat(unroll(new KB().read(`
       for (let few x: P(x)) {
+        Q(x).
+      }
+      P(a).
+      Q(a)?
+    `))).equalsTo([]);
+  });
+
+  it("for (let at-least(3) x: P(x)) Q(x). P(a). Q(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let at-least(3) x: P(x)) {
+        Q(x).
+      }
+      P(a).
+      Q(a)?
+    `))).equalsTo([]);
+  });
+
+  it("for (let at-most(3) x: P(x)) Q(x). P(a). Q(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let at-most(3) x: P(x)) {
+        Q(x).
+      }
+      P(a).
+      Q(a)?
+    `))).equalsTo([]);
+  });
+
+  it("for (let more-than(3) x: P(x)) Q(x). P(a). Q(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let more-than(3) x: P(x)) {
+        Q(x).
+      }
+      P(a).
+      Q(a)?
+    `))).equalsTo([]);
+  });
+
+  it("for (let fewer-than(3) x: P(x)) Q(x). P(a). Q(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let fewer-than(3) x: P(x)) {
+        Q(x).
+      }
+      P(a).
+      Q(a)?
+    `))).equalsTo([]);
+  });
+
+  it("for (let exactly(3) x: P(x)) Q(x). P(a). Q(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let at-most(3) x: P(x)) {
         Q(x).
       }
       P(a).
