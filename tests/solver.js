@@ -2519,19 +2519,12 @@ describe("REPL", () => {
     ]);
 
     assertThat(unroll(kb.read(`
-      Sam(u).
-      Dani(v).
+      Sam(u) person(u).
+      Dani(v) person(v).
 
-      Leo(p) male(p).
-      Anna(q) female(q).
-      Arthur(r) male(r).
-
-      person(u).
-      person(v).
-
-      person(p).
-      person(q).
-      person(r).
+      Leo(p) person(p) male(p).
+      Anna(q) person(q) female(q).
+      Arthur(r) person(r) male(r).
 
       father(u, p).
       father(u, q).
@@ -2573,25 +2566,39 @@ describe("REPL", () => {
     assertThat(log[9]).equalsTo(["H", 2, QUERY(person(q()), person(u()))]);
 
     assertThat(log.length).equalsTo(19);
-    
-    assertThat(unroll(kb.read(`
-      child(p, u)?
-    `))).equalsTo([{}]);
 
+    // Is Leo Sam's child?
     assertThat(unroll(kb.read(`
-      child(q, u)?
-    `))).equalsTo([{}]);
+      let x, y: Leo(x) Sam(y) child(x, y)?
+    `))).equalsTo([{
+      "x": literal("p"),
+      "y": literal("u"),
+    }]);
 
+    // Is Anna Sam's daughter?
     assertThat(unroll(kb.read(`
-      child(r, u)?
-    `))).equalsTo([{}]);
+      let x, y: Anna(x) Sam(y) daughter(x, y)?
+    `))).equalsTo([{
+      "x": literal("q"),
+      "y": literal("u"),
+    }]);
 
-    // is u a male?
+    // Is Arthur Sam's son?
     assertThat(unroll(kb.read(`
-      male(u)?
-    `))).equalsTo([{}]);
+      let x, y: Arthur(x) Sam(y) son(x, y)?
+    `))).equalsTo([{
+      "x": literal("r"),
+      "y": literal("u"),
+     }]);
 
-    // who does Leo descend from?
+    // is Sam a male?
+    assertThat(unroll(kb.read(`
+      let x: Sam(x) male(x)?
+    `))).equalsTo([{
+      "x": literal("u")
+    }]);
+
+    // Who does Leo descend from?
     assertThat(unroll(kb.read(`
       let x, l: Leo(l) descedent(l, x)?
     `))).equalsTo([{
@@ -2602,10 +2609,13 @@ describe("REPL", () => {
       "x": literal("v")
     }]);
 
-    // are p and q siblings?
+    // are Leo and Anna siblings?
     assertThat(unroll(kb.read(`
-      sibling(p, q)?
-    `))).equalsTo([{}]);
+      let x, y: Leo(x) Anna(y) sibling(x, y)?
+    `))).equalsTo([{
+      "x": literal("p"),
+      "y": literal("q"),       
+    }]);
 
     // what are the pairs of siblings?
     assertThat(unroll(kb.read(`
@@ -2632,7 +2642,7 @@ describe("REPL", () => {
 
     // who are Anna's brothers?
     assertThat(unroll(kb.read(`
-      let x: brother(x, q)?
+      let x, y: brother(x, q)?
     `))).equalsTo([{
       "x": literal("p"),
     }, {
