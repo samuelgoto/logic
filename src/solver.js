@@ -351,13 +351,16 @@ class KB {
 
     const query = clone(head);
 
+    const free = Object.fromEntries(
+      query[1].filter(([name, type]) => type == "free"));
+    
     for (let q of this.query(query, clone(path), level + 1)) {
       if (q == false) {
         yield this.resolve(line, false);
         return;
       }
       if (tail.length == 0) {
-        yield this.resolve(line, q);
+        yield this.resolve(line, assign(free, q));
         continue;
       }
       const rest = apply(tail, q);

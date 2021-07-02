@@ -2389,11 +2389,11 @@ describe("REPL", () => {
     `))).equalsTo([{
       "x": literal("a"),
       "y": literal("b"),
-      "z": literal("u"),      
+      //"z": literal("u"),      
     }, {
       "x": literal("b"),
       "y": literal("a"),
-      "z": literal("u"),
+      //"z": literal("u"),
     }]);
   });
   
@@ -2567,7 +2567,7 @@ describe("REPL", () => {
     // is u a male?
     assertThat(unroll(kb.read(`
       male(u)?
-    `))).equalsTo([{"y": literal("p")}]);
+    `))).equalsTo([{}]);
 
     // who does p descend from?
     assertThat(unroll(kb.read(`
@@ -2581,7 +2581,7 @@ describe("REPL", () => {
     // are p and q siblings?
     assertThat(unroll(kb.read(`
       sibling(p, q)?
-    `))).equalsTo([{"z": literal("u")}]);
+    `))).equalsTo([{}]);
 
     // what are the pairs of siblings?
     assertThat(unroll(kb.read(`
@@ -2589,27 +2589,21 @@ describe("REPL", () => {
     `))).equalsTo([{
       "x": literal("p"),
       "y": literal("q"),      
-      "z": literal("u"),
     }, {
       "x": literal("p"),
       "y": literal("r"),      
-      "z": literal("u"),
     }, {
       "x": literal("q"),
       "y": literal("p"),      
-      "z": literal("u"),
     }, {
       "x": literal("q"),
       "y": literal("r"),      
-      "z": literal("u"),
     }, {
       "x": literal("r"),
       "y": literal("p"),      
-      "z": literal("u"),
     }, {
       "x": literal("r"),
       "y": literal("q"),      
-      "z": literal("u"),
     }]);
 
   });
