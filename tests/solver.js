@@ -2372,6 +2372,31 @@ describe("REPL", () => {
     }]);
   });
 
+  it("let x, y: Q(x, y)?", () => {
+    assertThat(unroll(new KB().read(`
+      for (let x: U(x)) {
+        for (let y: U(y)) {
+          for (let z: U(z)) {
+            if (P(z, x) P(z, y)) 
+              Q(x, y).
+          }        
+        }
+      }
+      U(u) U(a) U(b).
+      P(u, a) P(u, b).
+      U(v) P(v, a) P(v, b).
+      let x, y: Q(x, y)?
+    `))).equalsTo([{
+      "x": literal("a"),
+      "y": literal("b"),
+      "z": literal("u"),      
+    }, {
+      "x": literal("b"),
+      "y": literal("a"),
+      "z": literal("u"),
+    }]);
+  });
+  
   
   it("kinship", function() {
     const kb = new KB();
@@ -2418,9 +2443,9 @@ describe("REPL", () => {
             female(x) child(x, y).
           }
 
-          //if (female(x) child(x, y)) {
-          //  daughter(x, y).
-          //}
+          if (female(x) child(x, y)) {
+            daughter(x, y).
+          }
 
           // If A is an ancestor of B then B is a descendent of A
           if (ancestor(x, y)) {
@@ -2475,9 +2500,9 @@ describe("REPL", () => {
       Sam(u).
       Dani(v).
 
-      //Leo(p).
-      //Anna(q).
-      //Arthur(r).
+      Leo(p).
+      Anna(q).
+      Arthur(r).
 
       person(u).
       person(v).
@@ -2525,7 +2550,7 @@ describe("REPL", () => {
     assertThat(log[3]).equalsTo(["C", 3, QUERY(parent(u(), x()), male(u()), person(x()), person(u()))]);
     assertThat(log[9]).equalsTo(["H", 2, QUERY(person(q()), person(u()))]);
 
-    assertThat(log.length).equalsTo(18);
+    assertThat(log.length).equalsTo(19);
     
     assertThat(unroll(kb.read(`
       child(p, u)?
@@ -2542,13 +2567,7 @@ describe("REPL", () => {
     // is u a male?
     assertThat(unroll(kb.read(`
       male(u)?
-    `))).equalsTo([{
-      "y": literal("p")
-    }, {
-      "y": literal("q")
-    }, {
-      "y": literal("r")
-    }]);
+    `))).equalsTo([{"y": literal("p")}]);
 
     // who does p descend from?
     assertThat(unroll(kb.read(`
@@ -2562,12 +2581,37 @@ describe("REPL", () => {
     // are p and q siblings?
     assertThat(unroll(kb.read(`
       sibling(p, q)?
+    `))).equalsTo([{"z": literal("u")}]);
+
+    // what are the pairs of siblings?
+    assertThat(unroll(kb.read(`
+      let x, y: sibling(x, y)?
     `))).equalsTo([{
-      "z": literal("u")
+      "x": literal("p"),
+      "y": literal("q"),      
+      "z": literal("u"),
     }, {
-      "z": literal("v")
+      "x": literal("p"),
+      "y": literal("r"),      
+      "z": literal("u"),
+    }, {
+      "x": literal("q"),
+      "y": literal("p"),      
+      "z": literal("u"),
+    }, {
+      "x": literal("q"),
+      "y": literal("r"),      
+      "z": literal("u"),
+    }, {
+      "x": literal("r"),
+      "y": literal("p"),      
+      "z": literal("u"),
+    }, {
+      "x": literal("r"),
+      "y": literal("q"),      
+      "z": literal("u"),
     }]);
-    
+
   });
 
 });

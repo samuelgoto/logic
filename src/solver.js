@@ -193,6 +193,16 @@ function empty(a) {
   return Object.keys(a).length == 0;
 }
 
+function assign(a, b) {
+  const result = clone(a);
+  for (let [key] of Object.keys(result)) {
+    if (b[key]) {
+      result[key] = b[key];
+    }
+  }
+  return result;
+}
+
 class KB {
   constructor() {
     this.rules = {};
@@ -269,27 +279,28 @@ class KB {
       const results = this.select(["?", deps], path, level);
 
       const free = q[1]
-            .filter(([name, type]) => type == "free")
-            .map(([name]) => name);
+            .filter(([name, type]) => type == "free");
 
       const mapping = Object.fromEntries(
         Object.entries(value)
-          .filter(([key, value]) => free.includes(key)));
+          .filter(([key, value]) => free.map(([name]) => name).includes(key)));
 
+      const filter = Object.fromEntries(free);
+      
       for (let result of results) {
         if (!value) {
           yield false;
           return;
         }
 
-        const merged = clone(Object.assign(mapping, result));
         // If this was a binding that we had already found, skip
+        const merged = assign(filter, Object.assign(mapping, result));
         if (bindings.find((binding) => equals(binding, merged))) {
           continue;
         }
         bindings.push(merged);
 
-        yield merged;
+        yield clone(Object.assign(mapping, result));
 
         if (empty(merged)) {
           return;
@@ -308,6 +319,7 @@ class KB {
 
     // Tests if the current line of investigation is
     // a subset of any past line of investigation.
+    
     if (path.find(([, previous]) => {
       for (let part of previous) {
         const [, current] = line;
