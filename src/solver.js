@@ -300,6 +300,8 @@ class KB {
         }
         bindings.push(merged);
 
+        //console.log("query: ");
+        //console.log(Object.assign(mapping, result));
         yield clone(Object.assign(mapping, result));
 
         if (empty(merged)) {
@@ -360,12 +362,21 @@ class KB {
         return;
       }
       if (tail.length == 0) {
+        //console.log(q);
+        //console.log(JSON.stringify(line));
+        //console.log(assign(free, q));
+        //console.log("no tail");
         yield this.resolve(line, assign(free, q));
         continue;
       }
       const rest = apply(tail, q);
       for (let r of this.select(["?", rest], clone(path), level + 1)) {
-        yield this.resolve(line, Object.assign(q, r));
+        //console.log(JSON.stringify(line));
+        //console.log(q);
+        //console.log(r);
+        //console.log(Object.assign(q, r));
+      
+        yield this.resolve(line, clone(Object.assign(q, r)));
       }
     }
   }

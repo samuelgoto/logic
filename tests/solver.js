@@ -38,6 +38,10 @@ function R(...args) {
   return ["R", args, true];
 }
   
+function L(...args) {
+  return ["L", args, true];
+}
+
 function U(...args) {
   return ["U", args, true];
 }
@@ -2394,6 +2398,27 @@ describe("REPL", () => {
       "y": literal("a"),
     }]);
   });
+
+
+  it("let x, y: L(x) Q(x, y))?", () => {
+    const kb = new KB();    
+    assertThat(unroll(kb.read(`
+      for (let x: U(x)) {
+        for (let y: U(y)) {
+          Q(x, y).
+        }
+      }
+      U(u) U(v).
+      L(u).
+      let x, y: L(x) Q(x, y)?
+    `))).equalsTo([{
+      "x": literal("u"),
+      "y": literal("u"),
+    }, {
+      "x": literal("u"),
+      "y": literal("v"),
+    }]);
+  });
   
   it("kinship", function() {
     const kb = new KB();
@@ -2566,12 +2591,14 @@ describe("REPL", () => {
       male(u)?
     `))).equalsTo([{}]);
 
-    // who does p descend from?
+    // who does Leo descend from?
     assertThat(unroll(kb.read(`
-      let x: descedent(p, x)?
+      let x, l: Leo(l) descedent(l, x)?
     `))).equalsTo([{
+      "l": literal("p"),
       "x": literal("u")
     }, {
+      "l": literal("p"),
       "x": literal("v")
     }]);
 
@@ -2612,19 +2639,31 @@ describe("REPL", () => {
       "x": literal("r"),
     }]);
 
-    //assertThat(unroll(kb.read(`
-    //  let x, y: Anna(x) brother(y, x)?
-    //`))).equalsTo([{
-    //  "x": literal("q"),
-    //  "y": literal("r"),
-    //}, {
-    //  "x": literal("q"),
-    //  "y": literal("r"),
-    //}]);
+    assertThat(unroll(kb.read(`
+      let x, y: Anna(x) brother(y, x)?
+    `))).equalsTo([{
+      "x": literal("q"),
+      "y": literal("p"),
+    }, {
+      "x": literal("q"),
+      "y": literal("r"),
+    }]);
 });
 
 });
 
+
+describe.skip("Generalized Quantifiers", () => {
+  it("for (let most x: P(x)) Q(x). P(a). Q(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let most x: P(x)) {
+        Q(x).
+      }
+      P(a).
+      Q(a)?
+    `))).equalsTo([{}]);
+  });
+});
 
 function assertThat(x) {
   return {
