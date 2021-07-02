@@ -202,7 +202,7 @@ function empty(a) {
 
 function assign(a, b) {
   const result = clone(a);
-  for (let [key] of Object.keys(result)) {
+  for (let key of Object.keys(result)) {
     if (b[key]) {
       result[key] = b[key];
     }
@@ -277,6 +277,8 @@ class KB {
 
         yield value;
 
+        // console.log(value);
+        
         if (empty(value)) {
           return;
         }
@@ -336,7 +338,6 @@ class KB {
           return false;
         }
       }
-
       return true;
     })) {
       this.log(["C", level, line]);
@@ -364,6 +365,7 @@ class KB {
       query[1].filter(([name, type]) => type == "free"));
     
     for (let q of this.query(query, clone(path), level + 1)) {
+      // console.log(q);
       if (q == false) {
         yield this.resolve(line, false);
         return;
@@ -373,6 +375,9 @@ class KB {
         //console.log(JSON.stringify(line));
         //console.log(assign(free, q));
         //console.log("no tail");
+        //console.log(free);
+        //console.log(q);
+        //console.log(assign(free, q));
         yield this.resolve(line, assign(free, q));
         continue;
       }

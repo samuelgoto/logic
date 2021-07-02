@@ -777,6 +777,16 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("P(a). let s1: P(s1)?", function() {
+    assertThat(new Parser().parse(`
+      P(a).
+      let s1: P(s1)?
+    `)).equalsTo([[
+      [["P", ["a"]]],
+      ["?", ["s1"], [[["P", ["s1"]]]]],
+    ]]);
+  });
+  
   it("Socrates(u). mortal(u)?", function() {
     const results = new Parser().parse(`
       // most basic logical program

@@ -256,6 +256,14 @@ describe("Normalize", () => {
     ]);
   });
 
+  it("let s1: P(s1, a, b)?", () => {
+    assertThat(normalize(new Parser().parse(`
+      let s1: P(s1, a, b)?
+    `))).equalsTo([
+      QUERY(P(["s1", "free"], a(), b()))
+    ]);
+  });
+
   it("not P(). => not P().", () => {
     assertThat(normalize(new Parser().parse(`
       not P().
@@ -479,6 +487,14 @@ describe("Stepback", () => {
     `), first(`
       P(a).
     `))).equalsTo([{"x": a()}, []]);
+  });
+
+  it("P(a, b, c). let s1: P(s1, b, c)?", () => {
+    assertThat(stepback(q(`
+      let s1: P(s1, b, c)?
+    `), first(`
+      P(a, b, c).
+    `))).equalsTo([{"s1": a()}, []]);
   });
 
   it("P(). not P()?", () => {
@@ -2678,8 +2694,15 @@ describe("REPL", () => {
       "x": literal("q"),
       "y": literal("r"),
     }]);
-});
+  });
 
+  it("P(a). let x: P(s1)?", function() {
+    assertThat(unroll(new KB().read(`
+      P(a).
+      let s1: P(s1)?
+    `))).equalsTo([{s1: literal("a")}]);
+  });
+  
 });
 
 
