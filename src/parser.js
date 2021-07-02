@@ -80,7 +80,7 @@ const grammar = () => build(`
       # ([lines]) => lines.map(([ws, s]) => s ).filter((line) => typeof line != "string")
 
       loop -> "for" _ "(" _ "let" _ (quantifier _):? variable _ ":" _ condition _ ")" _ block {% 
-        ([forall, ws1, p1, ws2, letty, ws3, quantifier, arg, ws5, col, ws6, head, ws7, p2, ws8, tail]) =>  [quantifier ? quantifier[0] : "every", arg, head, tail] 
+        ([forall, ws1, p1, ws2, letty, ws3, quantifier, arg, ws5, col, ws6, head, ws7, p2, ws8, tail]) =>  ["for", [arg, quantifier ? quantifier[0] : "every"], head, tail] 
       %}
 
       quantifier -> "every" {% id %}

@@ -45,13 +45,9 @@ function normalize(statements, scope = {}) {
         result.push(rule);
       }
     } else if (op == "if" ||
-               op == "every" ||
-               op == "most") {
+               op == "for") {
       const [iffy, letty, [head], body] = statement;
-      const vars = {};
-      if (letty) {
-        vars[letty] = op;
-      }
+      const vars = Object.fromEntries([letty] || []);
       const heady = normalize([head], Object.assign(scope, vars));
       for (const part of normalize([body], scope)) {
         const p = clone(part);

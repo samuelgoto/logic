@@ -2693,6 +2693,16 @@ describe("Generalized Quantifiers", () => {
       Q(a)?
     `))).equalsTo([]);
   });
+
+  it("for (let few x: P(x)) Q(x). P(a). Q(a)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let few x: P(x)) {
+        Q(x).
+      }
+      P(a).
+      Q(a)?
+    `))).equalsTo([]);
+  });
 });
 
 function assertThat(x) {

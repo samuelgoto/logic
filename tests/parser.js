@@ -183,7 +183,7 @@ describe("Parser", function() {
       for (let x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["every", "x", [
+      ["for", ["x", "every"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -197,7 +197,7 @@ describe("Parser", function() {
       for (let every x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["every", "x", [
+      ["for", ["x", "every"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -212,10 +212,10 @@ describe("Parser", function() {
         for (let every y: b(y))
           a(x, y).
     `)).equalsTo([[
-      ["every", "x", [
+      ["for", ["x", "every"], [
         [["b", ["x"]]]
       ], [
-        ["every", "y", [
+        ["for", ["y", "every"], [
           [["b", ["y"]]]
         ], [
           [["a", ["x", "y"]]]
@@ -229,7 +229,7 @@ describe("Parser", function() {
       for (let every x: b(x)) 
         a(x, c).
     `)).equalsTo([[
-      ["every", "x", [
+      ["for", ["x", "every"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x", "c"]]]
@@ -242,7 +242,7 @@ describe("Parser", function() {
       for (let most x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["most", "x", [
+      ["for", ["x", "most"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -255,7 +255,7 @@ describe("Parser", function() {
       for (let few x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["few", "x", [
+      ["for", ["x", "few"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -268,7 +268,7 @@ describe("Parser", function() {
       for (let only x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["only", "x", [
+      ["for", ["x", "only"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -281,7 +281,7 @@ describe("Parser", function() {
       for (let at-least(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["at-least(3)", "x", [
+      ["for", ["x", "at-least(3)"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -294,7 +294,7 @@ describe("Parser", function() {
       for (let at-most(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["at-most(3)", "x", [
+      ["for", ["x", "at-most(3)"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -307,7 +307,7 @@ describe("Parser", function() {
       for (let more-than(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["more-than(3)", "x", [
+      ["for", ["x", "more-than(3)"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -320,7 +320,7 @@ describe("Parser", function() {
       for (let fewer-than(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["fewer-than(3)", "x", [
+      ["for", ["x", "fewer-than(3)"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -333,7 +333,7 @@ describe("Parser", function() {
       for (let exactly(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["exactly(3)", "x", [
+      ["for", ["x", "exactly(3)"], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -348,7 +348,7 @@ describe("Parser", function() {
         d(x).
       }
     `)).equalsTo([[
-      ["every", "x", [
+      ["for", ["x", "every"], [
         [["a", ["x"]], ["b", ["x"]]]
       ], [
         [["c", ["x"]]],
@@ -367,7 +367,7 @@ describe("Parser", function() {
         d(x).
       }
     `)).equalsTo([[
-      ["every", "x", [
+      ["for", ["x", "every"], [
         [["a", ["x"]]],
         [["b", ["x"]]]
       ], [
@@ -744,7 +744,7 @@ describe("Parser", function() {
       } ?
     `);
     assertThat(results).equalsTo([[
-      ["?", [], [["every", "x", [[["p", ["x"]]]], [[["q", ["x"]]]]]]]
+      ["?", [], [["for", ["x", "every"], [[["p", ["x"]]]], [[["q", ["x"]]]]]]]
     ]]);
   });
 
@@ -787,7 +787,7 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       // "// most basic logical program",
-      ["all", "x", [[["man", ["x"]]]], [[["mortal", ["x"]]]]],
+      ["for", ["x", "all"], [[["man", ["x"]]]], [[["mortal", ["x"]]]]],
       [["Socrates", ["u"]]],
       [["man", ["u"]]],
       ["?", [], [[["mortal", ["u"]]]]],
@@ -899,7 +899,7 @@ describe("Parser", function() {
     `);
     assertThat(results).equalsTo([[
       [["Jones", ["a"]]],
-      ["every", "b", [[["man", ["b"]]]], [[["love", ["s0", "a", "b"]]]]],
+      ["for", ["b", "every"], [[["man", ["b"]]]], [[["love", ["s0", "a", "b"]]]]],
       ["?", [], [[["love", ["s", "a", "u"]]]]],
     ]]);
   });
