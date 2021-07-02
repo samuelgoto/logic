@@ -2389,15 +2389,13 @@ describe("REPL", () => {
     `))).equalsTo([{
       "x": literal("a"),
       "y": literal("b"),
-      //"z": literal("u"),      
     }, {
       "x": literal("b"),
       "y": literal("a"),
-      //"z": literal("u"),
     }]);
   });
   
-  it.only("kinship", function() {
+  it("kinship", function() {
     const kb = new KB();
     assertThat(unroll(kb.read(`
 
