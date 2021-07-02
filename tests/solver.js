@@ -2397,8 +2397,7 @@ describe("REPL", () => {
     }]);
   });
   
-  
-  it("kinship", function() {
+  it.only("kinship", function() {
     const kb = new KB();
     assertThat(unroll(kb.read(`
 
@@ -2500,9 +2499,9 @@ describe("REPL", () => {
       Sam(u).
       Dani(v).
 
-      Leo(p).
-      Anna(q).
-      Arthur(r).
+      Leo(p) male(p).
+      Anna(q) female(q).
+      Arthur(r) male(r).
 
       person(u).
       person(v).
@@ -2606,7 +2605,25 @@ describe("REPL", () => {
       "y": literal("q"),      
     }]);
 
-  });
+    // who are Anna's brothers?
+    assertThat(unroll(kb.read(`
+      let x: brother(x, q)?
+    `))).equalsTo([{
+      "x": literal("p"),
+    }, {
+      "x": literal("r"),
+    }]);
+
+    //assertThat(unroll(kb.read(`
+    //  let x, y: Anna(x) brother(y, x)?
+    //`))).equalsTo([{
+    //  "x": literal("q"),
+    //  "y": literal("r"),
+    //}, {
+    //  "x": literal("q"),
+    //  "y": literal("r"),
+    //}]);
+});
 
 });
 
