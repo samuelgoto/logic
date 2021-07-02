@@ -44,11 +44,13 @@ function normalize(statements, scope = {}) {
         }
         result.push(rule);
       }
-    } else if (op == "if" || op == "every") {
+    } else if (op == "if" ||
+               op == "every" ||
+               op == "most") {
       const [iffy, letty, [head], body] = statement;
       const vars = {};
       if (letty) {
-        vars[letty] = "every";
+        vars[letty] = op;
       }
       const heady = normalize([head], Object.assign(scope, vars));
       for (const part of normalize([body], scope)) {
@@ -74,6 +76,10 @@ function normalize(statements, scope = {}) {
   return result;
 }
 
+function free([name, type]) {
+  return type == "free" || type == "every";
+}
+
 function match(a, b) {
   if (a[0] != b[0]) {
     return false;
@@ -83,21 +89,26 @@ function match(a, b) {
   }
   const subs = {};
   for (let i = 0; i < a[1].length; i++) {
-    if (b[1][i][1] != "const") {
-      subs[b[1][i][0]] = a[1][i];
+    const arg1 = a[1][i];
+    const arg2 = b[1][i];
+    const [name1, type1] = arg1;
+    const [name2, type2] = arg2;
+
+    if (free(arg2) && (free(arg1) || type1 == "const")) {
+      subs[name2] = arg1;
       continue;
     }
 
-    if (a[1][i][1] != "const") {
-      subs[a[1][i][0]] = b[1][i];
+    if (free(arg1) && (free(arg2) || type2 == "const")) {
+      subs[name1] = arg2;
       continue;
     }
 
-    if (a[1][i][1] != b[1][i][1]) {
+    if (type1 != type2) {
       return false;
     }
 
-    if (a[1][i][0] != b[1][i][0]) {
+    if (name1 != name2) {
       return false;
     }
   }

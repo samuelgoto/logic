@@ -383,6 +383,17 @@ describe("Normalize", () => {
       FORALL([U(y("every")), U(x("every"))], Q(y("every"), x("every")))
     ]);
   });
+
+  it("for (let most x: P(x)) Q(x). => let most x: Q(x) if (P(x)).", () => {
+    assertThat(normalize(new Parser().parse(`
+      for (let most x: P(x))
+        Q(x). 
+    `))).equalsTo([
+      FORALL([P(x("most"))], Q(x("most")))
+    ]);
+  });
+
+
 });
 
 describe("Push", () => {
@@ -826,6 +837,15 @@ describe("Match", () => {
     )).equalsTo({x: x("const")});
   });
   
+  it("match(let x: Q(x), for (let most y: P(y)) Q(y))", () => {
+    const body = [["P", ["y"]]];
+    const matches = match(
+      ["Q", [free("x")], []],
+      ["Q", [["y", "most"]], body]
+    );
+    assertThat(matches)
+      .equalsTo(false);
+  });
 });
 
 describe("Query", () => {
@@ -2663,7 +2683,7 @@ describe("REPL", () => {
 });
 
 
-describe.skip("Generalized Quantifiers", () => {
+describe("Generalized Quantifiers", () => {
   it("for (let most x: P(x)) Q(x). P(a). Q(a)?", function() {
     assertThat(unroll(new KB().read(`
       for (let most x: P(x)) {
@@ -2671,7 +2691,7 @@ describe.skip("Generalized Quantifiers", () => {
       }
       P(a).
       Q(a)?
-    `))).equalsTo([{}]);
+    `))).equalsTo([]);
   });
 });
 
