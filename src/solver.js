@@ -100,6 +100,13 @@ function match(a, b) {
       continue;
     }
 
+    if (type1 == type2 &&
+        type1 != "const" &&
+        type2 != "const") {
+      subs[name2] = arg1;
+      continue;
+    }
+
     if (type1 != type2) {
       return false;
     }

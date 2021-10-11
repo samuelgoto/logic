@@ -2788,6 +2788,51 @@ describe("Generalized Quantifiers", () => {
   });
 });
 
+describe("Syllogisms", () => {
+
+  it("for (let most x: P(x)) Q(x). == for (let most y: P(y)) Q(y)?", () => {
+    assertThat(match(
+      FORALL([P(["y", "most"])], Q(["y", "most"])),
+      FORALL([P(x("most"))], Q(x("most")))
+    )).equalsTo({"x": ["y", "most"]});
+  });
+  
+
+  it("for (let most x: P(x)) Q(x). for (let most y: P(y)) Q(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let most x: P(x)) {
+        Q(x).
+      }
+      for (let most y: P(y)) {
+        Q(y).
+      } ?
+    `))).equalsTo([{}]);
+  });
+
+  it("for (let most x: P(x)) Q(x). for (let most y: P(y)) R(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let most x: P(x)) {
+        Q(x).
+      }
+      for (let most y: P(y)) {
+        R(y).
+      } ?
+    `))).equalsTo([]);
+  });
+
+  it("for (let few x: P(x)) Q(x). for (let few y: P(y)) Q(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let few x: P(x)) {
+        Q(x).
+      }
+      for (let few  y: P(y)) {
+        Q(y).
+      } ?
+    `))).equalsTo([{}]);
+  });
+});
+
+
 function assertThat(x) {
   return {
     equalsTo(y) {
