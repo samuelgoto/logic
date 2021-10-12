@@ -3042,6 +3042,22 @@ describe("Syllogisms", () => {
     `))).equalsTo([{}]);
   });
 
+  it("for (let more-than(1) x: P(x)) Q(x). for (let x: Q(x)) R(x). for (let more-than(1) y: P(y)) R(y)?", function() {
+    // TODO(goto): we should check for the cardinality too.
+    assertThat(unroll(new KB().read(`
+      for (let more-than(1) x: P(x)) {
+        Q(x).
+      }
+      for (let x: Q(x)) {
+        R(x).
+      }
+      for (let more-than(1) y: P(y)) {
+        R(y).
+      } ?
+    `))).equalsTo([{}]);
+  });
+
+
 });
 
 

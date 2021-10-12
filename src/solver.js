@@ -132,7 +132,8 @@ function match(a, b) {
       "many": "up",
       "every": "up",
       "some": "up",
-      "at-least": "up"
+      "at-least": "up",
+      "more-than": "up",
     };
 
     // console.log(type1);
