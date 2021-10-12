@@ -83,6 +83,10 @@ function match(a, b) {
   if (a[1].length != b[1].length) {
     return false;
   }
+
+  //console.log(a);
+  //console.log(b);
+  
   const subs = {};
   for (let i = 0; i < a[1].length; i++) {
     const arg1 = a[1][i];
@@ -103,10 +107,31 @@ function match(a, b) {
     if (type1 == type2 &&
         type1 != "const" &&
         type2 != "const") {
+      // console.log("hi");
+      // console.log(JSON.stringify(a[3]));
+      // console.log(JSON.stringify(b[3]));
+      const deps1 = a[3];
+      const deps2 = b[3];
+      if (deps1.length != deps2.length) {
+        return false;
+      }
+      for (let i = 0; i < deps1.length; i++) {
+        if (deps1[i][0] != deps2[i][0]) {
+          // The names of the dependencies need to match.
+          // TODO(goto): this is probably very brittle.
+          return false;
+        }
+      }
       subs[name2] = arg1;
       continue;
     }
 
+    if (type2 == "every" &&
+        type1 == "most") {
+      subs[name2] = arg1;
+      continue;
+    }
+    
     if (type1 != type2) {
       return false;
     }
@@ -166,8 +191,8 @@ function stepback(q, rule) {
 
   {
     // If both the query and the rule are conditionals,
-    // check if every binding matches in type
     if (conds.length > 0 && deps.length > 0) {
+      // check if every binding matches in type
       for (let [a, [, expected]] of Object.entries(matches)) {
         for (let [b, type] of q[1]) {
           if (a == b && expected != type) {
@@ -182,11 +207,14 @@ function stepback(q, rule) {
     const all = result.filter((p) => !conds.find((q) => {
       return JSON.stringify(p) == JSON.stringify(q);
     }));
+    //console.log(JSON.stringify(all));
+    //console.log(JSON.stringify(q[3]));
     const [name, args, ask = true] = q;
     if (all.length > 0) {
       for (let part of all) {
         part[3] = q[3];
       }
+      //console.log("hi");
       return [matches, all];
     }
     const left = conds.filter((p) => !result.find((q) => {

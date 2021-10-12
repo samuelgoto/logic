@@ -14,6 +14,10 @@ function IF(a, b) {
   return [...b, a]
 }
 
+function FOR(a, b) {
+  return [...b, a]
+}
+
 function FORALL(a, b) {
   return [...b, a]
 }
@@ -657,6 +661,30 @@ describe("Stepback", () => {
     `))).equalsTo([{}, []]);
   });
   
+  it("for (let x: P(x)) Q(x). for (let y: P(y)) R(y)?", () => {
+    assertThat(stepback(q(`
+      for (let y: P(y)) {
+        R(y).
+      } ?
+    `), first(`
+      for (let x: P(x)) {
+        Q(x).
+      }
+    `))).equalsTo(undefined);
+  });
+
+  it("for (let x: Q(x)) R(x). for (let y: P(y)) R(y)?", () => {
+    assertThat(stepback(q(`
+      for (let y: P(y)) {
+        R(y).
+      } ?
+    `), first(`
+      for (let x: Q(x)) {
+        R(x).
+      }
+    `))).equalsTo([{x: ["y", "every"]}, [FORALL([P(["y", "every"])], Q(["y", "every"]))]]);
+  });
+
   it("for (let x: P(x)) Q(x) R(x). for (let x: P(x)) Q(x)?", () => {
     assertThat(stepback(q(`
       for (let y: P(y)) {
@@ -707,6 +735,18 @@ describe("Stepback", () => {
         Q(x).
       }
     `))).equalsTo(undefined);
+  });
+
+  it("for (let x: P(x)) R(x). for (let x: Q(x)) R(x). for (let x: P(x) Q(x)) R(x)?", () => {
+    assertThat(stepback(q(`
+      for (let y: P(y)) {
+        R(y).
+      } ?
+    `), first(`
+      for (let x: Q(x)) {
+        R(x).
+      }
+    `))).equalsTo([{x: ["y", "every"]}, [FORALL([P(["y", "every"])], Q(["y", "every"]))]]);
   });
 
   it("for (let x: U(x)) either P(x) or Q(x).", () => {
@@ -861,6 +901,13 @@ describe("Match", () => {
     );
     assertThat(matches)
       .equalsTo(false);
+  });
+
+  it("match(for (let x: P(x)) R(x), for (let y: P(y)) Q(y)) == false", () => {
+    assertThat(match(
+      FORALL([P(y("every"))], R(y("every"))),
+      FORALL([P(x("every"))], Q(x("every")))
+    )).equalsTo(false);
   });
 });
 
@@ -1634,7 +1681,17 @@ describe("Select", function() {
       } ?
     `)))).equalsTo([{}]);
   });
-  
+
+  it.skip("for (let x: P(x)) R(x). for (let y: P(y) Q(y)) R(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let x: P(x)) {
+        R(x).
+      }
+      for (let y: P(y) Q(y)) {
+        R(y).
+      } ?
+    `))).equalsTo([{}]);
+  });
 });
 
 describe.skip("Tracing", () => {
@@ -2792,15 +2849,36 @@ describe("Syllogisms", () => {
 
   it("for (let most x: P(x)) Q(x). == for (let most y: P(y)) Q(y)?", () => {
     assertThat(match(
-      FORALL([P(["y", "most"])], Q(["y", "most"])),
+      FORALL([P(y("most"))], Q(y("most"))),
       FORALL([P(x("most"))], Q(x("most")))
     )).equalsTo({"x": ["y", "most"]});
   });
   
-
   it("for (let most x: P(x)) Q(x). for (let most y: P(y)) Q(y)?", function() {
     assertThat(unroll(new KB().read(`
       for (let most x: P(x)) {
+        Q(x).
+      }
+      for (let most y: P(y)) {
+        Q(y).
+      } ?
+    `))).equalsTo([{}]);
+  });
+
+  it("for (let most x: P(x)) Q(x). for (let y: P(y)) Q(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let most x: P(x)) {
+        Q(x).
+      }
+      for (let y: P(y)) {
+        Q(y).
+      } ?
+    `))).equalsTo([]);
+  });
+
+  it("for (let x: P(x)) Q(x). for (let most y: P(y)) Q(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let x: P(x)) {
         Q(x).
       }
       for (let most y: P(y)) {
@@ -2830,6 +2908,111 @@ describe("Syllogisms", () => {
       } ?
     `))).equalsTo([{}]);
   });
+
+  it("for (let few x: P(x)) Q(x) R(x). for (let few y: P(y)) R(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let few x: P(x)) {
+        Q(x) R(x).
+      }
+      for (let few  y: P(y)) {
+        R(y).
+      } ?
+    `))).equalsTo([{}]);
+  });
+
+  it("for (let most x: P(x) Q(x)) R(x). for (let most y: P(y)) R(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let most x: P(x) Q(x)) {
+        R(x).
+      }
+      for (let most y: P(y)) {
+        R(y).
+      } ?
+    `))).equalsTo([]);
+  });
+
+  it("for (let most x: P(x)) Q(x). => let most x: Q(x) if (P(x)).", () => {
+    assertThat(normalize(new Parser().parse(`
+      for (let most x: P(x))
+        Q(x). 
+    `))).equalsTo([
+      FORALL([P(x("most"))], Q(x("most")))
+    ]);
+  });
+  
+  it("match(for (let most x: P(x)) R(x), for (let y: P(y)) R(y))", () => {
+    assertThat(match(
+      FOR([P(x("most"))], R(x("most"))),
+      FOR([Q(y("every"))], R(y("every")))
+    )).equalsTo({"y": ["x", "most"]});
+  });
+
+  it("match(for (let most x: P(x)) R(x), for (let y: Q(y)) R(y))", () => {
+    assertThat(match(
+      FOR([P(x("most"))], R(x("most"))),
+      FOR([Q(y("every"))], R(y("every")))
+    )).equalsTo({"y": ["x", "most"]});
+  });
+  
+  it("match(for (let most x: P(x)) R(x), for (let most y: Q(y)) R(y))", () => {
+    assertThat(match(
+      FOR([P(x("most"))], R(x("most"))),
+      FOR([Q(y("most"))], R(y("most")))
+    )).equalsTo(false);
+  });
+
+  it("for (let x: Q(x)) R(x). for (let most x: P(x)) R(x)?", () => {
+    assertThat(stepback(q(`
+      for (let most y: P(y)) {
+        R(y).
+      } ?
+    `), first(`
+      for (let x: Q(x)) {
+        R(x).
+      }
+    `))).equalsTo([{x: ["y", "most"]}, [FOR([P(["y", "most"])], Q(["y", "most"]))]]);
+  });
+
+  it("for (let most x: Q(x)) R(x). for (let most y: P(y)) R(y)?", () => {
+    assertThat(stepback(q(`
+      for (let most y: P(y)) {
+        R(y).
+      } ?
+    `), first(`
+      for (let most x: Q(x)) {
+        R(x).
+      }
+    `))).equalsTo(undefined);
+  });
+
+  it("for (let most x: P(x)) Q(x). for (let x: Q(x)) R(x). for (let most y: P(y)) R(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let most x: P(x)) {
+        Q(x).
+      }
+      for (let x: Q(x)) {
+        R(x).
+      }
+      for (let most y: P(y)) {
+        R(y).
+      } ?
+    `))).equalsTo([{}]);
+  });
+
+  it("for (let most x: P(x)) Q(x). for (let most x: Q(x)) R(x). for (let most y: P(y)) R(y)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let most x: P(x)) {
+        Q(x).
+      }
+      for (let most x: Q(x)) {
+        R(x).
+      }
+      for (let most y: P(y)) {
+        R(y).
+      } ?
+    `))).equalsTo([]);
+  });
+
 });
 
 
