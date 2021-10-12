@@ -281,7 +281,7 @@ describe("Parser", function() {
       for (let at-least(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "at-least(3)"], [
+      ["for", ["x", ["at-least", 3]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -294,7 +294,7 @@ describe("Parser", function() {
       for (let at-most(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "at-most(3)"], [
+      ["for", ["x", ["at-most", 3]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]

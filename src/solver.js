@@ -126,8 +126,17 @@ function match(a, b) {
       continue;
     }
 
-    if (type2 == "every" &&
-        type1 == "most") {
+    // right monotonicity
+    const right = {
+      "most": "up",
+      "many": "up",
+      "every": "up",
+      "some": "up",
+      "at-least": "up"
+    };
+
+    // console.log(type1);
+    if (type2 == "every" && right[type1] == "up") {
       subs[name2] = arg1;
       continue;
     }

@@ -80,7 +80,10 @@ const grammar = () => build(`
       # ([lines]) => lines.map(([ws, s]) => s ).filter((line) => typeof line != "string")
 
       loop -> "for" _ "(" _ "let" _ (quantifier _):? variable _ ":" _ condition _ ")" _ block {% 
-        ([forall, ws1, p1, ws2, letty, ws3, quantifier, arg, ws5, col, ws6, head, ws7, p2, ws8, tail]) =>  ["for", [arg, quantifier ? quantifier[0] : "every"], head, tail] 
+        ([forall, ws1, p1, ws2, letty, ws3, quantifier, arg, ws5, col, ws6, head, ws7, p2, ws8, tail]) =>  {
+          const q = quantifier ? (quantifier[0]) : "every";
+          return ["for", [arg, q], head, tail];
+        }
       %}
 
       quantifier -> "every" {% id %}
@@ -89,8 +92,8 @@ const grammar = () => build(`
                  | "many" {% id %}
                  | "few" {% id %}
                  | "only" {% id %}
-                 | "at-least(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
-                 | "at-most(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
+                 | "at-least" _ "(" _ [0-9]:+ _ ")" {% ([op, ws1, p1, ws2, number]) => [op, number.join("")] %}
+                 | "at-most" _ "(" _ [0-9]:+ _ ")" {% ([op, ws1, p1, ws2, number]) => [op, number.join("")] %}
                  | "more-than(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
                  | "fewer-than(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
                  | "exactly(" _ [0-9]:+ _ ")" {% ([op, ws, number]) => op + number.join("") + ")" %}
