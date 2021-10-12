@@ -3027,9 +3027,8 @@ describe("Syllogisms", () => {
     `))).equalsTo([{}]);
   });
 
-  // at-least
-  // all-but
-  it.skip("for (let at-least(1) x: P(x)) Q(x). for (let x: Q(x)) R(x). for (let at-least(1) y: P(y)) R(y)?", function() {
+  it("for (let at-least(1) x: P(x)) Q(x). for (let x: Q(x)) R(x). for (let at-least(1) y: P(y)) R(y)?", function() {
+    // TODO(goto): we should check for the cardinality too.
     assertThat(unroll(new KB().read(`
       for (let at-least(1) x: P(x)) {
         Q(x).
