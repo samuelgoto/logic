@@ -960,11 +960,11 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [[], [[
-        ["P", []]
-      ]]],
-       "make",
-       []
+      ["^", "make",
+       [],
+       [[], [[
+         ["P", []]
+       ]]]
       ]
     ]]);
   });
@@ -976,11 +976,12 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [[], [[
-        ["P", []]
-      ]]],
-       "make",[[], [[
+      ["^", "make",
+       [[], [[
          ["Q", []]
+       ]]],
+       [[], [[
+         ["P", []]
        ]]]
       ]
     ]]);
@@ -993,12 +994,13 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [[], [[
-        ["P", []],
-        ["Q", []],
-      ]]],
-       "make",[[], [[
+      ["^", "make",
+       [[], [[
          ["R", []]
+       ]]],
+       [[], [[
+         ["P", []],
+         ["Q", []],
        ]]]
       ]
     ]]);
@@ -1011,13 +1013,14 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [[], [[
-        ["P", []],
-        ["Q", []],
-      ]]],
-       "make",[[], [[
+      ["^", "make",
+       [[], [[
          ["S", []],
          ["T", []],
+       ]]],
+       [[], [[
+         ["P", []],
+         ["Q", []],
        ]]]
       ]
     ]]);
@@ -1030,31 +1033,35 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [[], [[
-        ["P", ["u"]]
-      ]]],
-       "make", [["u"], [[
+      ["^", "make",
+       [["u"], [[
          ["Q", ["u"]]
-       ]]]]
+       ]]],
+       [[], [[
+         ["P", ["u"]]
+       ]]]
+      ]
     ]]);
   });
 
   it("function make(let x, y, z: reservation(x) for(x, y) for(x, z)) { restaurant(y) party(z) }", function() {
     const results = new Parser().parse(`
-        function make(let y, z: restaurant(y) party(z)) { 
-          let x: reservation(x) for(x, y) for(x, z)
+        function make(let r, p: restaurant(r) party(p)) { 
+          let a: reservation(a) for(a, r) for(a, p)
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [["x"], [[
-        ["reservation", ["x"]],
-        ["for", ["x", "y"]],
-        ["for", ["x", "z"]],
-      ]]],
-       "make", [["y", "z"], [[
-         ["restaurant", ["y"]],
-         ["party", ["z"]],
-       ]]]]
+      ["^", "make",
+       [["r", "p"], [[
+         ["restaurant", ["r"]],
+         ["party", ["p"]],
+       ]]],
+       [["a"], [[
+         ["reservation", ["a"]],
+         ["for", ["a", "r"]],
+         ["for", ["a", "p"]],
+       ]]]
+      ]
     ]]);
   });
 
