@@ -753,7 +753,7 @@ describe("Parser", function() {
       hello()!
     `);
     assertThat(results).equalsTo([[
-      ["!", [["hello", []]]],
+      ["!", [], [[["hello", []]]]],
     ]]);
   });
 
@@ -762,7 +762,7 @@ describe("Parser", function() {
       hello() world()!
     `);
     assertThat(results).equalsTo([[
-      ["!", [["hello", []], ["world", []]]],
+      ["!", [], [[["hello", []], ["world", []]]]],
     ]]);
   });
 
@@ -772,8 +772,7 @@ describe("Parser", function() {
       print("hello world")!
     `);
     assertThat(results).equalsTo([[
-      // "// prints hello world",
-      ["!", [["print", ["'hello world'"]]]],
+      ["!", [], [[["print", ["'hello world'"]]]]],
     ]]);
   });
 
@@ -914,6 +913,39 @@ describe("Parser", function() {
     ]]);
   });
 
+  // desires / goals and operations
+
+  // I want a reservation for a party of 2 at Cascal.
+  // let u, v, p: reservation(u) for(u, v) Cascal(v) for(u, p) party(p) |p| = 2!
+
+  // I want a reservation for my family at Cascal.
+  // Cascal(c) restaurant(c).
+  // let u, v, p: reservation(u) for(u, v) Cascal(v) for(u, p) family(p) family-of(p, @self)!
+
+  // I want a reservation for my family at any italian restaurant.
+  // let u, v, p: reservation(u) for(u, v) resturant(v) italian-restaurant(v) for(u, p) family(p) family-of(p, @self)!
+
+  // operations
+
+  // let x, y, z: reservation(x) for(x, y) for(x, z) make(restaurant(y) party(z)).
+
+  // "practical reasoning", not about "what to believe in" but
+  // "what to do".
+
+  // let u: self(u) good(u)!
+
+  // 
+
+  it("let x: a(x)!", function() {
+    const results = new Parser().parse(`
+      let x: a(x)!
+    `);
+    assertThat(results).equalsTo([[
+      ["!", ["x"], [[["a", ["x"]]]]],
+    ]]);
+  });
+
+  
   function assertThat(x) {
     return {
       equalsTo(y) {

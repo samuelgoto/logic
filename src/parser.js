@@ -34,10 +34,10 @@ const grammar = () => build(`
 
       line -> statement {% id %}
       line -> question {% id %}
-      line -> command {% id %}
+      line -> desire {% id %}
     
-      command -> terminal (__ terminal):* _ "!" {% 
-        ([head, tail = []]) => ["!", [head, ...tail.map(([ws1, expression]) => expression)]]  
+      desire -> declaration _ "!" {% 
+        ([[vars, expression]]) => ["!", vars, expression]
       %}
 
       question -> declaration _ "?" {% 
