@@ -3069,11 +3069,32 @@ function NEED(letty, condition) {
 }
 
 describe("Planning", () => {
-  function satisfies(operation, goal) {
+  function satisfies(operation, goal, statements = []) {
     const [, name, head, [, [body]]] = operation;
     
+    // console.log(head);
+    const [letty, conditions] = head;
+
+    // console.log(conditions);
+
+    if (conditions) {
+      const kb1 = new KB();
+      unroll(kb1.load(normalize(statements)));
+      const [c1] = conditions;
+      const q1 = ["?", c1];
+      
+      // console.log(conditions);
+      
+      const r1 = unroll(kb1.select(q1));
+      // console.log(r1);
+      if (r1.length == 0) {
+        return false;
+      }
+    }
+        
     const kb = new KB();
     unroll(kb.load(normalize(body)));
+    unroll(kb.load(normalize(statements)));    
     const q = ["?", goal];
     const result = unroll(kb.select(q));
     return result.length > 0;
@@ -3138,7 +3159,49 @@ describe("Planning", () => {
     assertThat(satisfies(operation, goal))
       .equalsTo(false);
   });
+
+  it("function f() { Q(). } P(). P() Q()!", () => {
+    const [[operation, statement, [, , [goal]]]] = new Parser().parse(`
+      function f() {
+        Q().
+      }
+      // P() is already the case.
+      P().
+      // Wants P() and Q().
+      P() Q()!
+    `);
+
+    assertThat(satisfies(operation, goal, [statement]))
+      .equalsTo(true);
+  });
+
+  it("function f(P()) { Q(). } P(). Q()!", () => {
+    const [[operation, statement, [, , [goal]]]] = new Parser().parse(`
+      function f(P()) {
+        Q().
+      }
+      P().
+      Q()!
+    `);
+
+    assertThat(satisfies(operation, goal, [statement]))
+      .equalsTo(true);
+  });
+
+  it("function f(P()) { Q(). } Q()!", () => {
+    const [[operation, [, , [goal]]]] = new Parser().parse(`
+      function f(P()) {
+        Q().
+      }
+      Q()!
+    `);
+
+    assertThat(satisfies(operation, goal))
+      .equalsTo(false);
+  });
+
 });
+
 
 function assertThat(x) {
   return {
