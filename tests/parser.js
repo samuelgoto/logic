@@ -918,7 +918,6 @@ describe("Parser", function() {
   // I want a reservation for a party of 2 at Cascal.
   // let u, v, p: reservation(u) for(u, v) Cascal(v) for(u, p) party(p) |p| = 2!
 
-  // I want a reservation for my family at Cascal.
   // Cascal(c) restaurant(c).
   // let u, v, p: reservation(u) for(u, v) Cascal(v) for(u, p) family(p) family-of(p, @self)!
 
@@ -936,12 +935,21 @@ describe("Parser", function() {
 
   // 
 
-  it("let x: a(x)!", function() {
+  it("let u, v, p, s: reservation(u) for(u, v) Cascal(v) for(u, p) family(p) family-of(p, s) self(s)!", function() {
     const results = new Parser().parse(`
-      let x: a(x)!
+        // I want a reservation for my family at Cascal.
+        let u, v, p, s: reservation(u) for(u, v) Cascal(v) for(u, p) family(p) family-of(p, s) self(s)!
     `);
     assertThat(results).equalsTo([[
-      ["!", ["x"], [[["a", ["x"]]]]],
+      ["!", ["u", "v", "p", "s"], [[
+        ["reservation", ["u"]],
+        ["for", ["u", "v"]],
+        ["Cascal", ["v"]],
+        ["for", ["u", "p"]],
+        ["family", ["p"]],
+        ["family-of", ["p", "s"]],
+        ["self", ["s"]],
+      ]]],
     ]]);
   });
 
