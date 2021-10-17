@@ -256,8 +256,8 @@ function assign(a, b) {
 }
 
 class KB {
-  constructor() {
-    this.rules = {};
+  constructor(rules = {}) {
+    this.rules = rules;
     this.cache = {};
   }
   log(entry) {
@@ -275,9 +275,9 @@ class KB {
     delete this.tracing;
     return result;
   }
-  *read(code) {
-    const lines = normalize(new Parser().parse(code));
+  *load(lines) {
     const q = [];
+    // console.log(lines);
     for (let line of lines) {
       const [op] = line;
       if (op == "?") {
@@ -289,6 +289,10 @@ class KB {
     if (q.length > 0) {
       yield * this.select(q[q.length - 1]);
     }
+  }
+  *read(code) {
+    const lines = normalize(new Parser().parse(code));
+    yield * this.load(lines);
   }
   push(lines) {
     for (let line of lines) {

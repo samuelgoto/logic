@@ -3060,27 +3060,83 @@ describe("Syllogisms", () => {
 
 });
 
+function FUNC(name, head, body) {
+  return ["^", name, head, body];
+}
+
+function NEED(letty, condition) {
+  return ["!", letty, condition];
+}
 
 describe("Planning", () => {
-  it("function f() { Q() } Q()!", () => {
-    assertThat(new Parser().parse(`
+  function satisfies(operation, goal) {
+    const [, name, head, [, [body]]] = operation;
+    
+    const kb = new KB();
+    unroll(kb.load(normalize(body)));
+    const q = ["?", goal];
+    const result = unroll(kb.select(q));
+    return result.length > 0;
+  }
+
+  it("function f() { Q(). } Q()!", () => {
+    const [[operation, [, , [goal]]]] = new Parser().parse(`
       function f() {
         Q().
       }
       Q()!
-    `)).equalsTo([[
-      ["^", "f",
-       [],
-       [[], [[
-         ["Q", []]
-       ]]]
-      ],
-      ["!", 
-       [], [[
-         ["Q", []]
-       ]]
-      ]
-    ]]);
+    `);
+
+    assertThat(satisfies(operation, goal))
+      .equalsTo(true);
+  });
+
+  it("function f() { P(). } Q()!", () => {
+    const [[operation, [, , [goal]]]] = new Parser().parse(`
+      function f() {
+        P().
+      }
+      Q()!
+    `);
+
+    assertThat(satisfies(operation, goal))
+      .equalsTo(false);
+  });
+
+  it("function f() { P() Q(). } Q()!", () => {
+    const [[operation, [, , [goal]]]] = new Parser().parse(`
+      function f() {
+        P() Q().
+      }
+      Q()!
+    `);
+
+    assertThat(satisfies(operation, goal))
+      .equalsTo(true);
+  });
+
+  it("function f() { P() Q(). } Q() P()!", () => {
+    const [[operation, [, , [goal]]]] = new Parser().parse(`
+      function f() {
+        P() Q().
+      }
+      Q() P()!
+    `);
+
+    assertThat(satisfies(operation, goal))
+      .equalsTo(true);
+  });
+
+  it("function f() { Q(). } P() Q()!", () => {
+    const [[operation, [, , [goal]]]] = new Parser().parse(`
+      function f() {
+        Q().
+      }
+      P() Q()!
+    `);
+
+    assertThat(satisfies(operation, goal))
+      .equalsTo(false);
   });
 });
 
