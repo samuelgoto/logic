@@ -1023,9 +1023,9 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("function make(Q(u)) { P(u) }", function() {
+  it("function make(let u: Q(u)) { P(u) }", function() {
     const results = new Parser().parse(`
-        let u: function make(Q(u)) { 
+        function make(let u: Q(u)) { 
           P(u) 
         }
     `);

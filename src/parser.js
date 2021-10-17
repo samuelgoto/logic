@@ -37,8 +37,8 @@ const grammar = () => build(`
       line -> desire {% id %}
       line -> operation {% id %}
     
-      operation ->  (letty _ ":" _):? "function" _ predicate _ "(" _ expression:? _ ")" _ "{" _ expression _ "}" {% 
-        ([letty, func, ws1, operation, ws2, p1, ws3, args, w4, p2, ws5, cb1, ws6, result]) => ["^", letty ? letty[0] : [], result, operation, args || []]
+      operation ->  "function" _ predicate _ "(" _ (letty _ ":" _):? expression:? _ ")" _ "{" _ expression _ "}" {% 
+        ([func, ws1, operation, ws2, p1, ws3, letty, args, w4, p2, ws5, cb1, ws6, result]) => ["^", letty ? letty[0] : [], result, operation, args || []]
       %}
 
       desire -> declaration _ "!" {% 
