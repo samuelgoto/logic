@@ -960,7 +960,7 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [[], [[
+      ["^", [[], [[
         ["P", []]
       ]]],
        "make",
@@ -976,12 +976,12 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [[], [[
+      ["^", [[], [[
         ["P", []]
       ]]],
-       "make",[
+       "make",[[], [[
          ["Q", []]
-       ]
+       ]]]
       ]
     ]]);
   });
@@ -993,13 +993,13 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [[], [[
+      ["^", [[], [[
         ["P", []],
         ["Q", []],
       ]]],
-       "make",[
+       "make",[[], [[
          ["R", []]
-       ]
+       ]]]
       ]
     ]]);
   });
@@ -1011,14 +1011,14 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [[], [[
+      ["^", [[], [[
         ["P", []],
         ["Q", []],
       ]]],
-       "make",[
+       "make",[[], [[
          ["S", []],
          ["T", []],
-       ]
+       ]]]
       ]
     ]]);
   });
@@ -1030,12 +1030,12 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", ["u"], [[], [[
+      ["^", [[], [[
         ["P", ["u"]]
       ]]],
-       "make", [
+       "make", [["u"], [[
          ["Q", ["u"]]
-       ]]
+       ]]]]
     ]]);
   });
 
@@ -1046,15 +1046,15 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", ["y", "z"], [["x"], [[
+      ["^", [["x"], [[
         ["reservation", ["x"]],
         ["for", ["x", "y"]],
         ["for", ["x", "z"]],
       ]]],
-       "make", [
+       "make", [["y", "z"], [[
          ["restaurant", ["y"]],
          ["party", ["z"]],
-       ]]
+       ]]]]
     ]]);
   });
 
