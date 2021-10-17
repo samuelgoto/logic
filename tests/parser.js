@@ -1044,7 +1044,7 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("function make(let x, y, z: reservation(x) for(x, y) for(x, z)) { restaurant(y) party(z) }", function() {
+  it("function make(let x, y: reservation(x) for(x, y) for(x, z)) { let z: restaurant(y) party(z) }", function() {
     const results = new Parser().parse(`
         function make(let r, p: restaurant(r) party(p)) { 
           let a: reservation(a) for(a, r) for(a, p)
