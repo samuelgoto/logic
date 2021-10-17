@@ -953,28 +953,32 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("P() @make().", function() {
+  it("function make() { P() }", function() {
     const results = new Parser().parse(`
-        P() @make().
+        function make() {
+          P() 
+        }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [[
+      ["^", [], [
         ["P", []]
-      ]],
+      ],
        "make",
        []
       ]
     ]]);
   });
 
-  it("P() @make(Q()).", function() {
+  it("function make(Q()) { P() }", function() {
     const results = new Parser().parse(`
-        P() @make(Q()).
+        function make(Q()) { 
+          P()
+        }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [[
+      ["^", [], [
         ["P", []]
-      ]],
+      ],
        "make",[
          ["Q", []]
        ]
@@ -982,15 +986,17 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("P() Q() @make(R()).", function() {
+  it("function make(R()) { P() Q() }", function() {
     const results = new Parser().parse(`
-        P() Q() @make(R()).
+        function make(R()) { 
+          P() Q() 
+        }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [[
+      ["^", [], [
         ["P", []],
         ["Q", []],
-      ]],
+      ],
        "make",[
          ["R", []]
        ]
@@ -998,15 +1004,17 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("P() Q() @make(S() T()).", function() {
+  it("function make(S() T()) { P() Q() }", function() {
     const results = new Parser().parse(`
-        P() Q() @make(S() T()).
+        function make(S() T()) {
+          P() Q()
+        }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [[
+      ["^", [], [
         ["P", []],
         ["Q", []],
-      ]],
+      ],
        "make",[
          ["S", []],
          ["T", []],
@@ -1015,14 +1023,16 @@ describe("Parser", function() {
     ]]);
   });
 
-  it("let u: P(u) @make(Q(u)).", function() {
+  it("function make(Q(u)) { P(u) }", function() {
     const results = new Parser().parse(`
-        let u: P(u) @make(Q(u)).
+        let u: function make(Q(u)) { 
+          P(u) 
+        }
     `);
     assertThat(results).equalsTo([[
-      ["^", ["u"], [[
+      ["^", ["u"], [
         ["P", ["u"]]
-      ]],
+      ],
        "make", [
          ["Q", ["u"]]
        ]]
