@@ -3200,6 +3200,19 @@ describe("Planning", () => {
       .equalsTo(false);
   });
 
+  it("function f(P() Q()) { R(). } P(). R()!", () => {
+    const [[operation, statement, [, , [goal]]]] = new Parser().parse(`
+      function f(P() Q()) {
+        R().
+      }
+      P() Q().
+      R()!
+    `);
+
+    assertThat(satisfies(operation, goal, [statement]))
+      .equalsTo(true);
+  });
+
 });
 
 
