@@ -960,9 +960,9 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [
+      ["^", [], [[], [[
         ["P", []]
-      ],
+      ]]],
        "make",
        []
       ]
@@ -976,9 +976,9 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [
+      ["^", [], [[], [[
         ["P", []]
-      ],
+      ]]],
        "make",[
          ["Q", []]
        ]
@@ -993,10 +993,10 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [
+      ["^", [], [[], [[
         ["P", []],
         ["Q", []],
-      ],
+      ]]],
        "make",[
          ["R", []]
        ]
@@ -1011,10 +1011,10 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", [], [
+      ["^", [], [[], [[
         ["P", []],
         ["Q", []],
-      ],
+      ]]],
        "make",[
          ["S", []],
          ["T", []],
@@ -1030,9 +1030,9 @@ describe("Parser", function() {
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", ["u"], [
+      ["^", ["u"], [[], [[
         ["P", ["u"]]
-      ],
+      ]]],
        "make", [
          ["Q", ["u"]]
        ]]
@@ -1041,16 +1041,16 @@ describe("Parser", function() {
 
   it("function make(let x, y, z: reservation(x) for(x, y) for(x, z)) { restaurant(y) party(z) }", function() {
     const results = new Parser().parse(`
-        function make(let x, y, z: restaurant(y) party(z)) { 
-          reservation(x) for(x, y) for(x, z)
+        function make(let y, z: restaurant(y) party(z)) { 
+          let x: reservation(x) for(x, y) for(x, z)
         }
     `);
     assertThat(results).equalsTo([[
-      ["^", ["x", "y", "z"], [
+      ["^", ["y", "z"], [["x"], [[
         ["reservation", ["x"]],
         ["for", ["x", "y"]],
         ["for", ["x", "z"]],
-      ],
+      ]]],
        "make", [
          ["restaurant", ["y"]],
          ["party", ["z"]],
