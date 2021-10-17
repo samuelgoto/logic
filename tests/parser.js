@@ -1039,6 +1039,26 @@ describe("Parser", function() {
     ]]);
   });
 
+  // let x, y, z: reservation(x) for(x, y) for(x, z) make(restaurant(y) party(z)).
+
+  it.only("function make(let x, y, z: reservation(x) for(x, y) for(x, z)) { restaurant(y) party(z) }", function() {
+    const results = new Parser().parse(`
+        function make(let x, y, z: restaurant(y) party(z)) { 
+          reservation(x) for(x, y) for(x, z)
+        }
+    `);
+    assertThat(results).equalsTo([[
+      ["^", ["x", "y", "z"], [
+        ["reservation", ["x"]],
+        ["for", ["x", "y"]],
+        ["for", ["x", "z"]],
+      ],
+       "make", [
+         ["restaurant", ["y"]],
+         ["party", ["z"]],
+       ]]
+    ]]);
+  });
 
   function assertThat(x) {
     return {
