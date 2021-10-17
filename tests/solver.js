@@ -3061,6 +3061,29 @@ describe("Syllogisms", () => {
 });
 
 
+describe("Planning", () => {
+  it("function f() { Q() } Q()!", () => {
+    assertThat(new Parser().parse(`
+      function f() {
+        Q()
+      }
+      Q()!
+    `)).equalsTo([[
+      ["^", "f",
+       [],
+       [[], [[
+         ["Q", []]
+       ]]]
+      ],
+      ["!", 
+       [], [[
+         ["Q", []]
+       ]]
+      ]
+    ]]);
+  });
+});
+
 function assertThat(x) {
   return {
     equalsTo(y) {
