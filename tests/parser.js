@@ -956,7 +956,7 @@ describe("Parser", function() {
   it("function make() { P() }", function() {
     const results = new Parser().parse(`
         function make() {
-          P() 
+          P().
         }
     `);
     assertThat(results).equalsTo([[
@@ -972,7 +972,7 @@ describe("Parser", function() {
   it("function make(Q()) { P() }", function() {
     const results = new Parser().parse(`
         function make(Q()) { 
-          P()
+          P().
         }
     `);
     assertThat(results).equalsTo([[
@@ -990,7 +990,7 @@ describe("Parser", function() {
   it("function make(R()) { P() Q() }", function() {
     const results = new Parser().parse(`
         function make(R()) { 
-          P() Q() 
+          P() Q().
         }
     `);
     assertThat(results).equalsTo([[
@@ -1009,7 +1009,7 @@ describe("Parser", function() {
   it("function make(S() T()) { P() Q() }", function() {
     const results = new Parser().parse(`
         function make(S() T()) {
-          P() Q()
+          P() Q().
         }
     `);
     assertThat(results).equalsTo([[
@@ -1029,7 +1029,7 @@ describe("Parser", function() {
   it("function make(let u: Q(u)) { P(u) }", function() {
     const results = new Parser().parse(`
         function make(let u: Q(u)) { 
-          P(u) 
+          P(u).
         }
     `);
     assertThat(results).equalsTo([[
@@ -1047,7 +1047,7 @@ describe("Parser", function() {
   it("function make(let x, y: reservation(x) for(x, y) for(x, z)) { let z: restaurant(y) party(z) }", function() {
     const results = new Parser().parse(`
         function make(let r, p: restaurant(r) party(p)) { 
-          let a: reservation(a) for(a, r) for(a, p)
+          let a: reservation(a) for(a, r) for(a, p).
         }
     `);
     assertThat(results).equalsTo([[

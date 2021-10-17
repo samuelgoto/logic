@@ -3065,7 +3065,7 @@ describe("Planning", () => {
   it("function f() { Q() } Q()!", () => {
     assertThat(new Parser().parse(`
       function f() {
-        Q()
+        Q().
       }
       Q()!
     `)).equalsTo([[
