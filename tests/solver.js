@@ -1215,7 +1215,7 @@ describe("Select", function() {
       .equalsTo([{"x": a()}]);
   });
 
-  it("P(a). let x: Q(x)?", () => {
+  it("P(a). let x: Q(x)?", () => {    
     assertThat(unroll(new KB().push(parse(`
       P(a).
     `)).select(first(`
@@ -3069,8 +3069,21 @@ function NEED(letty, condition) {
 }
 
 describe("Planning", () => {
-  function satisfies(operation, goal, statements = []) {
+  function satisfies(operation, command, statements = []) {
     const [, name, head, [, [body]]] = operation;
+
+    // console.log(JSON.stringify(command));
+    // console.log(command);
+    command[0] = "?";
+    const c = clone(command);
+    c[0] = "?";
+    // console.log(JSON.stringify());
+    // ["?",[["Q",[["x","free"]],true]]]
+    const goal = normalize([c])[0];
+
+    // const [, , [goal]] = command;
+
+    // console.log(goal);
     
     // console.log(head);
     const [letty, conditions] = head;
@@ -3083,25 +3096,26 @@ describe("Planning", () => {
       const [c1] = conditions;
       const q1 = ["?", c1];
       
-      // console.log(conditions);
-      
       const r1 = unroll(kb1.select(q1));
       // console.log(r1);
       if (r1.length == 0) {
         return false;
       }
     }
-        
+
     const kb = new KB();
+
+    // console.log(body);
+
     unroll(kb.load(normalize(body)));
-    unroll(kb.load(normalize(statements)));    
-    const q = ["?", goal];
-    const result = unroll(kb.select(q));
+    unroll(kb.load(normalize(statements)));
+    // const q = ["?", goal];
+    const result = unroll(kb.select(goal));
     return result.length > 0;
   }
 
   it("function f() { Q(). } Q()!", () => {
-    const [[operation, [, , [goal]]]] = new Parser().parse(`
+    const [[operation, goal]] = new Parser().parse(`
       function f() {
         Q().
       }
@@ -3113,7 +3127,7 @@ describe("Planning", () => {
   });
 
   it("function f() { P(). } Q()!", () => {
-    const [[operation, [, , [goal]]]] = new Parser().parse(`
+    const [[operation, goal]] = new Parser().parse(`
       function f() {
         P().
       }
@@ -3125,7 +3139,7 @@ describe("Planning", () => {
   });
 
   it("function f() { P() Q(). } Q()!", () => {
-    const [[operation, [, , [goal]]]] = new Parser().parse(`
+    const [[operation, goal]] = new Parser().parse(`
       function f() {
         P() Q().
       }
@@ -3137,7 +3151,7 @@ describe("Planning", () => {
   });
 
   it("function f() { P() Q(). } Q() P()!", () => {
-    const [[operation, [, , [goal]]]] = new Parser().parse(`
+    const [[operation, goal]] = new Parser().parse(`
       function f() {
         P() Q().
       }
@@ -3149,7 +3163,7 @@ describe("Planning", () => {
   });
 
   it("function f() { Q(). } P() Q()!", () => {
-    const [[operation, [, , [goal]]]] = new Parser().parse(`
+    const [[operation, goal]] = new Parser().parse(`
       function f() {
         Q().
       }
@@ -3161,7 +3175,7 @@ describe("Planning", () => {
   });
 
   it("function f() { Q(). } P(). P() Q()!", () => {
-    const [[operation, statement, [, , [goal]]]] = new Parser().parse(`
+    const [[operation, statement, goal]] = new Parser().parse(`
       function f() {
         Q().
       }
@@ -3176,7 +3190,7 @@ describe("Planning", () => {
   });
 
   it("function f(P()) { Q(). } P(). Q()!", () => {
-    const [[operation, statement, [, , [goal]]]] = new Parser().parse(`
+    const [[operation, statement, goal]] = new Parser().parse(`
       function f(P()) {
         Q().
       }
@@ -3189,7 +3203,7 @@ describe("Planning", () => {
   });
 
   it("function f(P()) { Q(). } Q()!", () => {
-    const [[operation, [, , [goal]]]] = new Parser().parse(`
+    const [[operation, goal]] = new Parser().parse(`
       function f(P()) {
         Q().
       }
@@ -3201,7 +3215,7 @@ describe("Planning", () => {
   });
 
   it("function f(P() Q()) { R(). } P(). R()!", () => {
-    const [[operation, statement, [, , [goal]]]] = new Parser().parse(`
+    const [[operation, statement, goal]] = new Parser().parse(`
       function f(P() Q()) {
         R().
       }
@@ -3213,6 +3227,19 @@ describe("Planning", () => {
       .equalsTo(true);
   });
 
+  it("function f() { let r: Q(r). } let x: Q(x)!", () => {
+    const [[operation, goal]] = new Parser().parse(`
+      function f() {
+        let r: Q(r).
+      }
+      let x: Q(x)!
+    `);
+
+    assertThat(satisfies(operation, goal))
+      .equalsTo(true);
+  });
+
+  
 });
 
 

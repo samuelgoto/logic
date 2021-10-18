@@ -408,6 +408,8 @@ class KB {
 
     const [head, ...tail] = body;
 
+    // console.log(line);
+    
     const query = clone(head);
 
     const free = Object.fromEntries(
