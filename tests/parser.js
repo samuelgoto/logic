@@ -177,6 +177,19 @@ describe("Parser", function() {
     ]]);
   });
 
+  it("for (let x) a(x).", () => {
+    assertThat(new Parser().parse(`
+      // Basic quantifiers can optionally skip a head.
+      for (let x) 
+        a(x).
+    `)).equalsTo([[
+      ["for", ["x", "every"], [
+      ], [
+        [["a", ["x"]]]
+      ]],
+    ]]);
+  });
+
   it("for (let x: b(x)) a(x).", () => {
     assertThat(new Parser().parse(`
       // Basic quantifiers take a head and a tail.

@@ -84,8 +84,9 @@ const grammar = () => build(`
 
       # ([lines]) => lines.map(([ws, s]) => s ).filter((line) => typeof line != "string")
 
-      loop -> "for" _ "(" _ "let" _ (quantifier _):? variable _ ":" _ condition _ ")" _ block {% 
-        ([forall, ws1, p1, ws2, letty, ws3, quantifier, arg, ws5, col, ws6, head, ws7, p2, ws8, tail]) =>  {
+      loop -> "for" _ "(" _ "let" _ (quantifier _):? variable _ (":" _ condition _):? ")" _ block {% 
+        ([forall, ws1, p1, ws2, letty, ws3, quantifier, arg, ws5, condition, p2, ws8, tail]) =>  {
+          const [col, ws6, head = [], ws7] = condition || [];
           const q = quantifier ? (quantifier[0]) : ["every"];
           return ["for", [arg, ...q], head, tail];
         }

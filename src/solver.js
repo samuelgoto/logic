@@ -48,7 +48,8 @@ function normalize(statements, scope = {}) {
                op == "for") {
       const [iffy, letty, [head], body] = statement;
       const vars = Object.fromEntries([letty] || []);
-      const heady = normalize([head], Object.assign(scope, vars));
+      Object.assign(scope, vars);
+      const heady = head ? normalize([head], scope) : [];
       for (const part of normalize([body], scope)) {
         const p = clone(part);
         if (p[3]) {

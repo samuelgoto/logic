@@ -198,6 +198,15 @@ describe("Normalize", () => {
     ]);
   });
 
+  it("for (let x) P(x). => let x: P(x).", () => {
+    assertThat(normalize(new Parser().parse(`
+      for (let x)
+        P(x). 
+    `))).equalsTo([
+      FORALL([], P(x("every")))
+    ]);
+  });
+
   it("for (let x: P(x)) Q(x). => let x: Q(x) if (P(x)).", () => {
     assertThat(normalize(new Parser().parse(`
       for (let x: P(x))
@@ -984,6 +993,14 @@ describe("Query", () => {
       P(a). 
     `)).query(Q(free("y")))))
       .equalsTo([{"y": a()}]);
+  });
+
+  it("for (let x) P(x). P(a)?", () => {
+    assertThat(unroll(new KB().push(parse(`
+      for (let x) 
+        P(x). 
+    `)).query(Q(literal("a")))))
+      .equalsTo([]);
   });
 
 });
