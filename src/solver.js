@@ -1,9 +1,10 @@
 const {Parser} = require("./parser.js");
 
-function normalize(statements, scope = {}) {
+function normalize(statements, scope = {}, equals = {}) {
   const result = [];
   for (const statement of statements) {
     const [op] = statement;
+    // console.log(op == "=");
     if (op == "?") {
       const [q, letty, body] = statement;
       const vars = {};
@@ -16,18 +17,18 @@ function normalize(statements, scope = {}) {
           vars[letty] = "free";
         }
       }
-      result.push([q, normalize(body, Object.assign(scope, vars))]);
+      result.push([q, normalize(body, Object.assign(scope, vars), equals)]);
     } else if (op == "not") {
       const [not, head] = statement;
-      for (const part of normalize([[head]], scope)) {
+      for (const part of normalize([[head]], scope, equals)) {
         const [name, args, value = true] = part;
         part[2] = !value;
         result.push(part);
       }
     } else if (op == "either") {
       const [either, letty, head, body] = statement;
-      const left = normalize([[head]], scope);
-      const right = normalize([[body]], scope);
+      const left = normalize([[head]], scope, equals);
+      const right = normalize([[body]], scope, equals);
       for (const part of left) {
         const rule = clone(part);
         rule[3] = clone(right);
@@ -49,8 +50,8 @@ function normalize(statements, scope = {}) {
       const [iffy, letty, [head], body] = statement;
       const vars = Object.fromEntries([letty] || []);
       Object.assign(scope, vars);
-      const heady = head ? normalize([head], scope) : [];
-      for (const part of normalize([body], scope)) {
+      const heady = head ? normalize([head], scope, equals) : [];
+      for (const part of normalize([body], scope, equals)) {
         const p = clone(part);
         if (p[3]) {
           p[3].push(...heady);
@@ -60,13 +61,18 @@ function normalize(statements, scope = {}) {
         result.push(p);
       }
     } else if (Array.isArray(statement[0])) {
-      const conjunction = normalize(statement, scope);
+      const conjunction = normalize(statement, scope, equals);
       result.push(...conjunction);
+    } else if (op == "=") {
+      const [, [a, b]] = statement;
+      Object.assign(equals, {[b]: a});
     } else {
       const [name, args] = statement;
-      const vars = args.map((x) =>
-        scope[x] ? [x, scope[x]] : [x, "const"]
-      );
+      const vars = args
+            .map((x) => equals[x] ? equals[x] : x)
+            .map((x) =>
+              scope[x] ? [x, scope[x]] : [x, "const"]
+            );
       result.push([name, vars, true]);
     }
   }

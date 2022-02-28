@@ -414,6 +414,15 @@ describe("Normalize", () => {
     ]);
   });
 
+  it("a = b. P(b). => P(a).", () => {
+    assertThat(normalize(new Parser().parse(`
+      a = b.
+      P(b).
+    `))).equalsTo([
+      P(a()),
+    ]);
+  });
+
 
 });
 
@@ -2776,7 +2785,40 @@ describe("REPL", () => {
       let s1: P(s1)?
     `))).equalsTo([{s1: literal("a")}]);
   });
-  
+
+  it("a = b. P(a). P(b)?", function() {
+    assertThat(unroll(new KB().read(`
+      a = b.                                                                                                                                        P(a).                                                                                                                                         P(b)?
+    `))).equalsTo([{}]);
+  });  
+
+  it("a = b. P(c, a). P(c, b)?", function() {
+    assertThat(unroll(new KB().read(`
+      a = b.
+      P(c, a).
+      P(c, b)?
+    `))).equalsTo([{}]);
+  });  
+
+  it("if (P()) { a = b. Q(a). } P(). Q(b)?", function() {
+    assertThat(unroll(new KB().read(`
+      if (P()) {
+        a = b.                                                                                                                                        Q(a).                                                                                                                                       }
+      P().
+      Q(b)?
+    `))).equalsTo([{}]);
+  });  
+
+  it("if (P()) { a = b. Q(a). } P(). Q(b)?", function() {
+    assertThat(unroll(new KB().read(`
+      for (let every x: P(x)) {
+        x = b.
+        Q(b).
+      }
+      P(c).
+      Q(c)?
+    `))).equalsTo([{}]);
+  });  
 });
 
 
