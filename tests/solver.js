@@ -1718,6 +1718,30 @@ describe("Select", function() {
       } ?
     `))).equalsTo([{}]);
   });
+
+  it("for (let x: P(x, c)) Q(x). P(a, c). let x: Q(x)?", () => {
+    assertThat(unroll(new KB().push(parse(`
+      for (let x: P(x, c)) Q(x). 
+      P(a, c).
+    `)).select(first(`
+      let x: Q(x)?
+    `))))
+      .equalsTo([{"x": a()}]);
+  });
+
+  it("for (let y) for (let x: P(x, y)) Q(x). P(a, c). let x: Q(x)?", () => {
+    assertThat(unroll(new KB().push(parse(`
+      for (let y) 
+        for (let every x: P(x, y)) 
+          Q(x). 
+      P(a, c).
+      P(b, d).
+    `)).select(first(`
+      let x: Q(x)?
+    `))))
+      .equalsTo([{"x": a()}, {"x": b()}]);
+  });
+
 });
 
 describe.skip("Tracing", () => {
