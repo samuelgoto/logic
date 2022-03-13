@@ -195,7 +195,7 @@ describe("Parser", function() {
       for (let x, y) 
         a(x, y).
     `)).equalsTo([[
-      ["for", ["x", "every"], [], [
+      ["for", ["x", "every"], ["y"], [
       ], [
         [["a", ["x", "y"]]]
       ]],

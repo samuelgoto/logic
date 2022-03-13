@@ -86,16 +86,19 @@ const grammar = () => build(`
 
       ref -> (quantifier _):? variable {% ([quantifier, variable]) => [quantifier, variable] %}
 
-      loop -> "for" _ "(" _ "let" _ ref (_ "," _ ref):? _ (":" _ condition _):? ")" _ block {% 
+      loop -> "for" _ "(" _ "let" _ ref (_ "," _ variable):* _ (":" _ condition _):? ")" _ block {% 
         ([forall, ws1, p1, ws2, letty, ws3, [quantifier, arg], more, ws5, condition, p2, ws8, tail]) =>  {
           //console.log(foo);
           //console.log(arg);
           // throw new Error(foo);
+          //console.log();
+          //console.log(more);
+          const vars = more.map(([a, c, b, v]) => v);
           const [col, ws6, head = [], ws7] = condition || [];
           const q = quantifier ? (quantifier[0]) : ["every"];
           //const args = [];
           //args.push();
-          return ["for", [arg, ...q], [], head, tail];
+          return ["for", [arg, ...q], vars, head, tail];
         }
       %}
 
