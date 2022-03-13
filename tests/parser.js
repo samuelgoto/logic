@@ -183,9 +183,21 @@ describe("Parser", function() {
       for (let x) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "every"], [
+      ["for", [["x", "every"]], [
       ], [
         [["a", ["x"]]]
+      ]],
+    ]]);
+  });
+
+  it("for (let x, y) a(x, y).", () => {
+    assertThat(new Parser().parse(`
+      for (let x, y) 
+        a(x, y).
+    `)).equalsTo([[
+      ["for", [["x", "every"]], [
+      ], [
+        [["a", ["x", "y"]]]
       ]],
     ]]);
   });
@@ -210,7 +222,7 @@ describe("Parser", function() {
       for (let every x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "every"], [
+      ["for", [["x", "every"]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -225,10 +237,10 @@ describe("Parser", function() {
         for (let every y: b(y))
           a(x, y).
     `)).equalsTo([[
-      ["for", ["x", "every"], [
+      ["for", [["x", "every"]], [
         [["b", ["x"]]]
       ], [
-        ["for", ["y", "every"], [
+        ["for", [["y", "every"]], [
           [["b", ["y"]]]
         ], [
           [["a", ["x", "y"]]]
@@ -242,7 +254,7 @@ describe("Parser", function() {
       for (let every x: b(x)) 
         a(x, c).
     `)).equalsTo([[
-      ["for", ["x", "every"], [
+      ["for", [["x", "every"]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x", "c"]]]
@@ -255,7 +267,7 @@ describe("Parser", function() {
       for (let most x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "most"], [
+      ["for", [["x", "most"]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -268,7 +280,7 @@ describe("Parser", function() {
       for (let few x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "few"], [
+      ["for", [["x", "few"]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -281,7 +293,7 @@ describe("Parser", function() {
       for (let only x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "only"], [
+      ["for", [["x", "only"]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -294,7 +306,7 @@ describe("Parser", function() {
       for (let at-least(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "at-least", 3], [
+      ["for", [["x", "at-least", 3]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -307,7 +319,7 @@ describe("Parser", function() {
       for (let at-most(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "at-most", 3], [
+      ["for", [["x", "at-most", 3]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -320,7 +332,7 @@ describe("Parser", function() {
       for (let more-than(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "more-than", "3"], [
+      ["for", [["x", "more-than", "3"]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -333,7 +345,7 @@ describe("Parser", function() {
       for (let fewer-than(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "fewer-than", "3"], [
+      ["for", [["x", "fewer-than", "3"]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -346,7 +358,7 @@ describe("Parser", function() {
       for (let exactly(3) x: b(x)) 
         a(x).
     `)).equalsTo([[
-      ["for", ["x", "exactly", "3"], [
+      ["for", [["x", "exactly", "3"]], [
         [["b", ["x"]]]
       ], [
         [["a", ["x"]]]
@@ -361,7 +373,7 @@ describe("Parser", function() {
         d(x).
       }
     `)).equalsTo([[
-      ["for", ["x", "every"], [
+      ["for", [["x", "every"]], [
         [["a", ["x"]], ["b", ["x"]]]
       ], [
         [["c", ["x"]]],
@@ -380,7 +392,7 @@ describe("Parser", function() {
         d(x).
       }
     `)).equalsTo([[
-      ["for", ["x", "every"], [
+      ["for", [["x", "every"]], [
         [["a", ["x"]]],
         [["b", ["x"]]]
       ], [

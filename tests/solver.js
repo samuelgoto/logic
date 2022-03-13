@@ -1729,6 +1729,26 @@ describe("Select", function() {
       .equalsTo([{"x": a()}]);
   });
 
+  it("for (let c) for (let x: P(x, c)) Q(x). P(a, d). let x: Q(x)?", () => {
+    assertThat(unroll(new KB().push(parse(`
+      for (let c) for (let x: P(x, c)) Q(x). 
+      P(a, d).
+    `)).select(first(`
+      let x: Q(x)?
+    `))))
+      .equalsTo([{"x": a()}]);
+  });
+
+  it.skip("for (let x, c: P(x, c)) Q(x). P(a, d). let x: Q(x)?", () => {
+    assertThat(unroll(new KB().push(parse(`
+      for (let x, c: P(x, c)) Q(x). 
+      P(a, d).
+    `)).select(first(`
+      let x: Q(x)?
+    `))))
+      .equalsTo([{"x": a()}]);
+  });
+
   it("for (let y) for (let x: P(x, y)) Q(x). P(a, c). let x: Q(x)?", () => {
     assertThat(unroll(new KB().push(parse(`
       for (let y) 
@@ -1740,6 +1760,16 @@ describe("Select", function() {
       let x: Q(x)?
     `))))
       .equalsTo([{"x": a()}, {"x": b()}]);
+  });
+
+  it.skip("for (let x: P(x)) Q(x). for (let x: Q(x)) R(x). P(a). let x: R(x)?", () => {
+    assertThat(unroll(new KB().push(parse(`
+      for (let x) P(x) R(x). 
+      P(a).
+    `)).select(first(`
+      let x: R(x)?
+    `))))
+      .equalsTo([{"x": free("x")}]);
   });
 
 });
