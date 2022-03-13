@@ -2601,6 +2601,32 @@ describe("REPL", () => {
       "y": literal("v"),
     }]);
   });
+
+  it("let b: uncle(b, a)?", () => {
+    const kb = new KB();    
+    assertThat(unroll(kb.read(`
+       for (let every a) {
+         for (let every b, c: parent(c) parent-of(c, a) sibling(b) sibling-of(b, c)) {
+           b = d.
+           uncle(d).
+           uncle-of(d, a).
+         }
+       }
+       Maura(e).
+       Mel(f).
+       e = g.
+       parent(g).
+       parent-of(g, f).
+       Tio-Bo(h).
+       h = i.
+       sibling(i).
+       sibling-of(i, e).
+       let j, k: j = k uncle(k) uncle-of(k, f)?
+    `, true))).equalsTo([
+      ["j"], 
+      {"a": ["f", "const"], "c": ["e", "const"], "j": ["h", "const"]}
+    ]);
+  });
   
   it("kinship", function() {
     const kb = new KB();

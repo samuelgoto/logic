@@ -261,6 +261,7 @@ function assign(a, b) {
       result[key] = b[key];
     }
   }
+  //console.log(result);
   return result;
 }
 
@@ -284,24 +285,40 @@ class KB {
     delete this.tracing;
     return result;
   }
-  *load(lines) {
+  *load(lines, repeat) {
     const q = [];
     // console.log(lines);
     for (let line of lines) {
       const [op] = line;
       if (op == "?") {
+        //console.log("hi");
+        //console.log(JSON.stringify(line));
         q.push(line);
       } else {
         this.push([line]);
       }
     }
     if (q.length > 0) {
+      // NOTE(goto): repeats the parsed query.
+      // massive hack, because fixing
+      // this properly isn't going to be trivial.
+      if (repeat) {
+        // console.log();
+        yield Object.keys(Object.fromEntries(
+          q[q.length - 1][1]
+            .map(([name, params]) => params)
+            .flat()
+            .filter(([name, type]) => type == "free")
+        ))
+      }
+      // yield
+      // console.log(q[q.length - 1]);
       yield * this.select(q[q.length - 1]);
     }
   }
-  *read(code) {
+  *read(code, repeat) {
     const lines = normalize(new Parser().parse(code));
-    yield * this.load(lines);
+    yield * this.load(lines, repeat);
   }
   push(lines) {
     for (let line of lines) {
@@ -423,6 +440,8 @@ class KB {
 
     const free = Object.fromEntries(
       query[1].filter(([name, type]) => type == "free"));
+
+    // console.log(free);
     
     for (let q of this.query(query, clone(path), level + 1)) {
       // console.log(q);
@@ -447,7 +466,10 @@ class KB {
         //console.log(q);
         //console.log(r);
         //console.log(Object.assign(q, r));
-      
+        //console.log("hi");
+        //console.log(clone(Object.assign(q, r)));
+        //console.log(assign(free, clone(Object.assign(q, r))));
+        //yield this.resolve(line, assign(free, clone(Object.assign(q, r))));
         yield this.resolve(line, clone(Object.assign(q, r)));
       }
     }
