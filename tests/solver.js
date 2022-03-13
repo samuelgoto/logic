@@ -227,6 +227,15 @@ describe("Normalize", () => {
     ]);
   });
 
+  it("for (let x, y: P(x, y)) Q(x, y). => let x, y: Q(x, y) if (P(x, y)).", () => {
+    assertThat(normalize(new Parser().parse(`
+      for (let x, y: P(x, y))
+        Q(x, y). 
+    `))).equalsTo([
+      FORALL([P(x("every"), y("free"))], Q(x("every"), y("free")))
+    ]);
+  });
+
   it("for (let a: P(a)) {Q(a).} ? => let a: Q(a) if (P(a)).", () => {
     assertThat(normalize(new Parser().parse(`
       for (let a: P(a)) {
@@ -1739,9 +1748,9 @@ describe("Select", function() {
       .equalsTo([{"x": a()}]);
   });
 
-  it.skip("for (let x, c: P(x, c)) Q(x). P(a, d). let x: Q(x)?", () => {
+  it("for (let x, c: P(x, c)) Q(x). P(a, d). let x: Q(x)?", () => {
     assertThat(unroll(new KB().push(parse(`
-      for (let x, c: P(x, c)) Q(x). 
+      for (let x, y: P(x, y)) Q(x). 
       P(a, d).
     `)).select(first(`
       let x: Q(x)?

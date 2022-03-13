@@ -50,6 +50,8 @@ function normalize(statements, scope = {}, equals = {}) {
       const [iffy, letty, more, [head], body] = statement;
       const vars = Object.fromEntries([letty] || []);
       Object.assign(scope, vars);
+      const free = Object.fromEntries(more.map((x) => [x, "free"]));
+      Object.assign(scope, free);
       const heady = head ? normalize([head], scope, equals) : [];
       for (const part of normalize([body], scope, equals)) {
         const p = clone(part);
