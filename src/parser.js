@@ -63,11 +63,11 @@ const grammar = () => build(`
       statement -> loop {% id %}
 
       iffy -> "if" _ head _ block {% 
-        ([iffy, ws1, head, ws2, body]) =>  ["if", head[0], head[1], body] 
+        ([iffy, ws1, head, ws2, body]) =>  ["if", head[0], [], head[1], body] 
       %}
 
       iffy -> "if" _ head _ block _ "else" _ block {% 
-        ([iffy, ws1, head, ws2, body, ws3, elsy, ws4, tail]) =>  ["if", head[0], head[1], body, tail] 
+        ([iffy, ws1, head, ws2, body, ws3, elsy, ws4, tail]) =>  ["if", head[0], [], head[1], body, tail] 
       %}
 
       letty -> "let" _ variable (_ "," _ variable):* {% 
@@ -93,9 +93,9 @@ const grammar = () => build(`
           // throw new Error(foo);
           const [col, ws6, head = [], ws7] = condition || [];
           const q = quantifier ? (quantifier[0]) : ["every"];
-          const args = [];
-          args.push([arg, ...q]);
-          return ["for", args, head, tail];
+          //const args = [];
+          //args.push();
+          return ["for", [arg, ...q], [], head, tail];
         }
       %}
 

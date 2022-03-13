@@ -47,7 +47,7 @@ function normalize(statements, scope = {}, equals = {}) {
       }
     } else if (op == "if" ||
                op == "for") {
-      const [iffy, letty, [head], body] = statement;
+      const [iffy, letty, more, [head], body] = statement;
       const vars = Object.fromEntries([letty] || []);
       Object.assign(scope, vars);
       const heady = head ? normalize([head], scope, equals) : [];
